@@ -176,8 +176,7 @@
   .lko-podium-row{display:flex; gap:26px; flex-wrap:wrap;}
   .lko-podium-slot{display:flex; align-items:center; gap:10px;}
   .lko-podium-slot .lbl{font-family:'Roboto Mono'; font-size:0.6rem; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:2px;}
-  .lko-podium-slot .nm, .lko-shield-winner .nm{font-family:'Anton'; font-size:1.15rem; color:var(--floodlight);}
-  .lko-shield-winner .nm{font-size:1.4rem;}
+  .lko-podium-slot .nm{font-family:'Anton'; font-size:1.15rem; color:var(--floodlight);}
 
   /* ---------- PLAYERS ---------- */
   .hof-strip{display:flex; gap:16px; overflow-x:auto; margin-bottom:52px; padding-bottom:8px;}
@@ -509,7 +508,7 @@
             <div class="lko-stage-label">🛡️ League Phase — Shield</div>
             <div class="lko-shield-winner">
               <span class="dot gold">1</span>
-              <span class="nm">${s.shieldWinner}</span>
+              <div><span class="lbl">Shield Winner</span><span class="nm">${s.shieldWinner}</span></div>
             </div>
           </div>
           <div class="lko-stage">
