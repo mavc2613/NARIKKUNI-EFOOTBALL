@@ -384,6 +384,25 @@
   .save-status{font-family:'Roboto Mono'; font-size:0.7rem; color:var(--muted); width:100%; margin-top:4px;}
   .save-status.ok{color:var(--turf-bright);}
   .save-status.err{color:#e07a6b;}
+  
+  /* Season/Photo edit modals */
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(10,14,12,0.85); z-index:100; align-items:center; justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal-content{background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:32px; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+  .modal-title{font-family:'Oswald'; font-size:1.2rem; color:var(--floodlight); margin-bottom:20px;}
+  .modal-field{display:flex; flex-direction:column; gap:8px; margin-bottom:16px;}
+  .modal-field label{font-family:'Roboto Mono'; font-size:0.65rem; text-transform:uppercase; color:var(--muted);}
+  .modal-field input, .modal-field select{background:var(--pitch-deep); color:var(--floodlight); border:1px solid var(--card-line); border-radius:6px; padding:10px 12px; font-family:'Oswald'; font-size:0.95rem;}
+  .modal-actions{display:flex; gap:10px; margin-top:24px; justify-content:flex-end;}
+  .modal-actions button{font-family:'Oswald'; font-weight:600; font-size:0.85rem; text-transform:uppercase; padding:11px 22px; border-radius:8px; border:none; cursor:pointer;}
+  .modal-actions .cancel{background:var(--card-line); color:var(--floodlight);}
+  .modal-actions .save{background:var(--gold); color:var(--ink);}
+  
+  .photo-upload{position:relative; cursor:pointer;}
+  .photo-upload input[type="file"]{display:none;}
+  .photo-upload-overlay{position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s ease; font-size:1rem;}
+  .photo-upload:hover .photo-upload-overlay{opacity:1;}
+  
   .player-card:hover{transform:translateY(-5px); border-color:var(--gold);}
   .player-photo{height:170px; position:relative; overflow:hidden; background:linear-gradient(145deg, var(--pitch), var(--pitch-deep)); display:flex; align-items:center; justify-content:center;}
   .player-photo .init{font-family:'Anton'; font-size:3.6rem; color:rgba(255,255,255,0.08);}
@@ -652,6 +671,7 @@
         <div class="add-player-row reveal" id="addPlayerRow" style="display:none;">
           <input type="text" id="newPlayerInput" placeholder="New player name…">
           <button onclick="addPlayer()">+ Add Player</button>
+          <button onclick="openMergeDuplicatesModal()" style="background:var(--gold-soft); color:var(--ink);">🔀 Merge Duplicates</button>
         </div>
 
         <div class="roster-grid" id="rosterGrid"></div>
@@ -828,9 +848,13 @@
 
   function renderTable(containerId, seasons){
     const el = document.getElementById(containerId);
+    const isLeague = containerId === 'leagueRows';
+    const isKnockout = containerId === 'knockoutRows';
     el.innerHTML = seasons.map(s=>{
       const statusLabel = s.status === 'live' ? 'In Progress' : s.status === 'next' ? 'Upcoming' : 'Completed';
       const statusClass = s.status === 'live' ? 'live' : s.status === 'next' ? 'next' : 'done';
+      const isLiveDerived = isKnockout && TOURNAMENT_DATA.some(t => t.name === s.season);
+      const type = isLeague ? 'league' : 'knockout';
       return `
       <div class="results-row ${s.status !== 'done' ? 'upcoming' : ''}">
         <div class="r-season"><div class="s-name">${s.season}${s.note ? ' · '+s.note : ''}</div><div class="s-date">${s.date}</div></div>
@@ -838,6 +862,7 @@
         ${chip(s.runner, 'silver', '2')}
         ${chip(s.secondRunner, 'bronze', '3')}
         <div class="r-status ${statusClass}">${statusLabel}</div>
+        ${editModeEnabled && !isLiveDerived ? `<button class="p-ic-btn" style="width:32px;height:32px;font-size:0.8rem;" onclick="openSeasonEditModal('${type}','${s.season.replace(/'/g,"\\'")}')">✏️</button>` : ''}
       </div>`;
     }).join('');
   }
@@ -866,7 +891,10 @@
       <div class="lko-card reveal in">
         <div class="lko-head">
           <div><div class="s-name">${s.season}</div><div class="s-date">${s.date}</div></div>
-          <div class="r-status done">Completed</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            ${editModeEnabled ? `<button class="p-ic-btn" style="width:32px;height:32px;font-size:0.8rem;" onclick="openSeasonEditModal('leagueko','${s.season.replace(/'/g,"\\'")}')">✏️</button>` : ''}
+            <div class="r-status done">Completed</div>
+          </div>
         </div>
         <div class="lko-body">
           <div class="lko-stage">
@@ -1161,6 +1189,7 @@
         : `<span class="init">${initials}</span>`;
       card.innerHTML = `
         ${editModeEnabled ? `<div class="player-edit-controls">
+          <div class="p-ic-btn" title="Photo" onclick="event.stopPropagation(); uploadPlayerPhoto('${escAttr(name)}')">📷</div>
           <div class="p-ic-btn" title="Rename" onclick="event.stopPropagation(); toggleRename(this)">✏️</div>
           <div class="p-ic-btn danger" title="Delete" onclick="event.stopPropagation(); deletePlayer('${escAttr(name)}')">🗑️</div>
         </div>` : ''}
@@ -1182,7 +1211,7 @@
     });
   }
   renderRoster();
-  autoSyncFixtureFeed().then(() => loadRosterOverrides()); // fixtures first, then apply saved roster edits on top — hoisted, defined further down
+  const syncReady = autoSyncFixtureFeed().then(() => loadRosterOverrides()); // fixtures first, then apply saved roster edits on top — hoisted, defined further down; profile clicks await this
 
   /* ---------------- PLAYER PROFILE (opens in a real new tab) ---------------- */
   function getPlayerAchievements(name){
@@ -1297,10 +1326,23 @@
   }
 
   function viewProfile(name){
-    const html = buildPlayerProfileHTML(name);
-    const blob = new Blob([html], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+    // open synchronously first (popup blockers require this to happen directly
+    // inside the click handler) — swap in the real content once sync is done
+    const win = window.open('', '_blank');
+    if(win){
+      win.document.write(`<!DOCTYPE html><html><head><title>${name} — Loading…</title></head>
+        <body style="background:#0a0e0c;color:#9db3a8;font-family:sans-serif;padding:60px;text-align:center;">
+        Loading ${name}'s profile…</body></html>`);
+    }
+    const openReal = () => {
+      const html = buildPlayerProfileHTML(name);
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      if(win && !win.closed) win.location.href = url;
+      else window.open(url, '_blank'); // fallback if the popup got blocked/closed
+    };
+    if(syncReady && typeof syncReady.then === 'function') syncReady.then(openReal).catch(openReal);
+    else openReal();
   }
 
   /* ---------------- EDIT MODE GATE ----------------
@@ -1344,6 +1386,8 @@
   let pendingRenames = {};   // oldName -> newName
   let pendingAdditions = []; // new names
   let pendingRemovals = [];  // removed names
+  let pendingSeasonEdits = {}; // type_season -> {champion, runner, secondRunner, shieldWinner, date}
+  let pendingPhotoUploads = {}; // playerName -> base64
   let isDirty = false;
 
   function markDirty(){
@@ -1426,6 +1470,65 @@
     markDirty();
   }
 
+  function openMergeDuplicatesModal(){
+    const modal = document.getElementById('mergeDuplicatesModal');
+    const fromSel = document.getElementById('mergeFrom');
+    const toSel = document.getElementById('mergeTo');
+    
+    fromSel.innerHTML = rosterOrder.map(n => `<option value="${n}">${n}</option>`).join('');
+    toSel.innerHTML = rosterOrder.map(n => `<option value="${n}">${n}</option>`).join('');
+    
+    if(fromSel.options.length > 1) fromSel.selectedIndex = 0;
+    if(toSel.options.length > 1) toSel.selectedIndex = 1;
+    
+    modal.classList.add('show');
+  }
+  
+  function closeMergeDuplicatesModal(){ document.getElementById('mergeDuplicatesModal').classList.remove('show'); }
+  
+  function mergeDuplicates(){
+    const fromName = document.getElementById('mergeFrom').value;
+    const toName = document.getElementById('mergeTo').value;
+    
+    if(!fromName || !toName || fromName === toName){ alert('Select two different players.'); return; }
+    if(!confirm(`Merge all data from ${fromName} into ${toName}? ${fromName} will be removed from the roster.`)) return;
+    
+    // Rename everywhere (from → to)
+    renameEverywhere(fromName, toName);
+    
+    // Remove from roster (not just mark as pending removal, actually delete)
+    rosterOrder = rosterOrder.filter(n => n !== fromName);
+    
+    // Clean up if it was a pending addition
+    const addIdx = pendingAdditions.indexOf(fromName);
+    if(addIdx > -1) pendingAdditions.splice(addIdx, 1);
+    
+    pendingRemovals.push(fromName);
+    closeMergeDuplicatesModal();
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons);
+    markDirty();
+  }
+
+  function uploadPlayerPhoto(name){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64 = evt.target.result;
+        PHOTOS[name] = base64;
+        pendingPhotoUploads[name] = base64;
+        renderRoster();
+        markDirty();
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }
+
   async function saveRosterToGitHub(){
     if(!editModeEnabled) return;
     const statusEl = document.getElementById('saveStatus');
@@ -1437,7 +1540,7 @@
     statusEl.className = 'save-status'; statusEl.textContent = 'Saving…';
 
     try{
-      let sha = null, existing = { renames:{}, additions:[], removals:[] };
+      let sha = null, existing = { renames:{}, additions:[], removals:[], aliases:{}, seasonEdits:{}, photos:{} };
       const getRes = await fetch(`${apiUrl}?ref=${BRANCH}`, { headers: { Authorization: `Bearer ${token}` } });
       if(getRes.ok){
         const fileData = await getRes.json();
@@ -1451,6 +1554,9 @@
         renames: { ...(existing.renames||{}), ...pendingRenames },
         additions: Array.from(new Set([...(existing.additions||[]).filter(n=>!pendingRemovals.includes(n)), ...pendingAdditions])),
         removals: Array.from(new Set([...(existing.removals||[]), ...pendingRemovals])),
+        aliases: { ...(existing.aliases||{}), ...sessionOverrides },
+        seasonEdits: { ...(existing.seasonEdits||{}), ...pendingSeasonEdits },
+        photos: { ...(existing.photos||{}), ...pendingPhotoUploads },
       };
 
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2))));
@@ -1458,13 +1564,13 @@
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Roster update: ${Object.keys(pendingRenames).length} renamed, ${pendingAdditions.length} added, ${pendingRemovals.length} removed`,
+          message: `Roster update: ${Object.keys(pendingRenames).length} renamed, ${pendingAdditions.length} added, ${pendingRemovals.length} removed, ${Object.keys(pendingSeasonEdits).length} seasons edited`,
           content, branch: BRANCH, ...(sha ? {sha} : {}),
         }),
       });
       if(!putRes.ok){ const errBody = await putRes.json().catch(()=>({})); throw new Error(errBody.message || `PUT failed: HTTP ${putRes.status}`); }
 
-      pendingRenames = {}; pendingAdditions = []; pendingRemovals = []; isDirty = false;
+      pendingRenames = {}; pendingAdditions = []; pendingRemovals = []; pendingSeasonEdits = {}; pendingPhotoUploads = {}; isDirty = false;
       document.getElementById('saveBar').classList.remove('show');
       statusEl.className = 'save-status ok';
       statusEl.textContent = '✅ Saved to GitHub — live for everyone on next page load.';
@@ -1480,6 +1586,29 @@
       const res = await fetch(`https://raw.githubusercontent.com/mavc2613/fixture-flow/main/roster-overrides.json`, { cache:'no-store' });
       if(!res.ok) return;
       const data = await res.json();
+      
+      // Load aliases (name merges from fixture sync)
+      sessionOverrides = { ...data.aliases||{} };
+      
+      // Load photos
+      Object.entries(data.photos||{}).forEach(([name,base64]) => { PHOTOS[name] = base64; });
+      
+      // Load season edits
+      Object.entries(data.seasonEdits||{}).forEach(([key, edit]) => {
+        const [type, ...seasonParts] = key.split('_');
+        const season = seasonParts.join('_');
+        let arr = type === 'league' ? leagueSeasons : type === 'knockout' ? knockoutSeasons : leagueKoSeasons;
+        const entry = arr.find(s => s.season === season);
+        if(entry){
+          entry.champion = edit.champion || entry.champion;
+          entry.runner = edit.runner || entry.runner;
+          entry.secondRunner = edit.secondRunner || entry.secondRunner;
+          entry.shieldWinner = edit.shieldWinner || entry.shieldWinner;
+          entry.date = edit.date || entry.date;
+        }
+      });
+      
+      // Load roster changes
       Object.entries(data.renames||{}).forEach(([oldName,newName]) => {
         if(rosterOrder.includes(oldName)) renameEverywhere(oldName, newName);
       });
@@ -1697,7 +1826,7 @@
     panel.style.display = 'block';
     panel.innerHTML = `
       <div class="assign-head">👤 Assign new names</div>
-      <div class="assign-sub">These names weren't recognised. If one is actually an existing player under a nickname or alt name, pick them below — fixtures and the points table update immediately. Leave as "Keep as new player" if they're genuinely new.</div>
+      <div class="assign-sub">These names weren't recognised. If one is actually an existing player under a nickname or alt name, pick them below — all their stats will merge together. Leave as "Keep as new player" if they're genuinely new.</div>
       ${unmapped.map((u,i) => `
         <div class="assign-row">
           <span class="assign-raw">${u.raw}</span>
@@ -1708,25 +1837,133 @@
           </select>
         </div>`).join('')}
       <button class="assign-apply" onclick="applyAssignments()">Apply &amp; refresh</button>
+      <div style="margin-top:24px;padding-top:24px;border-top:1px dashed var(--card-line);">
+        <div style="font-family:'Roboto Mono';font-size:0.68rem;color:var(--muted);margin-bottom:12px;">⚙️ OR merge two existing roster players:</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="mergeExistingFrom" style="flex:1;min-width:140px;background:var(--pitch-deep);color:var(--floodlight);border:1px solid var(--card-line);border-radius:6px;padding:8px;font-family:'Oswald';font-size:0.9rem;"></select>
+          <select id="mergeExistingTo" style="flex:1;min-width:140px;background:var(--pitch-deep);color:var(--floodlight);border:1px solid var(--card-line);border-radius:6px;padding:8px;font-family:'Oswald';font-size:0.9rem;"></select>
+          <button onclick="mergeExistingFromPanel()" style="background:var(--gold-soft);color:var(--ink);border:none;padding:8px 16px;border-radius:6px;font-family:'Oswald';font-weight:600;font-size:0.85rem;cursor:pointer;">Merge</button>
+        </div>
+      </div>
     `;
+    
+    // Populate merge selects
+    ['mergeExistingFrom','mergeExistingTo'].forEach(id => {
+      const sel = document.getElementById(id);
+      sel.innerHTML = rosterOrder.map(n => `<option value="${n}">${n}</option>`).join('');
+      if(sel.options.length > 1 && id === 'mergeExistingTo') sel.selectedIndex = 1;
+    });
+  }
+  
+  function mergeExistingFromPanel(){
+    const fromName = document.getElementById('mergeExistingFrom').value;
+    const toName = document.getElementById('mergeExistingTo').value;
+    
+    if(!fromName || !toName || fromName === toName){ alert('Select two different players.'); return; }
+    if(!confirm(`Merge all data from ${fromName} into ${toName}? ${fromName} will be removed from the roster.`)) return;
+    
+    // Use existing merge logic
+    renameEverywhere(fromName, toName);
+    rosterOrder = rosterOrder.filter(n => n !== fromName);
+    const addIdx = pendingAdditions.indexOf(fromName);
+    if(addIdx > -1) pendingAdditions.splice(addIdx, 1);
+    if(!pendingRemovals.includes(fromName)) pendingRemovals.push(fromName);
+    
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons);
+    renderAssignPanel([]); // clear panel
+    markDirty();
+    
+    const statusEl = document.getElementById('uploadStatus');
+    statusEl.className = 'upload-sub ok';
+    statusEl.innerHTML = `✅ ${fromName} merged into ${toName}. All stats consolidated. <b style="color:var(--gold);">Save to GitHub to make permanent</b>.`;
+  }
+
+  /* Season edit modal */
+  function openSeasonEditModal(type, season){
+    const season_key = `${type}_${season}`;
+    const modal = document.getElementById('seasonEditModal');
+    document.getElementById('seasonEditType').value = type;
+    document.getElementById('seasonEditSeason').value = season;
+    
+    let data = null;
+    if(type === 'league') data = leagueSeasons.find(s => s.season === season);
+    else if(type === 'knockout') data = knockoutSeasons.find(s => s.season === season);
+    else if(type === 'leagueko') data = leagueKoSeasons.find(s => s.season === season);
+    
+    if(!data) return;
+    
+    document.getElementById('seasonChampion').value = data.champion || '';
+    document.getElementById('seasonRunner').value = data.runner || '';
+    document.getElementById('seasonSecondRunner').value = data.secondRunner || '';
+    document.getElementById('seasonShieldWinner').value = data.shieldWinner || '';
+    document.getElementById('seasonDate').value = data.date || '';
+    document.getElementById('seasonEditModal').classList.add('show');
+  }
+  
+  function closeSeasonEditModal(){ document.getElementById('seasonEditModal').classList.remove('show'); }
+  document.getElementById('seasonEditModal').addEventListener('click', (e) => {
+    if(e.target.id === 'seasonEditModal') closeSeasonEditModal();
+  });
+  
+  function saveSeasonEdit(){
+    const type = document.getElementById('seasonEditType').value;
+    const season = document.getElementById('seasonEditSeason').value;
+    const season_key = `${type}_${season}`;
+    const data = {
+      champion: document.getElementById('seasonChampion').value || null,
+      runner: document.getElementById('seasonRunner').value || null,
+      secondRunner: document.getElementById('seasonSecondRunner').value || null,
+      shieldWinner: document.getElementById('seasonShieldWinner').value || null,
+      date: document.getElementById('seasonDate').value || null,
+    };
+    
+    // Apply to live array
+    let arr = type === 'league' ? leagueSeasons : type === 'knockout' ? knockoutSeasons : leagueKoSeasons;
+    const entry = arr.find(s => s.season === season);
+    if(entry){
+      entry.champion = data.champion;
+      entry.runner = data.runner;
+      entry.secondRunner = data.secondRunner;
+      entry.shieldWinner = data.shieldWinner;
+      entry.date = data.date;
+    }
+    
+    pendingSeasonEdits[season_key] = data;
+    closeSeasonEditModal();
+    renderTable('leagueRows', leagueSeasons);
+    renderKnockoutTable();
+    renderLkoCards();
+    markDirty();
   }
 
   function applyAssignments(){
     const selects = document.querySelectorAll('#assignPanel .assign-select');
     let changed = 0;
     const ghostsToRemove = [];
+    const mergesApplied = {}; // fromName -> toName (for stat consolidation)
+    
     selects.forEach(sel => {
       const raw = sel.getAttribute('data-raw');
       const oldResolved = sel.getAttribute('data-old-resolved');
       const choice = sel.value;
       if(choice !== '__new__'){
         sessionOverrides[raw.toLowerCase()] = choice;
+        mergesApplied[oldResolved] = choice; // track for stat merge
         if(oldResolved && oldResolved !== choice) ghostsToRemove.push(oldResolved);
         changed++;
       }
     });
 
     if(changed && lastRawImport){
+      // Apply merges: consolidate all stats from old player into new player
+      Object.entries(mergesApplied).forEach(([fromName, toName]) => {
+        if(fromName !== toName && rosterOrder.includes(fromName)){
+          renameEverywhere(fromName, toName); // renames everywhere
+          rosterOrder = rosterOrder.filter(n => n !== fromName); // remove old
+          if(!pendingRemovals.includes(fromName)) pendingRemovals.push(fromName);
+        }
+      });
+      
       const { tournaments, names } = parseFixtureFlowBackup(lastRawImport);
       TOURNAMENT_DATA = tournaments;
       buildMatchResults();
@@ -1741,13 +1978,82 @@
       renderSideStats();
       renderKnockoutTable();
       renderHomeCounts();
+      renderTable('leagueRows', leagueSeasons);
     }
 
     document.getElementById('assignPanel').style.display = 'none';
     const statusEl = document.getElementById('uploadStatus');
     statusEl.className = 'upload-sub ok';
-    statusEl.innerHTML = `✅ ${changed} name${changed!==1?'s':''} merged into existing players. Fixtures &amp; leaderboard updated.`;
+    statusEl.innerHTML = `✅ ${changed} name${changed!==1?'s':''} merged. All stats consolidated. <b style="color:var(--gold);">Save to GitHub to make permanent</b> — or reload to lose changes.`;
+    markDirty();
   }
 </script>
+
+<!-- Season edit modal -->
+<div class="modal-overlay" id="seasonEditModal">
+  <div class="modal-content">
+    <div class="modal-title">Edit Season</div>
+    <input type="hidden" id="seasonEditType">
+    <input type="hidden" id="seasonEditSeason">
+    <div class="modal-field">
+      <label>Champion</label>
+      <select id="seasonChampion"></select>
+    </div>
+    <div class="modal-field">
+      <label>Runner-up</label>
+      <select id="seasonRunner"></select>
+    </div>
+    <div class="modal-field">
+      <label>2nd Runner-up</label>
+      <select id="seasonSecondRunner"></select>
+    </div>
+    <div class="modal-field">
+      <label>Shield Winner (League+KO only)</label>
+      <select id="seasonShieldWinner"></select>
+    </div>
+    <div class="modal-field">
+      <label>Date</label>
+      <input type="text" id="seasonDate" placeholder="e.g. 22-08-2026">
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeSeasonEditModal()">Cancel</button>
+      <button class="save" onclick="saveSeasonEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Merge duplicates modal -->
+<div class="modal-overlay" id="mergeDuplicatesModal">
+  <div class="modal-content">
+    <div class="modal-title">🔀 Merge Duplicate Players</div>
+    <div class="modal-field">
+      <label>Merge FROM (will be removed)</label>
+      <select id="mergeFrom"></select>
+    </div>
+    <div class="modal-field">
+      <label>Merge INTO (will keep data)</label>
+      <select id="mergeTo"></select>
+    </div>
+    <p style="color:var(--muted);font-size:0.85rem;margin:16px 0;">All match results, titles, and runner-up finishes from the first player will be consolidated into the second. The first player will be removed from the roster.</p>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeMergeDuplicatesModal()">Cancel</button>
+      <button class="save" onclick="mergeDuplicates()">Merge Players</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Close modal on background click
+  document.getElementById('mergeDuplicatesModal').addEventListener('click', (e) => {
+    if(e.target.id === 'mergeDuplicatesModal') closeMergeDuplicatesModal();
+  });
+  
+  // Populate season edit dropdowns with roster
+  ['seasonChampion','seasonRunner','seasonSecondRunner','seasonShieldWinner'].forEach(id => {
+    const select = document.getElementById(id);
+    select.innerHTML = '<option value="">None</option>' + rosterOrder.map(n => `<option value="${n}">${n}</option>`).join('');
+  });
+</script>
+
 </body>
 </html>
