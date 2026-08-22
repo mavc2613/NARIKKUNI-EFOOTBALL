@@ -1211,7 +1211,7 @@
     });
   }
   renderRoster();
-  const syncReady = autoSyncFixtureFeed().then(() => loadRosterOverrides()); // fixtures first, then apply saved roster edits on top — hoisted, defined further down; profile clicks await this
+  const syncReady = loadRosterOverrides().then(() => autoSyncFixtureFeed()); // load aliases/renames FIRST so parseFixtureFlowBackup can resolve names immediately — no assign panel if aliases exist
 
   /* ---------------- PLAYER PROFILE (opens in a real new tab) ---------------- */
   function getPlayerAchievements(name){
@@ -1571,6 +1571,7 @@
       if(!putRes.ok){ const errBody = await putRes.json().catch(()=>({})); throw new Error(errBody.message || `PUT failed: HTTP ${putRes.status}`); }
 
       pendingRenames = {}; pendingAdditions = []; pendingRemovals = []; pendingSeasonEdits = {}; pendingPhotoUploads = {}; isDirty = false;
+      document.getElementById('ghToken').value = ''; // clear token for security (session-memory only)
       document.getElementById('saveBar').classList.remove('show');
       statusEl.className = 'save-status ok';
       statusEl.textContent = '✅ Saved to GitHub — live for everyone on next page load.';
@@ -1584,7 +1585,7 @@
   async function loadRosterOverrides(){
     try{
       const res = await fetch(`https://raw.githubusercontent.com/mavc2613/fixture-flow/main/roster-overrides.json`, { cache:'no-store' });
-      if(!res.ok) return;
+      if(!res.ok) return; // file doesn't exist yet, fine (404 on first use)
       const data = await res.json();
       
       // Load aliases (name merges from fixture sync)
@@ -1608,14 +1609,16 @@
         }
       });
       
-      // Load roster changes
+      // Load roster changes (renames cascade through all historical data)
       Object.entries(data.renames||{}).forEach(([oldName,newName]) => {
         if(rosterOrder.includes(oldName)) renameEverywhere(oldName, newName);
       });
       (data.additions||[]).forEach(n => { if(n && !rosterOrder.includes(n)) rosterOrder.push(n); });
       (data.removals||[]).forEach(n => { rosterOrder = rosterOrder.filter(x => x !== n); });
-      renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts();
-    }catch(err){ /* no overrides file yet — fine, nothing to apply */ }
+      
+      // Re-render to display loaded photos + roster changes
+      renderRoster();
+    }catch(err){ /* no overrides file yet, or parse error — fine, nothing to apply */ }
   }
 
   /* ---------------- SCROLL REVEAL ---------------- */
