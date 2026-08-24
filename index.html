@@ -1859,6 +1859,7 @@
   }
   
   function mergeExistingFromPanel(){
+    if(!editModeEnabled){ alert('Turn on Edit Mode first (🔒 button) — otherwise this only lasts until you reload the page.'); return; }
     const fromName = document.getElementById('mergeExistingFrom').value;
     const toName = document.getElementById('mergeExistingTo').value;
     
@@ -1940,6 +1941,7 @@
   }
 
   function applyAssignments(){
+    if(!editModeEnabled){ alert('Turn on Edit Mode first (🔒 button) — otherwise this only lasts until you reload the page.'); return; }
     const selects = document.querySelectorAll('#assignPanel .assign-select');
     let changed = 0;
     const ghostsToRemove = [];
