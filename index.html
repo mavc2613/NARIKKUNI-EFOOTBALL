@@ -75,7 +75,15 @@
   ::selection{background:var(--gold); color:var(--ink-fixed);}
   .display{font-family:var(--font-display), sans-serif; text-transform:uppercase; letter-spacing:0.01em;}
   .eyebrow{font-family:'Roboto Mono', monospace; text-transform:uppercase; letter-spacing:0.18em; font-size:0.72rem; color:var(--gold);}
+  .fa-ic{width:1em; height:1em; display:inline-block; fill:currentColor; vertical-align:-0.125em;}
   a{color:inherit; text-decoration:none;}
+
+  /* ---------- Minimal scrollbar (themed) ---------- */
+  *{scrollbar-width:thin; scrollbar-color:var(--card-line) transparent;}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--card-line); border-radius:8px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--gold);}
 
   /* ---------- Layout ---------- */
   .shell{display:flex; min-height:100vh;}
@@ -87,28 +95,40 @@
     overflow-y:auto;
   }
   .brand{display:flex; align-items:center; gap:12px;}
-  .brand-badge{
-    width:42px; height:42px; border-radius:10px;
-    background:linear-gradient(145deg, var(--turf-bright), var(--pitch));
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-display),sans-serif; color:var(--ink-fixed); font-size:1.1rem;
-    border:2px solid var(--gold); flex-shrink:0;
+  .brand-name{
+    font-family:'Oswald',sans-serif; font-size:0.98rem; line-height:1.2; font-weight:600;
+    letter-spacing:0.02em; position:relative; padding-left:14px;
   }
-  .brand-name{font-family:'Oswald',sans-serif; font-size:0.95rem; line-height:1.15; font-weight:600;}
-  .brand-name span{display:block; color:var(--gold);}
+  .brand-name::before{
+    content:""; position:absolute; left:0; top:1px; bottom:1px; width:3px; border-radius:3px;
+    background:linear-gradient(180deg, var(--gold), var(--turf-bright));
+  }
+  .brand-name span{display:block; color:var(--gold); margin-top:1px;}
   .navlinks{display:flex; flex-direction:column; gap:2px;}
   .navlinks a{
     font-family:'Oswald',sans-serif; font-size:0.98rem; font-weight:500; padding:11px 12px;
     border-radius:6px; color:var(--muted); border-left:2px solid transparent;
-    transition:all .15s ease; display:flex; align-items:center; gap:10px;
+    transition:color .2s ease, background-color .2s ease, border-color .2s ease, transform .18s ease;
+    display:flex; align-items:center; gap:10px;
   }
-  .navlinks a .n{font-family:'Roboto Mono',monospace; font-size:0.68rem; color:var(--gold-soft);}
-  .navlinks a:hover, .navlinks a.active{color:var(--floodlight); background:var(--card); border-left:2px solid var(--gold);}
+  .navlinks a .n{font-family:'Roboto Mono',monospace; font-size:0.68rem; color:var(--gold-soft); transition:color .2s ease;}
+  .navlinks a:hover{color:var(--floodlight); background:var(--card); border-left:2px solid var(--gold); transform:translateX(3px);}
+  .navlinks a.active{color:var(--floodlight); background:var(--card); border-left:2px solid var(--gold);}
   .side-stats{display:flex; flex-direction:column; gap:10px; padding-top:16px; border-top:1px dashed var(--card-line);}
   .side-stats .row{display:flex; justify-content:space-between; font-family:'Roboto Mono'; font-size:0.68rem; color:var(--muted);}
   .side-stats .row b{color:var(--gold); font-family:var(--font-display); font-size:0.9rem;}
   .side-foot{margin-top:auto; font-family:'Roboto Mono',monospace; font-size:0.64rem; color:var(--muted); line-height:1.6;}
-  .mobile-bar{display:none;}
+  .side-theme{padding-top:16px; border-top:1px dashed var(--card-line);}
+  .side-theme-label{font-family:'Roboto Mono',monospace; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); margin-bottom:10px;}
+  #menuBtn{
+    display:none; position:fixed; top:18px; left:18px; z-index:90;
+    width:44px; height:44px; align-items:center; justify-content:center;
+    background:var(--pitch-deep); border:1px solid var(--card-line); color:var(--floodlight);
+    border-radius:50%; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.4);
+    transition:border-color .2s ease, color .2s ease, transform .15s ease;
+  }
+  #menuBtn:hover{border-color:var(--gold); color:var(--gold); transform:translateY(-1px);}
+  #menuBtn:active{transform:translateY(0) scale(0.94);}
   main{flex:1; min-width:0;}
   section{padding:96px 64px; position:relative;}
   .section-inner{max-width:1180px; margin:0 auto;}
@@ -156,11 +176,18 @@
   .hero h1 .accent{color:var(--gold); -webkit-text-stroke:2px var(--gold);}
   .hero-sub{position:relative; z-index:2; max-width:540px; margin-top:22px; color:var(--muted); font-size:1.02rem; line-height:1.6;}
   .hero-cta{position:relative; z-index:2; display:flex; gap:14px; margin-top:34px; flex-wrap:wrap;}
-  .btn{font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; padding:14px 28px; border-radius:4px; font-size:0.88rem; border:1px solid var(--card-line); cursor:pointer; transition:all .15s ease;}
-  .btn-primary{background:var(--gold); color:var(--ink-fixed); border-color:var(--gold);}
-  .btn-primary:hover{background:var(--gold-soft);}
+  .btn{
+    font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:0.04em; text-transform:uppercase;
+    padding:14px 28px; border-radius:6px; font-size:0.88rem; border:1px solid var(--card-line); cursor:pointer;
+    position:relative; overflow:hidden;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease, background-color .2s ease, border-color .2s ease, color .2s ease;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:active{transform:translateY(0) scale(0.97);}
+  .btn-primary{background:var(--gold); color:var(--ink-fixed); border-color:var(--gold); box-shadow:0 4px 14px rgba(0,0,0,0.15);}
+  .btn-primary:hover{background:var(--gold-soft); box-shadow:0 8px 22px rgba(0,0,0,0.25);}
   .btn-ghost{color:var(--floodlight); background:transparent;}
-  .btn-ghost:hover{border-color:var(--gold); color:var(--gold);}
+  .btn-ghost:hover{border-color:var(--gold); color:var(--gold); box-shadow:0 6px 18px rgba(0,0,0,0.2);}
 
   .ticker-wrap{background:var(--gold); color:var(--ink-fixed); overflow:hidden; border-bottom:3px solid var(--ink-fixed); position:relative;}
   .ticker{display:flex; white-space:nowrap; animation:ticker 34s linear infinite; font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;}
@@ -175,7 +202,7 @@
 
   .comp-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px;}
   .comp-card{position:relative; border-radius:14px; overflow:hidden; height:260px; border:1px solid var(--card-line); display:flex; align-items:flex-end; padding:28px; cursor:pointer; transition:transform .2s ease, border-color .2s ease;}
-  .comp-card:hover{transform:translateY(-6px); border-color:var(--gold);}
+  .comp-card:hover{transform:translateY(-6px); border-color:var(--gold); box-shadow:0 16px 40px rgba(0,0,0,0.35);}
   .comp-card.league{background:linear-gradient(160deg, #16463a, #0c2e22 65%);}
   .comp-card.knockout{background:linear-gradient(160deg, #3a1f1f, #1a1010 65%);}
   .comp-card.combined{background:linear-gradient(160deg, #2e2a15, #14200f 65%);}
@@ -187,8 +214,8 @@
   .comp-card .count{position:relative; z-index:2; font-family:'Roboto Mono'; font-size:0.7rem; color:var(--muted); margin-top:6px;}
 
   .quick-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px;}
-  .quick-card{background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:30px; display:flex; flex-direction:column; gap:10px; transition:border-color .2s ease;}
-  .quick-card:hover{border-color:var(--turf-bright);}
+  .quick-card{background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:30px; display:flex; flex-direction:column; gap:10px; transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;}
+  .quick-card:hover{border-color:var(--turf-bright); transform:translateY(-4px); box-shadow:0 14px 32px rgba(0,0,0,0.3);}
   .quick-card .icon{font-size:1.6rem;}
   .quick-card h4{font-family:'Oswald'; font-size:1.3rem; color:var(--floodlight);}
   .quick-card p{color:var(--muted); font-size:0.92rem; line-height:1.5;}
@@ -286,12 +313,12 @@
   }
   .accord-head.open .accord-chevron{transform:rotate(180deg);}
   .accord-body{
-    max-height:0; overflow:hidden;
-    transition:max-height .35s cubic-bezier(0.4,0,0.2,1);
+    display:grid; grid-template-rows:0fr; overflow:hidden;
+    transition:grid-template-rows .35s cubic-bezier(0.4,0,0.2,1);
     background:var(--pitch-deep);
   }
-  .accord-body.open{max-height:4000px;}
-  .accord-inner{padding:20px 24px; display:flex; flex-direction:column; gap:18px;}
+  .accord-body.open{grid-template-rows:1fr;}
+  .accord-inner{min-height:0; padding:20px 24px; display:flex; flex-direction:column; gap:18px;}
 
   .round-label{
     font-family:'Roboto Mono'; font-size:0.62rem; letter-spacing:0.14em;
@@ -354,10 +381,12 @@
     font-family:'Oswald'; font-weight:600; font-size:0.92rem; letter-spacing:0.02em;
     padding:11px 22px; border-radius:30px; border:1px solid var(--card-line);
     background:var(--card); color:var(--muted); cursor:pointer;
-    transition:all .15s ease; display:flex; align-items:center; gap:8px;
+    transition:background-color .2s ease, border-color .2s ease, color .2s ease, transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
+    display:flex; align-items:center; gap:8px;
   }
-  .lb-tab:hover{border-color:var(--turf-bright); color:var(--floodlight);}
-  .lb-tab.active{background:var(--gold); border-color:var(--gold); color:var(--ink-fixed);}
+  .lb-tab:hover{border-color:var(--turf-bright); color:var(--floodlight); transform:translateY(-1px);}
+  .lb-tab:active{transform:translateY(0) scale(0.96);}
+  .lb-tab.active{background:var(--gold); border-color:var(--gold); color:var(--ink-fixed); box-shadow:0 4px 14px rgba(0,0,0,0.2);}
   .lb-tab .dot-live{width:7px; height:7px; border-radius:50%; background:#b23a2e; animation:pulse 1.4s ease-in-out infinite;}
   .lb-tab.active .dot-live{background:var(--ink-fixed);}
 
@@ -423,6 +452,17 @@
   .rename-row .go{background:var(--gold); color:var(--ink-fixed);}
   .rename-row .no{background:var(--card-line); color:var(--floodlight);}
 
+  .player-search-row{
+    display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--card-line);
+    border-radius:10px; padding:12px 18px; margin-bottom:24px; max-width:420px; transition:border-color .2s ease;
+  }
+  .player-search-row:focus-within{border-color:var(--gold);}
+  .player-search-row svg{width:0.95rem; height:0.95rem; color:var(--muted); flex-shrink:0;}
+  .player-search-row input{
+    flex:1; background:transparent; border:none; outline:none; color:var(--floodlight);
+    font-family:'Oswald'; font-size:0.95rem;
+  }
+  .player-search-row input::placeholder{color:var(--muted);}
   .add-player-row{display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;}
   .add-player-row input{
     flex:1; min-width:200px; font-family:'Oswald'; font-size:0.95rem; background:var(--card); color:var(--floodlight);
@@ -472,7 +512,7 @@
   .photo-upload-overlay{position:absolute; inset:0; background:rgba(0,0,0,0.4); border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s ease; font-size:1rem;}
   .photo-upload:hover .photo-upload-overlay{opacity:1;}
   
-  .player-card:hover{transform:translateY(-5px); border-color:var(--gold);}
+  .player-card:hover{transform:translateY(-5px); border-color:var(--gold); box-shadow:0 14px 32px rgba(0,0,0,0.3);}
   .player-photo{height:170px; position:relative; overflow:hidden; background:linear-gradient(145deg, var(--pitch), var(--pitch-deep)); display:flex; align-items:center; justify-content:center;}
   .player-photo .init{font-family:var(--font-display); font-size:3.6rem; color:rgba(255,255,255,0.08);}
   .player-photo .num{position:absolute; top:12px; right:14px; font-family:var(--font-display); font-size:1.5rem; color:var(--gold); opacity:0.8;}
@@ -482,16 +522,46 @@
   .player-stats{display:flex; gap:14px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--card-line);}
   .player-stats div{font-family:'Roboto Mono'; font-size:0.64rem; color:var(--muted);}
   .player-stats div b{display:block; font-family:var(--font-display); font-size:1.05rem; color:var(--floodlight);}
+  .form-dots{display:flex; gap:4px; margin-top:10px;}
+  .form-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .form-dot.form-W{background:var(--turf-bright);}
+  .form-dot.form-D{background:var(--muted);}
+  .form-dot.form-L{background:#b23a2e;}
+  .streak-badge{
+    display:inline-flex; align-items:center; gap:8px; font-family:'Roboto Mono'; font-size:0.72rem;
+    color:var(--gold); background:rgba(226,166,59,0.1); border:1px solid var(--gold); border-radius:30px;
+    padding:7px 14px; margin-top:14px;
+  }
+  .streak-badge svg{width:0.85em; height:0.85em;}
 
   /* ---------- ANALYTICS ---------- */
-  .analytics-panel{border:1px solid var(--card-line); border-radius:16px; overflow:hidden; background:var(--card);}
-  .analytics-top{padding:60px 40px; text-align:center; background:radial-gradient(circle at 30% 20%, rgba(111,201,142,0.15), transparent 55%), radial-gradient(circle at 75% 70%, rgba(226,166,59,0.12), transparent 55%); border-bottom:1px dashed var(--card-line);}
-  .pulse-dot{width:10px; height:10px; border-radius:50%; background:var(--turf-bright); display:inline-block; margin-right:8px; animation:pulse 1.6s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.3;}}
-  .analytics-body{padding:40px; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
-  .ghost-stat{border:1px dashed var(--card-line); border-radius:10px; padding:22px; text-align:center;}
-  .ghost-stat .lbl{font-family:'Roboto Mono'; font-size:0.66rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase;}
-  .ghost-stat .val{font-family:var(--font-display); font-size:1.8rem; color:var(--card-line); margin-top:8px;}
+  .h2h-panel{border:1px solid var(--card-line); border-radius:16px; background:var(--card); padding:32px; margin-bottom:32px;}
+  .h2h-pickers{display:flex; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap;}
+  .h2h-pickers select{
+    flex:1; min-width:160px; background:var(--pitch-deep); color:var(--floodlight); border:1px solid var(--card-line);
+    border-radius:8px; padding:12px 14px; font-family:'Oswald'; font-size:1rem; cursor:pointer; transition:border-color .2s ease;
+  }
+  .h2h-pickers select:hover, .h2h-pickers select:focus{border-color:var(--gold);}
+  .h2h-vs{font-family:var(--font-display); color:var(--gold); font-size:0.9rem; flex-shrink:0;}
+  .h2h-empty{color:var(--muted); font-family:'Roboto Mono'; font-size:0.85rem; text-align:center; padding:20px 0;}
+  .h2h-score{display:flex; align-items:center; justify-content:center; gap:28px; padding:12px 0 24px; flex-wrap:wrap;}
+  .h2h-side{text-align:center;}
+  .h2h-name{font-family:'Oswald'; font-weight:600; font-size:0.92rem; color:var(--muted); margin-bottom:6px; max-width:160px;}
+  .h2h-n{font-family:var(--font-display); font-size:3rem; color:var(--gold); line-height:1;}
+  .h2h-mid{text-align:center; color:var(--muted); font-family:'Roboto Mono'; font-size:0.7rem;}
+  .h2h-mid .h2h-draws{margin-bottom:4px;}
+  .h2h-meetings{border-top:1px dashed var(--card-line); padding-top:16px; display:flex; flex-direction:column; gap:10px;}
+  .h2h-meeting{display:flex; justify-content:space-between; gap:12px; font-size:0.85rem; flex-wrap:wrap;}
+  .h2h-meeting span{color:var(--muted); font-family:'Roboto Mono'; font-size:0.68rem;}
+  .h2h-meeting b{font-family:'Oswald'; font-weight:600; color:var(--floodlight);}
+  .awards-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .award-card{border:1px solid var(--card-line); border-radius:14px; background:var(--card); padding:26px; text-align:center; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;}
+  .award-card:hover{transform:translateY(-4px); border-color:var(--gold); box-shadow:0 14px 32px rgba(0,0,0,0.3);}
+  .award-ic{width:1.6rem; height:1.6rem; color:var(--gold); margin-bottom:10px;}
+  .award-label{font-family:'Roboto Mono'; font-size:0.64rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase;}
+  .award-name{font-family:var(--font-display); font-size:1.4rem; color:var(--floodlight); margin-top:8px;}
+  .award-detail{font-family:'Roboto Mono'; font-size:0.72rem; color:var(--muted); margin-top:4px;}
 
   /* ---------- ABOUT ---------- */
   .about-grid{display:grid; grid-template-columns:1fr 1fr; gap:36px; align-items:stretch;}
@@ -504,6 +574,11 @@
   .info-row p{color:var(--muted); font-size:0.9rem; line-height:1.55;}
 
   footer{padding:40px 64px; border-top:1px solid var(--card-line); display:flex; justify-content:space-between; align-items:center; font-family:'Roboto Mono'; font-size:0.72rem; color:var(--muted); flex-wrap:wrap; gap:12px;}
+  .footer-credits{width:100%; display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap; padding-top:20px; margin-top:8px; border-top:1px dashed var(--card-line);}
+  .footer-credits a, .footer-credit-tag{display:inline-flex; align-items:center; gap:7px; font-size:0.68rem; color:var(--muted);}
+  .footer-credits a{transition:color .2s ease;}
+  .footer-credits a:hover{color:var(--gold);}
+  .footer-credits svg{width:0.85em; height:0.85em;}
 
   .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease;}
   .reveal.in{opacity:1; transform:translateY(0);}
@@ -525,10 +600,9 @@
     .accord-inner{padding:14px 16px;}
     section{padding:64px 26px;}
     .hero{padding:36px;}
-    nav.side{position:fixed; left:0; top:0; transform:translateX(-100%); transition:transform .25s ease; box-shadow:20px 0 40px rgba(0,0,0,0.4);}
+    nav.side{position:fixed; left:0; top:0; transform:translateX(-100%); transition:transform .35s cubic-bezier(.16,1,.3,1); box-shadow:20px 0 40px rgba(0,0,0,0.4);}
     nav.side.open{transform:translateX(0);}
-    .mobile-bar{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; background:var(--pitch-deep); border-bottom:1px solid var(--card-line); position:sticky; top:0; z-index:60;}
-    .mobile-bar button{background:none; border:1px solid var(--card-line); color:var(--floodlight); padding:8px 12px; border-radius:6px; font-size:1rem;}
+    #menuBtn{display:flex;}
   }
   @media (max-width:600px){ .roster-grid{grid-template-columns:1fr;} }
 
@@ -547,42 +621,39 @@
     transition:background-color .2s ease, color .2s ease, border-color .2s ease;
   }
   .theme-switcher{
-    position:fixed; top:18px; right:210px; z-index:80;
-    display:flex; gap:2px; padding:4px; border-radius:30px;
+    display:flex; justify-content:space-between; gap:4px; padding:4px; border-radius:30px;
     border:1px solid var(--card-line); background:var(--pitch-deep);
-    box-shadow:0 4px 16px rgba(0,0,0,0.4);
   }
   .theme-switcher button{
-    width:44px; height:44px; border-radius:50%; border:none; background:transparent;
+    flex:1; aspect-ratio:1; border-radius:50%; border:none; background:transparent;
     font-size:0.95rem; font-family:inherit; padding:0; display:flex; align-items:center; justify-content:center;
-    color:var(--muted); cursor:pointer; transition:all .15s ease;
+    color:var(--muted); cursor:pointer; transition:background-color .2s ease, color .2s ease, transform .15s ease;
   }
-  .theme-switcher button:hover{color:var(--gold);}
+  .theme-switcher button:hover{color:var(--gold); transform:translateY(-1px);}
+  .theme-switcher button:active{transform:translateY(0) scale(0.92);}
   .theme-switcher button.active{background:var(--gold); color:var(--ink-fixed);}
-  @media (max-width:980px){ .theme-switcher{top:auto; bottom:80px; right:18px;} }
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:0.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:0.01ms !important; scroll-behavior:auto !important;
+    }
+  }
 </style>
 </head>
 <body>
+<svg style="display:none" aria-hidden="true"><symbol id="fa-trophy" viewBox="0 0 512 512"><path d="M144.3 0l224 0c26.5 0 48.1 21.8 47.1 48.2-.2 5.3-.4 10.6-.7 15.8l49.6 0c26.1 0 49.1 21.6 47.1 49.8-7.5 103.7-60.5 160.7-118 190.5-15.8 8.2-31.9 14.3-47.2 18.8-20.2 28.6-41.2 43.7-57.9 51.8l0 73.1 64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-192 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0 0-73.1c-16-7.7-35.9-22-55.3-48.3-18.4-4.8-38.4-12.1-57.9-23.1-54.1-30.3-102.9-87.4-109.9-189.9-1.9-28.1 21-49.7 47.1-49.7l49.6 0c-.3-5.2-.5-10.4-.7-15.8-1-26.5 20.6-48.2 47.1-48.2zM101.5 112l-52.4 0c6.2 84.7 45.1 127.1 85.2 149.6-14.4-37.3-26.3-86-32.8-149.6zM380 256.8c40.5-23.8 77.1-66.1 83.3-144.8L411 112c-6.2 60.9-17.4 108.2-31 144.8z"/></symbol><symbol id="fa-lock" viewBox="0 0 384 512"><path d="M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z"/></symbol><symbol id="fa-lock-open" viewBox="0 0 576 512"><path d="M384 96c0-35.3 28.7-64 64-64s64 28.7 64 64l0 32c0 17.7 14.3 32 32 32s32-14.3 32-32l0-32c0-70.7-57.3-128-128-128S320 25.3 320 96l0 64-160 0c-35.3 0-64 28.7-64 64l0 224c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-224c0-35.3-28.7-64-64-64l-32 0 0-64z"/></symbol><symbol id="fa-shield-halved" viewBox="0 0 512 512"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.8 82.8c22 9.3 38.4 31 38.3 57.2-.5 99.2-41.3 280.7-213.6 363.2-16.7 8-36.1 8-52.8 0-172.4-82.5-213.1-264-213.6-363.2-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.9 1 251.4 0 256 0zm0 66.8l0 378.1c138-66.8 175.1-214.8 176-303.4l-176-74.6 0 0z"/></symbol><symbol id="fa-pen" viewBox="0 0 512 512"><path d="M352.9 21.2L308 66.1 445.9 204 490.8 159.1C504.4 145.6 512 127.2 512 108s-7.6-37.6-21.2-51.1L455.1 21.2C441.6 7.6 423.2 0 404 0s-37.6 7.6-51.1 21.2zM274.1 100L58.9 315.1c-10.7 10.7-18.5 24.1-22.6 38.7L.9 481.6c-2.3 8.3 0 17.3 6.2 23.4s15.1 8.5 23.4 6.2l127.8-35.5c14.6-4.1 27.9-11.8 38.7-22.6L412 237.9 274.1 100z"/></symbol><symbol id="fa-medal" viewBox="0 0 448 512"><path d="M224.3 128L139.7-12.9c-6.5-10.8-20.1-14.7-31.3-9.1L21.8 21.3C9.9 27.2 5.1 41.6 11 53.5L80.6 192.6c-30.1 33.9-48.3 78.5-48.3 127.4 0 106 86 192 192 192s192-86 192-192c0-48.9-18.3-93.5-48.3-127.4L437.6 53.5c5.9-11.9 1.1-26.3-10.7-32.2L340.2-22.1c-11.2-5.6-24.9-1.6-31.3 9.1L224.3 128zm30.8 142.5c1.4 2.8 4 4.7 7 5.1l50.1 7.3c7.7 1.1 10.7 10.5 5.2 16l-36.3 35.4c-2.2 2.2-3.2 5.2-2.7 8.3l8.6 49.9c1.3 7.6-6.7 13.5-13.6 9.9l-44.8-23.6c-2.7-1.4-6-1.4-8.7 0l-44.8 23.6c-6.9 3.6-14.9-2.2-13.6-9.9l8.6-49.9c.5-3-.5-6.1-2.7-8.3l-36.3-35.4c-5.6-5.4-2.5-14.8 5.2-16l50.1-7.3c3-.4 5.7-2.4 7-5.1l22.4-45.4c3.4-7 13.3-7 16.8 0l22.4 45.4z"/></symbol><symbol id="fa-circle-check" viewBox="0 0 512 512"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></symbol><symbol id="fa-up-right-from-square" viewBox="0 0 512 512"><path d="M290.4 19.8C295.4 7.8 307.1 0 320 0L480 0c17.7 0 32 14.3 32 32l0 160c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9L400 157.3 246.6 310.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L354.7 112 297.4 54.6c-9.2-9.2-11.9-22.9-6.9-34.9zM0 176c0-44.2 35.8-80 80-80l80 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-80 0c-8.8 0-16 7.2-16 16l0 256c0 8.8 7.2 16 16 16l256 0c8.8 0 16-7.2 16-16l0-80c0-17.7 14.3-32 32-32s32 14.3 32 32l0 80c0 44.2-35.8 80-80 80L80 512c-44.2 0-80-35.8-80-80L0 176z"/></symbol><symbol id="fa-trash" viewBox="0 0 448 512"><path d="M136.7 5.9L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-8.7-26.1C306.9-7.2 294.7-16 280.9-16L167.1-16c-13.8 0-26 8.8-30.4 21.9zM416 144L32 144 53.1 467.1C54.7 492.4 75.7 512 101 512L347 512c25.3 0 46.3-19.6 47.9-44.9L416 144z"/></symbol><symbol id="fa-triangle-exclamation" viewBox="0 0 512 512"><path d="M256 0c14.7 0 28.2 8.1 35.2 21l216 400c6.7 12.4 6.4 27.4-.8 39.5S486.1 480 472 480L40 480c-14.1 0-27.2-7.4-34.4-19.5s-7.5-27.1-.8-39.5l216-400c7-12.9 20.5-21 35.2-21zm0 352a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm0-192c-18.2 0-32.7 15.5-31.4 33.7l7.4 104c.9 12.5 11.4 22.3 23.9 22.3 12.6 0 23-9.7 23.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z"/></symbol><symbol id="fa-futbol" viewBox="0 0 512 512"><path d="M417.3 360.1l-71.6-4.8c-5.2-.3-10.3 1.1-14.5 4.2s-7.2 7.4-8.4 12.5l-17.6 69.6C289.5 445.8 273 448 256 448s-33.5-2.2-49.2-6.4L189.2 372c-1.3-5-4.3-9.4-8.4-12.5s-9.3-4.5-14.5-4.2l-71.6 4.8c-17.6-27.2-28.5-59.2-30.4-93.6L125 228.3c4.4-2.8 7.6-7 9.2-11.9s1.4-10.2-.5-15l-26.7-66.6C128 109.2 155.3 89 186.7 76.9l55.2 46c4 3.3 9 5.1 14.1 5.1s10.2-1.8 14.1-5.1l55.2-46c31.3 12.1 58.7 32.3 79.6 57.9l-26.7 66.6c-1.9 4.8-2.1 10.1-.5 15s4.9 9.1 9.2 11.9l60.7 38.2c-1.9 34.4-12.8 66.4-30.4 93.6zM256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm14.1-325.7c-8.4-6.1-19.8-6.1-28.2 0L194 221c-8.4 6.1-11.9 16.9-8.7 26.8l18.3 56.3c3.2 9.9 12.4 16.6 22.8 16.6l59.2 0c10.4 0 19.6-6.7 22.8-16.6l18.3-56.3c3.2-9.9-.3-20.7-8.7-26.8l-47.9-34.8z"/></symbol><symbol id="fa-fire" viewBox="0 0 448 512"><path d="M160.5-26.4c9.3-7.8 23-7.5 31.9 .9 12.3 11.6 23.3 24.4 33.9 37.4 13.5 16.5 29.7 38.3 45.3 64.2 5.2-6.8 10-12.8 14.2-17.9 1.1-1.3 2.2-2.7 3.3-4.1 7.9-9.8 17.7-22.1 30.8-22.1 13.4 0 22.8 11.9 30.8 22.1 1.3 1.7 2.6 3.3 3.9 4.8 10.3 12.4 24 30.3 37.7 52.4 27.2 43.9 55.6 106.4 55.6 176.6 0 123.7-100.3 224-224 224S0 411.7 0 288c0-91.1 41.1-170 80.5-225 19.9-27.7 39.7-49.9 54.6-65.1 8.2-8.4 16.5-16.7 25.5-24.2zM225.7 416c25.3 0 47.7-7 68.8-21 42.1-29.4 53.4-88.2 28.1-134.4-4.5-9-16-9.6-22.5-2l-25.2 29.3c-6.6 7.6-18.5 7.4-24.7-.5-17.3-22.1-49.1-62.4-65.3-83-5.4-6.9-15.2-8-21.5-1.9-18.3 17.8-51.5 56.8-51.5 104.3 0 68.6 50.6 109.2 113.7 109.2z"/></symbol><symbol id="fa-square" viewBox="0 0 448 512"><path d="M64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32z"/></symbol><symbol id="fa-chart-column" viewBox="0 0 512 512"><path d="M32 32c17.7 0 32 14.3 32 32l0 336c0 8.8 7.2 16 16 16l400 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L80 480c-44.2 0-80-35.8-80-80L0 64C0 46.3 14.3 32 32 32zM144 224c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32zm144-64l0 160c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-160c0-17.7 14.3-32 32-32s32 14.3 32 32zm80 32c17.7 0 32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96c0-17.7 14.3-32 32-32zM512 96l0 224c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-224c0-17.7 14.3-32 32-32s32 14.3 32 32z"/></symbol><symbol id="fa-arrows-rotate" viewBox="0 0 512 512"><path d="M65.9 228.5c13.3-93 93.4-164.5 190.1-164.5 53 0 101 21.5 135.8 56.2 .2 .2 .4 .4 .6 .6l7.6 7.2-47.9 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l128 0c17.7 0 32-14.3 32-32l0-128c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 53.4-11.3-10.7C390.5 28.6 326.5 0 256 0 127 0 20.3 95.4 2.6 219.5 .1 237 12.2 253.2 29.7 255.7s33.7-9.7 36.2-27.1zm443.5 64c2.5-17.5-9.7-33.7-27.1-36.2s-33.7 9.7-36.2 27.1c-13.3 93-93.4 164.5-190.1 164.5-53 0-101-21.5-135.8-56.2-.2-.2-.4-.4-.6-.6l-7.6-7.2 47.9 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 320c-8.5 0-16.7 3.4-22.7 9.5S-.1 343.7 0 352.3l1 127c.1 17.7 14.6 31.9 32.3 31.7S65.2 496.4 65 478.7l-.4-51.5 10.7 10.1c46.3 46.1 110.2 74.7 180.7 74.7 129 0 235.7-95.4 253.4-219.5z"/></symbol><symbol id="fa-shuffle" viewBox="0 0 512 512"><path d="M403.8 34.4c12-5 25.7-2.2 34.9 6.9l64 64c6 6 9.4 14.1 9.4 22.6s-3.4 16.6-9.4 22.6l-64 64c-9.2 9.2-22.9 11.9-34.9 6.9S384 204.9 384 192l0-32-32 0c-10.1 0-19.6 4.7-25.6 12.8l-32.4 43.2-40-53.3 21.2-28.3C293.3 110.2 321.8 96 352 96l32 0 0-32c0-12.9 7.8-24.6 19.8-29.6zM154 296l40 53.3-21.2 28.3C154.7 401.8 126.2 416 96 416l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0c10.1 0 19.6-4.7 25.6-12.8L154 296zM438.6 470.6c-9.2 9.2-22.9 11.9-34.9 6.9S384 460.9 384 448l0-32-32 0c-30.2 0-58.7-14.2-76.8-38.4L121.6 172.8c-6-8.1-15.5-12.8-25.6-12.8l-64 0c-17.7 0-32-14.3-32-32S14.3 96 32 96l64 0c30.2 0 58.7 14.2 76.8 38.4L326.4 339.2c6 8.1 15.5 12.8 25.6 12.8l32 0 0-32c0-12.9 7.8-24.6 19.8-29.6s25.7-2.2 34.9 6.9l64 64c6 6 9.4 14.1 9.4 22.6s-3.4 16.6-9.4 22.6l-64 64z"/></symbol><symbol id="fa-hand-fist" viewBox="0 0 384 512"><path d="M160 0c17.7 0 32 14.3 32 32l0 112-64 0 0-112c0-17.7 14.3-32 32-32zM32 64c0-17.7 14.3-32 32-32S96 46.3 96 64l0 80-64 0 0-80zm192 0c0-17.7 14.3-32 32-32s32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96zm96 64c0-17.7 14.3-32 32-32s32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64zm-96 88l0-.6c9.4 5.4 20.3 8.6 32 8.6 13.2 0 25.4-4 35.6-10.8 8.7 24.9 32.5 42.8 60.4 42.8 11.7 0 22.6-3.1 32-8.6l0 8.6c0 52.3-25.1 98.8-64 128l0 96c0 17.7-14.3 32-32 32l-160 0c-17.7 0-32-14.3-32-32l0-78.4c-17.3-7.9-33.2-18.8-46.9-32.5L37.5 357.5C13.5 333.5 0 300.9 0 267l0-27c0-35.3 28.7-64 64-64l88 0c22.1 0 40 17.9 40 40s-17.9 40-40 40l-56 0c-8.8 0-16 7.2-16 16s7.2 16 16 16l56 0c39.8 0 72-32.2 72-72z"/></symbol><symbol id="fa-camera" viewBox="0 0 512 512"><path d="M149.1 64.8L138.7 96 64 96C28.7 96 0 124.7 0 160L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64l-74.7 0-10.4-31.2C356.4 45.2 338.1 32 317.4 32L194.6 32c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/></symbol><symbol id="fa-user" viewBox="0 0 448 512"><path d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l356.6 0c16.4 0 29.7-13.3 29.7-29.7 0-98.5-79.8-178.3-178.3-178.3l-59.4 0z"/></symbol><symbol id="fa-calendar-days" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32zM64 240l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM64 368l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zm112 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16z"/></symbol><symbol id="fa-users" viewBox="0 0 640 512"><path d="M320 16a104 104 0 1 1 0 208 104 104 0 1 1 0-208zM96 88a72 72 0 1 1 0 144 72 72 0 1 1 0-144zM0 416c0-70.7 57.3-128 128-128 12.8 0 25.2 1.9 36.9 5.4-32.9 36.8-52.9 85.4-52.9 138.6l0 16c0 11.4 2.4 22.2 6.7 32L32 480c-17.7 0-32-14.3-32-32l0-32zm521.3 64c4.3-9.8 6.7-20.6 6.7-32l0-16c0-53.2-20-101.8-52.9-138.6 11.7-3.5 24.1-5.4 36.9-5.4 70.7 0 128 57.3 128 128l0 32c0 17.7-14.3 32-32 32l-86.7 0zM472 160a72 72 0 1 1 144 0 72 72 0 1 1 -144 0zM160 432c0-88.4 71.6-160 160-160s160 71.6 160 160l0 16c0 17.7-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32l0-16z"/></symbol><symbol id="fa-hourglass-half" viewBox="0 0 384 512"><path d="M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l0 11c0 42.4 16.9 83.1 46.9 113.1l67.9 67.9-67.9 67.9C48.9 353.9 32 394.6 32 437l0 11c-17.7 0-32 14.3-32 32s14.3 32 32 32l320 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-11c0-42.4-16.9-83.1-46.9-113.1l-67.9-67.9 67.9-67.9c30-30 46.9-70.7 46.9-113.1l0-11c17.7 0 32-14.3 32-32S369.7 0 352 0L32 0zM96 75l0-11 192 0 0 11c0 19-5.6 37.4-16 53L112 128c-10.3-15.6-16-34-16-53zm16 309c3.5-5.3 7.6-10.3 12.1-14.9l67.9-67.9 67.9 67.9c4.6 4.6 8.6 9.6 12.2 14.9L112 384z"/></symbol><symbol id="fa-location-dot" viewBox="0 0 384 512"><path d="M0 188.6C0 84.4 86 0 192 0S384 84.4 384 188.6c0 119.3-120.2 262.3-170.4 316.8-11.8 12.8-31.5 12.8-43.3 0-50.2-54.5-170.4-197.5-170.4-316.8zM192 256a64 64 0 1 0 0-128 64 64 0 1 0 0 128z"/></symbol><symbol id="fa-gamepad" viewBox="0 0 640 512"><path d="M448 64c106 0 192 86 192 192S554 448 448 448l-256 0C86 448 0 362 0 256S86 64 192 64l256 0zM192 176c-13.3 0-24 10.7-24 24l0 32-32 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l32 0 0 32c0 13.3 10.7 24 24 24s24-10.7 24-24l0-32 32 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-32 0 0-32c0-13.3-10.7-24-24-24zm240 96a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm64-96a32 32 0 1 0 0 64 32 32 0 1 0 0-64z"/></symbol><symbol id="fa-magnifying-glass" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></symbol><symbol id="fa-circle" viewBox="0 0 512 512"><path d="M0 256a256 256 0 1 1 512 0 256 256 0 1 1 -512 0z"/></symbol><symbol id="fa-gear" viewBox="0 0 512 512"><path d="M195.1 9.5C198.1-5.3 211.2-16 226.4-16l59.8 0c15.2 0 28.3 10.7 31.3 25.5L332 79.5c14.1 6 27.3 13.7 39.3 22.8l67.8-22.5c14.4-4.8 30.2 1.2 37.8 14.4l29.9 51.8c7.6 13.2 4.9 29.8-6.5 39.9L447 233.3c.9 7.4 1.3 15 1.3 22.7s-.5 15.3-1.3 22.7l53.4 47.5c11.4 10.1 14 26.8 6.5 39.9l-29.9 51.8c-7.6 13.1-23.4 19.2-37.8 14.4l-67.8-22.5c-12.1 9.1-25.3 16.7-39.3 22.8l-14.4 69.9c-3.1 14.9-16.2 25.5-31.3 25.5l-59.8 0c-15.2 0-28.3-10.7-31.3-25.5l-14.4-69.9c-14.1-6-27.2-13.7-39.3-22.8L73.5 432.3c-14.4 4.8-30.2-1.2-37.8-14.4L5.8 366.1c-7.6-13.2-4.9-29.8 6.5-39.9l53.4-47.5c-.9-7.4-1.3-15-1.3-22.7s.5-15.3 1.3-22.7L12.3 185.8c-11.4-10.1-14-26.8-6.5-39.9L35.7 94.1c7.6-13.2 23.4-19.2 37.8-14.4l67.8 22.5c12.1-9.1 25.3-16.7 39.3-22.8L195.1 9.5zM256.3 336a80 80 0 1 0 -.6-160 80 80 0 1 0 .6 160z"/></symbol><symbol id="fa-bars" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"/></symbol><symbol id="fa-xmark" viewBox="0 0 384 512"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></symbol><symbol id="fa-instagram" viewBox="0 0 448 512"><path d="M224.3 141a115 115 0 1 0 -.6 230 115 115 0 1 0 .6-230zm-.6 40.4a74.6 74.6 0 1 1 .6 149.2 74.6 74.6 0 1 1 -.6-149.2zm93.4-45.1a26.8 26.8 0 1 1 53.6 0 26.8 26.8 0 1 1 -53.6 0zm129.7 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM399 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/></symbol><symbol id="fa-envelope" viewBox="0 0 512 512"><path d="M48 64c-26.5 0-48 21.5-48 48 0 15.1 7.1 29.3 19.2 38.4l208 156c17.1 12.8 40.5 12.8 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48L48 64zM0 196L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-188-198.4 148.8c-34.1 25.6-81.1 25.6-115.2 0L0 196z"/></symbol><symbol id="fa-code" viewBox="0 0 576 512"><path d="M360.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm64.6 136.1c-12.5 12.5-12.5 32.8 0 45.3l73.4 73.4-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm-274.7 0c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 150.6 182.6c12.5-12.5 12.5-32.8 0-45.3z"/></symbol><symbol id="fa-palette" viewBox="0 0 512 512"><path d="M512 256c0 .9 0 1.8 0 2.7-.4 36.5-33.6 61.3-70.1 61.3L344 320c-26.5 0-48 21.5-48 48 0 3.4 .4 6.7 1 9.9 2.1 10.2 6.5 20 10.8 29.9 6.1 13.8 12.1 27.5 12.1 42 0 31.8-21.6 60.7-53.4 62-3.5 .1-7 .2-10.6 .2-141.4 0-256-114.6-256-256S114.6 0 256 0 512 114.6 512 256zM128 288a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm0-96a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM288 96a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm96 96a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></symbol><symbol id="fa-chevron-down" viewBox="0 0 448 512"><path d="M201.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 338.7 54.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></symbol></svg>
 
-<button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">🔒 Edit Mode</button>
-<div class="theme-switcher" id="themeSwitcher">
-  <button class="active" data-theme-value="normal" onclick="setTheme('normal')" title="Normal theme" aria-label="Switch to Normal theme" aria-pressed="true">🏟️</button>
-  <button data-theme-value="light" onclick="setTheme('light')" title="Esports theme" aria-label="Switch to Esports Fire theme" aria-pressed="false">🔥</button>
-  <button data-theme-value="dark" onclick="setTheme('dark')" title="Black &amp; White theme" aria-label="Switch to Black &amp; White theme" aria-pressed="false">⬛</button>
-</div>
 
-<div class="mobile-bar">
-  <div class="brand">
-    <div class="brand-badge">EN</div>
-    <div class="brand-name">EFOOTBALL<span>NARIKKUNI</span></div>
-  </div>
-  <button id="menuBtn">☰ Menu</button>
-</div>
+<button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()"><svg class="fa-ic"><use href="#fa-lock"/></svg> Edit Mode</button>
+<button id="menuBtn" aria-label="Open menu" aria-expanded="false">
+  <svg class="fa-ic" id="menuBtnIconBars"><use href="#fa-bars"/></svg>
+  <svg class="fa-ic" id="menuBtnIconClose" style="display:none;"><use href="#fa-xmark"/></svg>
+</button>
 
 <div class="shell">
   <nav class="side" id="sideNav">
     <div class="brand">
-      <div class="brand-badge">EN</div>
       <div class="brand-name">EFOOTBALL<span>NARIKKUNI</span></div>
     </div>
     <div class="navlinks">
@@ -597,6 +668,14 @@
       <a href="#about" class="nlink"><span class="n">09</span> About</a>
     </div>
     <div class="side-stats" id="sideStats"></div>
+    <div class="side-theme">
+      <div class="side-theme-label">Theme</div>
+      <div class="theme-switcher" id="themeSwitcher">
+        <button class="active" data-theme-value="normal" onclick="setTheme('normal')" title="Normal theme" aria-label="Switch to Normal theme" aria-pressed="true"><svg class="fa-ic"><use href="#fa-futbol"/></svg></button>
+        <button data-theme-value="light" onclick="setTheme('light')" title="Esports theme" aria-label="Switch to Esports Fire theme" aria-pressed="false"><svg class="fa-ic"><use href="#fa-fire"/></svg></button>
+        <button data-theme-value="dark" onclick="setTheme('dark')" title="Black &amp; White theme" aria-label="Switch to Black &amp; White theme" aria-pressed="false"><svg class="fa-ic"><use href="#fa-square"/></svg></button>
+      </div>
+    </div>
     <div class="side-foot">NARIKKUNI, KERALA<br>UPDATED AUG 2026</div>
   </nav>
 
@@ -620,11 +699,11 @@
       <div class="section-inner" style="padding-top:96px;">
         <div class="live-grid">
           <a href="#fixtures" class="live-card reveal">
-            <div class="live-card-head"><h4>📅 Fixtures</h4><span class="live-tag" id="fixturesTag">Not connected</span></div>
+            <div class="live-card-head"><h4><svg class="fa-ic"><use href="#fa-calendar-days"/></svg> Fixtures</h4><span class="live-tag" id="fixturesTag">Not connected</span></div>
             <div class="live-card-body"><p id="fixturesPreview">Upcoming and live matches will show up here once the fixture feed is connected.</p></div>
           </a>
           <a href="#leaderboard" class="live-card reveal">
-            <div class="live-card-head"><h4>🏆 Leaderboard</h4><span class="live-tag" id="leaderboardTag">Pre-season</span></div>
+            <div class="live-card-head"><h4><svg class="fa-ic"><use href="#fa-trophy"/></svg> Leaderboard</h4><span class="live-tag" id="leaderboardTag">Pre-season</span></div>
             <div class="live-card-body"><p id="leaderboardPreview">Every player starts at zero. Standings update automatically as match results come in.</p></div>
           </a>
         </div>
@@ -634,27 +713,27 @@
         <p class="sec-desc reveal">The league decides the season's best over the long run. The knockout decides who's got nerve when it's win-or-go-home. The Shield combines both into one overall season standing.</p>
         <div class="comp-grid">
           <a href="#league" class="comp-card league reveal">
-            <span class="arrow">↗</span>
+            <span class="arrow"><svg class="fa-ic"><use href="#fa-up-right-from-square"/></svg></span>
             <div><div class="tag">Round robin</div><h3>League</h3><div class="count" id="leagueCount"></div></div>
           </a>
           <a href="#knockout" class="comp-card knockout reveal">
-            <span class="arrow">↗</span>
+            <span class="arrow"><svg class="fa-ic"><use href="#fa-up-right-from-square"/></svg></span>
             <div><div class="tag">Single elimination</div><h3>Knockout</h3><div class="count" id="knockoutCount"></div></div>
           </a>
           <a href="#leagueko" class="comp-card combined reveal">
-            <span class="arrow">↗</span>
+            <span class="arrow"><svg class="fa-ic"><use href="#fa-up-right-from-square"/></svg></span>
             <div><div class="tag">Combined standing</div><h3>League + KO</h3><div class="count" id="leagueKoCount"></div></div>
           </a>
         </div>
 
         <div class="quick-grid">
           <a href="#players" class="quick-card reveal">
-            <div class="icon">👥</div>
+            <div class="icon"><svg class="fa-ic"><use href="#fa-users"/></svg></div>
             <h4>Players</h4>
             <p id="rosterBlurb">The full squad — profiles, titles, and runner-up finishes.</p>
           </a>
           <a href="#analytics" class="quick-card reveal">
-            <div class="icon">📊</div>
+            <div class="icon"><svg class="fa-ic"><use href="#fa-chart-column"/></svg></div>
             <h4>Analytics</h4>
             <p>Match heatmaps and season trends, in progress — built once there's enough data to say something real.</p>
           </a>
@@ -671,10 +750,10 @@
 
         <div class="upload-box reveal">
           <div class="upload-left">
-            <div class="upload-ic">🔄</div>
+            <div class="upload-ic"><svg class="fa-ic"><use href="#fa-arrows-rotate"/></svg></div>
             <div>
               <div class="upload-title">Live sync status</div>
-              <div class="upload-sub" id="uploadStatus">🔄 Checking live feed…</div>
+              <div class="upload-sub" id="uploadStatus"><svg class="fa-ic"><use href="#fa-arrows-rotate"/></svg> Checking live feed…</div>
             </div>
           </div>
         </div>
@@ -692,7 +771,7 @@
         <h2 class="sec-title reveal">Leaderboard</h2>
         <p class="sec-desc reveal">Full points table — Played, Won, Drawn, Lost, Points — computed from match results as they come in. Standard scoring: win = 3, draw = 1, loss = 0.</p>
         <div class="shield-note reveal" id="lbNote">
-          <div class="ic">⏳</div>
+          <div class="ic"><svg class="fa-ic"><use href="#fa-hourglass-half"/></svg></div>
           <p>No match results logged yet — every player starts at zero. This table recalculates itself automatically the moment results are connected.</p>
         </div>
         <div class="lb-tabs" id="lbTabs"></div>
@@ -733,7 +812,7 @@
         <h2 class="sec-title reveal">League + Knockout</h2>
         <p class="sec-desc reveal">One season, two honors — same idea as the Indian Super League. The League phase crowns a Shield winner for topping the table. Then a knockout playoff, open to the league's top finishers, decides the actual season champion.</p>
         <div class="shield-note reveal">
-          <div class="ic">🛡️</div>
+          <div class="ic"><svg class="fa-ic"><use href="#fa-shield-halved"/></svg></div>
           <p>The Shield and the Playoff Champion can be different players in the same season — the Shield rewards consistency across the league phase, the playoffs reward who peaks at the right time.</p>
         </div>
         <div id="lkoCards"></div>
@@ -753,7 +832,7 @@
         <p class="sec-desc reveal" id="rosterCount"></p>
 
         <div class="save-bar" id="saveBar">
-          <div class="save-bar-left">✏️ <span id="dirtyLabel">Unsaved changes</span></div>
+          <div class="save-bar-left"><svg class="fa-ic"><use href="#fa-pen"/></svg> <span id="dirtyLabel">Unsaved changes</span></div>
           <div class="save-bar-right" id="saveBarRight">
             <input type="password" class="token-input" id="ghToken" placeholder="GitHub token (fine-grained, this repo, Contents: write)">
             <button class="save-btn" onclick="saveRosterToGitHub()">Save to GitHub</button>
@@ -764,7 +843,12 @@
         <div class="add-player-row reveal" id="addPlayerRow" style="display:none;">
           <input type="text" id="newPlayerInput" placeholder="New player name…">
           <button onclick="addPlayer()">+ Add Player</button>
-          <button onclick="openMergeDuplicatesModal()" style="background:var(--gold-soft); color:var(--ink-fixed);">🔀 Merge Duplicates</button>
+          <button onclick="openMergeDuplicatesModal()" style="background:var(--gold-soft); color:var(--ink-fixed);"><svg class="fa-ic"><use href="#fa-shuffle"/></svg> Merge Duplicates</button>
+        </div>
+
+        <div class="player-search-row reveal">
+          <svg class="fa-ic"><use href="#fa-magnifying-glass"/></svg>
+          <input type="text" id="playerSearch" placeholder="Search players…" oninput="filterPlayers()" aria-label="Search players">
         </div>
 
         <div class="roster-grid" id="rosterGrid"></div>
@@ -774,20 +858,20 @@
     <!-- ANALYTICS -->
     <section id="analytics">
       <div class="section-inner">
-        <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">In the works</div></div>
+        <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">The numbers</div></div>
         <h2 class="sec-title reveal">Analytics</h2>
-        <p class="sec-desc reveal">Head-to-head records, form guides, goal stats. Coming once there's a full season of match data logged.</p>
-        <div class="analytics-panel reveal">
-          <div class="analytics-top">
-            <div class="eyebrow" style="margin-bottom:10px;"><span class="pulse-dot"></span>Building in progress</div>
-            <div class="display" style="font-size:2.2rem; color:var(--floodlight);">Stats drop next season</div>
+        <p class="sec-desc reveal">Head-to-head records and season awards — computed live from every match on record.</p>
+
+        <div class="h2h-panel reveal">
+          <div class="h2h-pickers">
+            <select id="h2hA" onchange="renderH2H()"></select>
+            <span class="h2h-vs">VS</span>
+            <select id="h2hB" onchange="renderH2H()"></select>
           </div>
-          <div class="analytics-body">
-            <div class="ghost-stat"><div class="lbl">Head-to-head</div><div class="val">—</div></div>
-            <div class="ghost-stat"><div class="lbl">Goals per match</div><div class="val">—</div></div>
-            <div class="ghost-stat"><div class="lbl">Win streaks</div><div class="val">—</div></div>
-          </div>
+          <div id="h2hResult"></div>
         </div>
+
+        <div class="awards-grid" id="awardsGrid"></div>
       </div>
     </section>
 
@@ -802,9 +886,9 @@
             <iframe src="https://www.google.com/maps?q=Narikkuni+Bus+Stand,+Kerala&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
           </div>
           <div class="about-info reveal">
-            <div class="info-row"><div class="ic">📍</div><div><h5>Location</h5><p>Narikkuni, Kozhikode district, Kerala, India — near Narikkuni Bus Stand.</p></div></div>
-            <div class="info-row"><div class="ic">🎮</div><div><h5>What this is</h5><p>A tracker for our local eFootball league among friends — every season's champions, runners-up, and rosters in one place.</p></div></div>
-            <div class="info-row"><div class="ic">🗓️</div><div><h5>Format</h5><p>League seasons, standalone Knockout cups, and a combined Shield — updated as each season wraps.</p></div></div>
+            <div class="info-row"><div class="ic"><svg class="fa-ic"><use href="#fa-location-dot"/></svg></div><div><h5>Location</h5><p>Narikkuni, Kozhikode district, Kerala, India — near Narikkuni Bus Stand.</p></div></div>
+            <div class="info-row"><div class="ic"><svg class="fa-ic"><use href="#fa-gamepad"/></svg></div><div><h5>What this is</h5><p>A tracker for our local eFootball league among friends — every season's champions, runners-up, and rosters in one place.</p></div></div>
+            <div class="info-row"><div class="ic"><svg class="fa-ic"><use href="#fa-calendar-days"/></svg></div><div><h5>Format</h5><p>League seasons, standalone Knockout cups, and a combined Shield — updated as each season wraps.</p></div></div>
           </div>
         </div>
       </div>
@@ -813,6 +897,12 @@
     <footer>
       <div>EFOOTBALL NARIKKUNI © 2025–2026</div>
       <div>Built for the squad, not the algorithm.</div>
+      <div class="footer-credits">
+        <a href="mailto:minhajahammed619@gmai.com"><svg class="fa-ic"><use href="#fa-envelope"/></svg> minhajahammed619@gmai.com</a>
+        <a href="https://instagram.com/minhaj_ahammed_vc" target="_blank" rel="noopener"><svg class="fa-ic"><use href="#fa-instagram"/></svg> @minhaj_ahammed_vc</a>
+        <span class="footer-credit-tag"><svg class="fa-ic"><use href="#fa-code"/></svg> Icons: Font Awesome Free</span>
+        <span class="footer-credit-tag"><svg class="fa-ic"><use href="#fa-palette"/></svg> Design intel: UI/UX Pro Max</span>
+      </div>
     </footer>
   </main>
 </div>
@@ -956,7 +1046,7 @@
         ${chip(s.runner, 'silver', '2')}
         ${chip(s.secondRunner, 'bronze', '3')}
         <div class="r-status ${statusClass}">${statusLabel}</div>
-        ${editModeEnabled && !isLiveDerived ? `<button class="p-ic-btn" style="width:32px;height:32px;font-size:0.8rem;" onclick="openSeasonEditModal('${type}','${s.season.replace(/'/g,"\\'")}')">✏️</button>` : ''}
+        ${editModeEnabled && !isLiveDerived ? `<button class="p-ic-btn" style="width:32px;height:32px;font-size:0.8rem;" onclick="openSeasonEditModal('${type}','${s.season.replace(/'/g,"\\'")}')"><svg class="fa-ic"><use href="#fa-pen"/></svg></button>` : ''}
       </div>`;
     }).join('');
   }
@@ -986,20 +1076,20 @@
         <div class="lko-head">
           <div><div class="s-name">${s.season}</div><div class="s-date">${s.date}</div></div>
           <div style="display:flex;gap:10px;align-items:center;">
-            ${editModeEnabled ? `<button class="p-ic-btn" style="width:32px;height:32px;font-size:0.8rem;" onclick="openSeasonEditModal('leagueko','${s.season.replace(/'/g,"\\'")}')">✏️</button>` : ''}
+            ${editModeEnabled ? `<button class="p-ic-btn" style="width:32px;height:32px;font-size:0.8rem;" onclick="openSeasonEditModal('leagueko','${s.season.replace(/'/g,"\\'")}')"><svg class="fa-ic"><use href="#fa-pen"/></svg></button>` : ''}
             <div class="r-status done">Completed</div>
           </div>
         </div>
         <div class="lko-body">
           <div class="lko-stage">
-            <div class="lko-stage-label">🛡️ League Phase — Shield</div>
+            <div class="lko-stage-label"><svg class="fa-ic"><use href="#fa-shield-halved"/></svg> League Phase — Shield</div>
             <div class="lko-shield-winner">
               <span class="dot gold">1</span>
               <span class="nm">${s.shieldWinner}</span>
             </div>
           </div>
           <div class="lko-stage">
-            <div class="lko-stage-label">⚔️ Playoffs — Final Standings</div>
+            <div class="lko-stage-label"><svg class="fa-ic"><use href="#fa-hand-fist"/></svg> Playoffs — Final Standings</div>
             <div class="lko-podium-row">
               <div class="lko-podium-slot"><span class="dot gold">1</span><div><span class="lbl">Champion</span><span class="nm">${s.champion}</span></div></div>
               <div class="lko-podium-slot"><span class="dot silver">2</span><div><span class="lbl">Runner-up</span><span class="nm">${s.runner}</span></div></div>
@@ -1031,6 +1121,95 @@
     });
   }
   buildMatchResults();
+
+  /* ---------------- HEAD-TO-HEAD / FORM / STREAKS / AWARDS ----------------
+     All derived live from TOURNAMENT_DATA / matchResults — no separate data model. */
+  function getHeadToHead(nameA, nameB){
+    const meetings = [];
+    TOURNAMENT_DATA.forEach(t => {
+      t.rounds.forEach(r => {
+        r.matches.forEach(m => {
+          if(m.status === 'upcoming' || m.h === 'TBD') return;
+          const isPair = (m.h === nameA && m.a === nameB) || (m.h === nameB && m.a === nameA);
+          if(!isPair) return;
+          const hw = m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga;
+          const draw = !m.pen && m.gh === m.ga;
+          const winner = draw ? null : (hw ? m.h : m.a);
+          meetings.push({ tournament: t.name, round: r.round, h: m.h, a: m.a, gh: m.gh, ga: m.ga, pen: m.pen, winner });
+        });
+      });
+    });
+    let aWins = 0, bWins = 0, draws = 0;
+    meetings.forEach(mm => {
+      if(mm.winner === nameA) aWins++;
+      else if(mm.winner === nameB) bWins++;
+      else draws++;
+    });
+    return { meetings, aWins, bWins, draws, played: meetings.length };
+  }
+
+  function getRecentForm(name, limit){
+    limit = limit || 5;
+    return matchResults.filter(m => m.player === name).map(m => m.result).slice(-limit);
+  }
+
+  function getStreak(name){
+    const results = matchResults.filter(m => m.player === name).map(m => m.result);
+    if(!results.length) return null;
+    let winCount = 0;
+    for(let i = results.length - 1; i >= 0; i--){ if(results[i] === 'W') winCount++; else break; }
+    if(winCount >= 3) return { type:'win', count: winCount };
+    let unbeatenCount = 0;
+    for(let i = results.length - 1; i >= 0; i--){ if(results[i] !== 'L') unbeatenCount++; else break; }
+    if(unbeatenCount >= 3) return { type:'unbeaten', count: unbeatenCount };
+    return null;
+  }
+
+  function getSeasonAwards(){
+    const goalsFor = {}, goalsAgainst = {}, matchesPlayed = {};
+    let biggestWin = null;
+    TOURNAMENT_DATA.forEach(t => {
+      t.rounds.forEach(r => {
+        r.matches.forEach(m => {
+          if(m.status === 'upcoming' || m.h === 'TBD') return;
+          [m.h, m.a].forEach(p => { matchesPlayed[p] = (matchesPlayed[p]||0) + 1; });
+          goalsFor[m.h] = (goalsFor[m.h]||0) + m.gh;
+          goalsFor[m.a] = (goalsFor[m.a]||0) + m.ga;
+          goalsAgainst[m.h] = (goalsAgainst[m.h]||0) + m.ga;
+          goalsAgainst[m.a] = (goalsAgainst[m.a]||0) + m.gh;
+          if(m.gh !== m.ga){
+            const diff = Math.abs(m.gh - m.ga);
+            if(!biggestWin || diff > biggestWin.diff){
+              const winner = m.gh > m.ga ? m.h : m.a;
+              const loser = m.gh > m.ga ? m.a : m.h;
+              const wScore = m.gh > m.ga ? m.gh : m.ga;
+              const lScore = m.gh > m.ga ? m.ga : m.gh;
+              biggestWin = { winner, loser, diff, score: `${wScore}-${lScore}`, tournament: t.name };
+            }
+          }
+        });
+      });
+    });
+    const topScorer = Object.entries(goalsFor).sort((a,b) => b[1]-a[1])[0];
+    const bestDefense = Object.entries(goalsAgainst)
+      .filter(([p]) => (matchesPlayed[p]||0) >= 3)
+      .sort((a,b) => a[1]-b[1])[0];
+    return { topScorer, bestDefense, biggestWin };
+  }
+
+  function formDotsHtml(name, limit){
+    const form = getRecentForm(name, limit);
+    if(!form.length) return '';
+    const labels = { W:'Win', D:'Draw', L:'Loss' };
+    return `<div class="form-dots">${form.map(r => `<span class="form-dot form-${r}" title="${labels[r]}"></span>`).join('')}</div>`;
+  }
+
+  function streakBadgeHtml(name){
+    const s = getStreak(name);
+    if(!s) return '';
+    const label = s.type === 'win' ? `${s.count}-game win streak` : `Unbeaten in ${s.count}`;
+    return `<div class="streak-badge"><svg class="fa-ic"><use href="#fa-fire"/></svg> ${label}</div>`;
+  }
 
   function renderFixtures() {
     const container = document.getElementById('fixtureList');
@@ -1089,11 +1268,11 @@
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <span class="accord-title">${t.name}</span>
               <span class="fixture-badge ${sc}">${t.status}</span>
-              ${t.winner ? `<span class="accord-winner">🏆 ${t.winner}</span>` : ''}
+              ${t.winner ? `<span class="accord-winner"><svg class="fa-ic"><use href="#fa-trophy"/></svg> ${t.winner}</span>` : ''}
             </div>
             <span class="accord-date">${t.date} · ${played}/${totalMatches} matches played</span>
           </div>
-          <span class="accord-chevron">▼</span>
+          <svg class="fa-ic accord-chevron"><use href="#fa-chevron-down"/></svg>
         </div>
         <div class="accord-body ${isOpen ? 'open' : ''}" id="accord-body-${ti}">
           <div class="accord-inner">${roundsHtml}</div>
@@ -1114,7 +1293,7 @@
     } else {
       const last = TOURNAMENT_DATA[TOURNAMENT_DATA.length - 1];
       tag.textContent = last.winner ? 'Completed' : 'Active';
-      prev.textContent = last.winner ? `${last.name} complete — 🏆 ${last.winner}` : `${last.name} in progress.`;
+      prev.textContent = last.winner ? `${last.name} complete — <svg class="fa-ic"><use href="#fa-trophy"/></svg> ${last.winner}` : `${last.name} in progress.`;
     }
   }
   renderFixtures();
@@ -1221,14 +1400,14 @@
   /* ---------------- TICKER ---------------- */
   const tickerItems = [];
   leagueSeasons.forEach(s=>{
-    if(s.champion) tickerItems.push(`🏆 <b>${s.champion.toUpperCase()}</b> — League ${s.season} Champion`);
+    if(s.champion) tickerItems.push(`<svg class="fa-ic"><use href="#fa-trophy"/></svg> <b>${s.champion.toUpperCase()}</b> — League ${s.season} Champion`);
   });
   knockoutSeasons.forEach(s=>{
-    if(s.champion) tickerItems.push(`🏆 <b>${s.champion.toUpperCase()}</b> — Knockout ${s.season} Champion`);
+    if(s.champion) tickerItems.push(`<svg class="fa-ic"><use href="#fa-trophy"/></svg> <b>${s.champion.toUpperCase()}</b> — Knockout ${s.season} Champion`);
   });
   leagueKoSeasons.forEach(s=>{
-    if(s.shieldWinner) tickerItems.push(`🛡️ <b>${s.shieldWinner.toUpperCase()}</b> — League+KO ${s.season} Shield Winner`);
-    if(s.champion) tickerItems.push(`⚔️ <b>${s.champion.toUpperCase()}</b> — League+KO ${s.season} Playoff Champion`);
+    if(s.shieldWinner) tickerItems.push(`<svg class="fa-ic"><use href="#fa-shield-halved"/></svg> <b>${s.shieldWinner.toUpperCase()}</b> — League+KO ${s.season} Shield Winner`);
+    if(s.champion) tickerItems.push(`<svg class="fa-ic"><use href="#fa-hand-fist"/></svg> <b>${s.champion.toUpperCase()}</b> — League+KO ${s.season} Playoff Champion`);
   });
   const track = document.getElementById('tickerTrack');
   const doubled = [...tickerItems, ...tickerItems];
@@ -1284,15 +1463,15 @@
         : `<span class="init">${initials}</span>`;
       const photoControls = hasPhoto
         ? `<div class="photo-controls" onclick="event.stopPropagation();">
-             <button type="button" class="p-ic-btn" title="Zoom photo" aria-label="Zoom ${escAttr(name)}'s photo" onclick="zoomPhoto('${escAttr(name)}')">🔍</button>
-             ${editModeEnabled ? `<button type="button" class="p-ic-btn danger" title="Remove photo" aria-label="Remove ${escAttr(name)}'s photo" onclick="deletePlayerPhoto('${escAttr(name)}')">🗑️</button>` : ''}
+             <button type="button" class="p-ic-btn" title="Zoom photo" aria-label="Zoom ${escAttr(name)}'s photo" onclick="zoomPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-magnifying-glass"/></svg></button>
+             ${editModeEnabled ? `<button type="button" class="p-ic-btn danger" title="Remove photo" aria-label="Remove ${escAttr(name)}'s photo" onclick="deletePlayerPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>` : ''}
            </div>`
         : '';
       card.innerHTML = `
         ${editModeEnabled ? `<div class="player-edit-controls">
-          <button type="button" class="p-ic-btn" title="Replace photo" aria-label="Replace ${escAttr(name)}'s photo" onclick="event.stopPropagation(); uploadPlayerPhoto('${escAttr(name)}')">📷</button>
-          <button type="button" class="p-ic-btn" title="Rename" aria-label="Rename ${escAttr(name)}" onclick="event.stopPropagation(); toggleRename(this)">✏️</button>
-          <button type="button" class="p-ic-btn danger" title="Delete player" aria-label="Delete ${escAttr(name)} from roster" onclick="event.stopPropagation(); deletePlayer('${escAttr(name)}')">🗑️</button>
+          <button type="button" class="p-ic-btn" title="Replace photo" aria-label="Replace ${escAttr(name)}'s photo" onclick="event.stopPropagation(); uploadPlayerPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-camera"/></svg></button>
+          <button type="button" class="p-ic-btn" title="Rename" aria-label="Rename ${escAttr(name)}" onclick="event.stopPropagation(); toggleRename(this)"><svg class="fa-ic"><use href="#fa-pen"/></svg></button>
+          <button type="button" class="p-ic-btn danger" title="Delete player" aria-label="Delete ${escAttr(name)} from roster" onclick="event.stopPropagation(); deletePlayer('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>
         </div>` : ''}
         <div class="player-photo">${photoBlock}<span class="num">#${(i+1).toString().padStart(2,'0')}</span>${photoControls}</div>
         <div class="player-body">
@@ -1302,6 +1481,7 @@
             <div>Titles<b>${stats.titles}</b></div>
             <div>Runner-ups<b>${stats.runnerups}</b></div>
           </div>
+          ${formDotsHtml(name)}
         </div>
         ${editModeEnabled ? `<div class="rename-row" style="display:none;" onclick="event.stopPropagation();">
           <input type="text" value="${escAttr(name)}">
@@ -1312,29 +1492,82 @@
     });
   }
   renderRoster();
+
+  function renderH2H(){
+    const target = document.getElementById('h2hResult');
+    const selA = document.getElementById('h2hA'), selB = document.getElementById('h2hB');
+    if(!target || !selA || !selB) return;
+    const a = selA.value, b = selB.value;
+    if(!a || !b || a === b){ target.innerHTML = '<p class="h2h-empty">Pick two different players.</p>'; return; }
+    const h2h = getHeadToHead(a, b);
+    if(!h2h.played){ target.innerHTML = `<p class="h2h-empty">${a} and ${b} haven't played each other yet.</p>`; return; }
+    target.innerHTML = `
+      <div class="h2h-score">
+        <div class="h2h-side"><div class="h2h-name">${a}</div><div class="h2h-n">${h2h.aWins}</div></div>
+        <div class="h2h-mid"><div class="h2h-draws">${h2h.draws} draw${h2h.draws!==1?'s':''}</div><div class="h2h-played">${h2h.played} played</div></div>
+        <div class="h2h-side"><div class="h2h-name">${b}</div><div class="h2h-n">${h2h.bWins}</div></div>
+      </div>
+      <div class="h2h-meetings">
+        ${h2h.meetings.slice(-6).reverse().map(m => `<div class="h2h-meeting"><span>${m.tournament} · ${m.round}</span><b>${m.h} ${m.gh}-${m.ga} ${m.a}${m.pen ? ` (pen ${m.pen})` : ''}</b></div>`).join('')}
+      </div>`;
+  }
+
+  function populateH2HSelects(){
+    const selA = document.getElementById('h2hA'), selB = document.getElementById('h2hB');
+    if(!selA || !selB) return;
+    const prevA = selA.value, prevB = selB.value;
+    const options = [...rosterOrder].sort((x,y) => x.localeCompare(y)).map(n => `<option value="${n}">${n}</option>`).join('');
+    selA.innerHTML = options;
+    selB.innerHTML = options;
+    selA.value = (prevA && rosterOrder.includes(prevA)) ? prevA : (rosterOrder[0] || '');
+    selB.value = (prevB && rosterOrder.includes(prevB)) ? prevB : (rosterOrder[1] || '');
+    renderH2H();
+  }
+
+  function renderAwards(){
+    const grid = document.getElementById('awardsGrid');
+    if(!grid) return;
+    const a = getSeasonAwards();
+    const cards = [];
+    if(a.topScorer) cards.push({icon:'futbol', label:'Top Scorer', name:a.topScorer[0], detail:`${a.topScorer[1]} goal${a.topScorer[1]!==1?'s':''}`});
+    if(a.bestDefense) cards.push({icon:'shield-halved', label:'Best Defense', name:a.bestDefense[0], detail:`${a.bestDefense[1]} conceded`});
+    if(a.biggestWin) cards.push({icon:'fire', label:'Biggest Win', name:a.biggestWin.winner, detail:`${a.biggestWin.score} vs ${a.biggestWin.loser}`});
+    grid.innerHTML = cards.length
+      ? cards.map(c => `
+        <div class="award-card">
+          <svg class="fa-ic award-ic"><use href="#fa-${c.icon}"/></svg>
+          <div class="award-label">${c.label}</div>
+          <div class="award-name">${c.name}</div>
+          <div class="award-detail">${c.detail}</div>
+        </div>`).join('')
+      : '<p class="h2h-empty">Not enough match data yet.</p>';
+  }
+  populateH2HSelects();
+  renderAwards();
+
   const syncReady = loadRosterOverrides().then(() => autoSyncFixtureFeed()); // load aliases/renames FIRST so parseFixtureFlowBackup can resolve names immediately — no assign panel if aliases exist
 
   /* ---------------- PLAYER PROFILE (opens in a real new tab) ---------------- */
   function getPlayerAchievements(name){
     const list = [];
     leagueSeasons.forEach(s => {
-      if(s.champion === name) list.push({icon:'🏆', title:`League ${s.season} Champion`, date:s.date});
-      if(s.runner === name) list.push({icon:'🥈', title:`League ${s.season} Runner-up`, date:s.date});
+      if(s.champion === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-trophy"/></svg>', title:`League ${s.season} Champion`, date:s.date});
+      if(s.runner === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-medal"/></svg>', title:`League ${s.season} Runner-up`, date:s.date});
     });
     knockoutSeasons.forEach(s => {
-      if(s.champion === name) list.push({icon:'🏆', title:`Knockout ${s.season} Champion`, date:s.date});
-      if(s.runner === name) list.push({icon:'🥈', title:`Knockout ${s.season} Runner-up`, date:s.date});
-      if(s.secondRunner === name) list.push({icon:'🥉', title:`Knockout ${s.season} 2nd Runner-up`, date:s.date});
+      if(s.champion === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-trophy"/></svg>', title:`Knockout ${s.season} Champion`, date:s.date});
+      if(s.runner === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-medal"/></svg>', title:`Knockout ${s.season} Runner-up`, date:s.date});
+      if(s.secondRunner === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-medal"/></svg>', title:`Knockout ${s.season} 2nd Runner-up`, date:s.date});
     });
     leagueKoSeasons.forEach(s => {
-      if(s.shieldWinner === name) list.push({icon:'🛡️', title:`League+KO ${s.season} Shield Winner`, date:s.date});
-      if(s.champion === name) list.push({icon:'🏆', title:`League+KO ${s.season} Playoff Champion`, date:s.date});
-      if(s.runner === name) list.push({icon:'🥈', title:`League+KO ${s.season} Playoff Runner-up`, date:s.date});
-      if(s.secondRunner === name) list.push({icon:'🥉', title:`League+KO ${s.season} 2nd Runner-up`, date:s.date});
+      if(s.shieldWinner === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-shield-halved"/></svg>', title:`League+KO ${s.season} Shield Winner`, date:s.date});
+      if(s.champion === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-trophy"/></svg>', title:`League+KO ${s.season} Playoff Champion`, date:s.date});
+      if(s.runner === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-medal"/></svg>', title:`League+KO ${s.season} Playoff Runner-up`, date:s.date});
+      if(s.secondRunner === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-medal"/></svg>', title:`League+KO ${s.season} 2nd Runner-up`, date:s.date});
     });
     TOURNAMENT_DATA.forEach(t => {
-      if(t.winner === name) list.push({icon:'🏆', title:`${t.name} Champion`, date:t.date});
-      if(t.runnerUp === name) list.push({icon:'🥈', title:`${t.name} Runner-up`, date:t.date});
+      if(t.winner === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-trophy"/></svg>', title:`${t.name} Champion`, date:t.date});
+      if(t.runnerUp === name) list.push({icon:'<svg class="fa-ic"><use href="#fa-medal"/></svg>', title:`${t.name} Runner-up`, date:t.date});
     });
     return list;
   }
@@ -1370,9 +1603,10 @@
     // by refreshProfileWindow() whenever the photo changes, so it never goes stale)
     const photoEditControls = editModeEnabled ? `
       <div class="photo-edit-controls">
-        <button class="pe-btn" onclick="window.opener && window.opener.uploadPlayerPhoto && window.opener.uploadPlayerPhoto('${escAttr(name)}')">📷 Replace photo</button>
-        ${hasPhoto ? `<button class="pe-btn danger" onclick="window.opener && window.opener.deletePlayerPhoto && window.opener.deletePlayerPhoto('${escAttr(name)}')">🗑️ Remove photo</button>` : ''}
+        <button class="pe-btn" onclick="window.opener && window.opener.uploadPlayerPhoto && window.opener.uploadPlayerPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-camera"/></svg> Replace photo</button>
+        ${hasPhoto ? `<button class="pe-btn danger" onclick="window.opener && window.opener.deletePlayerPhoto && window.opener.deletePlayerPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg> Remove photo</button>` : ''}
       </div>` : '';
+    const streakBadge = streakBadgeHtml(name);
     const totalMatches = breakdown.reduce((a,r)=>a+r.played,0);
     const totalWins = breakdown.reduce((a,r)=>a+r.won,0);
 
@@ -1401,6 +1635,12 @@
   .theme-switcher button{width:30px;height:30px;border-radius:50%;border:none;background:transparent;font-size:0.9rem;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;transition:all .15s ease;}
   .theme-switcher button:hover{color:var(--gold);}
   .theme-switcher button.active{background:var(--gold);color:var(--ink-fixed);}
+  .fa-ic{width:1em;height:1em;display:inline-block;fill:currentColor;vertical-align:-0.125em;}
+  *{scrollbar-width:thin;scrollbar-color:var(--card-line) transparent;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--card-line);border-radius:8px;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--gold);}
   .back{font-family:'Roboto Mono';font-size:0.72rem;color:var(--muted);text-decoration:none;display:inline-block;margin-bottom:24px;}
   .head{display:flex;gap:24px;align-items:center;margin-bottom:36px;flex-wrap:wrap;}
   .photo{width:120px;height:120px;border-radius:16px;overflow:hidden;background:linear-gradient(145deg,var(--pitch),var(--pitch-deep));border:1px solid var(--card-line);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1408,6 +1648,15 @@
   .pe-btn{font-family:'Roboto Mono';font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;background:var(--card);border:1px solid var(--card-line);color:var(--floodlight);padding:8px 12px;border-radius:8px;cursor:pointer;}
   .pe-btn:hover{border-color:var(--gold);color:var(--gold);}
   .pe-btn.danger:hover{border-color:#e07a6b;color:#e07a6b;}
+  .share-btn{
+    font-family:'Oswald';font-weight:600;font-size:0.85rem;letter-spacing:0.03em;text-transform:uppercase;
+    display:flex;align-items:center;gap:10px;justify-content:center;width:100%;
+    background:var(--gold);color:var(--ink-fixed);border:none;border-radius:8px;padding:13px 20px;
+    cursor:pointer;margin-bottom:36px;transition:background-color .2s ease,transform .15s ease;
+  }
+  .share-btn:hover{background:var(--gold-soft,var(--gold));transform:translateY(-2px);}
+  .share-btn:active{transform:translateY(0) scale(0.98);}
+  .share-btn:disabled{opacity:0.6;cursor:default;transform:none;}
   .pz-overlay{display:none;position:fixed;inset:0;background:rgba(10,14,12,0.92);z-index:200;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
   .pz-overlay.show{display:flex;}
   .pz-overlay img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.7);cursor:default;}
@@ -1428,12 +1677,17 @@
   table.bt td{font-family:'Oswald';font-size:0.9rem;padding:10px;text-align:center;border-top:1px dashed var(--card-line);}
   table.bt td.pts{color:var(--gold);font-family:var(--font-display);}
   footer{margin-top:48px;font-family:'Roboto Mono';font-size:0.65rem;color:var(--muted);text-align:center;}
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
+  }
 </style></head>
 <body>
+  <svg style="display:none" aria-hidden="true"><symbol id="fa-trophy" viewBox="0 0 512 512"><path d="M144.3 0l224 0c26.5 0 48.1 21.8 47.1 48.2-.2 5.3-.4 10.6-.7 15.8l49.6 0c26.1 0 49.1 21.6 47.1 49.8-7.5 103.7-60.5 160.7-118 190.5-15.8 8.2-31.9 14.3-47.2 18.8-20.2 28.6-41.2 43.7-57.9 51.8l0 73.1 64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-192 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0 0-73.1c-16-7.7-35.9-22-55.3-48.3-18.4-4.8-38.4-12.1-57.9-23.1-54.1-30.3-102.9-87.4-109.9-189.9-1.9-28.1 21-49.7 47.1-49.7l49.6 0c-.3-5.2-.5-10.4-.7-15.8-1-26.5 20.6-48.2 47.1-48.2zM101.5 112l-52.4 0c6.2 84.7 45.1 127.1 85.2 149.6-14.4-37.3-26.3-86-32.8-149.6zM380 256.8c40.5-23.8 77.1-66.1 83.3-144.8L411 112c-6.2 60.9-17.4 108.2-31 144.8z"/></symbol><symbol id="fa-lock" viewBox="0 0 384 512"><path d="M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z"/></symbol><symbol id="fa-lock-open" viewBox="0 0 576 512"><path d="M384 96c0-35.3 28.7-64 64-64s64 28.7 64 64l0 32c0 17.7 14.3 32 32 32s32-14.3 32-32l0-32c0-70.7-57.3-128-128-128S320 25.3 320 96l0 64-160 0c-35.3 0-64 28.7-64 64l0 224c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-224c0-35.3-28.7-64-64-64l-32 0 0-64z"/></symbol><symbol id="fa-shield-halved" viewBox="0 0 512 512"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.8 82.8c22 9.3 38.4 31 38.3 57.2-.5 99.2-41.3 280.7-213.6 363.2-16.7 8-36.1 8-52.8 0-172.4-82.5-213.1-264-213.6-363.2-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.9 1 251.4 0 256 0zm0 66.8l0 378.1c138-66.8 175.1-214.8 176-303.4l-176-74.6 0 0z"/></symbol><symbol id="fa-pen" viewBox="0 0 512 512"><path d="M352.9 21.2L308 66.1 445.9 204 490.8 159.1C504.4 145.6 512 127.2 512 108s-7.6-37.6-21.2-51.1L455.1 21.2C441.6 7.6 423.2 0 404 0s-37.6 7.6-51.1 21.2zM274.1 100L58.9 315.1c-10.7 10.7-18.5 24.1-22.6 38.7L.9 481.6c-2.3 8.3 0 17.3 6.2 23.4s15.1 8.5 23.4 6.2l127.8-35.5c14.6-4.1 27.9-11.8 38.7-22.6L412 237.9 274.1 100z"/></symbol><symbol id="fa-medal" viewBox="0 0 448 512"><path d="M224.3 128L139.7-12.9c-6.5-10.8-20.1-14.7-31.3-9.1L21.8 21.3C9.9 27.2 5.1 41.6 11 53.5L80.6 192.6c-30.1 33.9-48.3 78.5-48.3 127.4 0 106 86 192 192 192s192-86 192-192c0-48.9-18.3-93.5-48.3-127.4L437.6 53.5c5.9-11.9 1.1-26.3-10.7-32.2L340.2-22.1c-11.2-5.6-24.9-1.6-31.3 9.1L224.3 128zm30.8 142.5c1.4 2.8 4 4.7 7 5.1l50.1 7.3c7.7 1.1 10.7 10.5 5.2 16l-36.3 35.4c-2.2 2.2-3.2 5.2-2.7 8.3l8.6 49.9c1.3 7.6-6.7 13.5-13.6 9.9l-44.8-23.6c-2.7-1.4-6-1.4-8.7 0l-44.8 23.6c-6.9 3.6-14.9-2.2-13.6-9.9l8.6-49.9c.5-3-.5-6.1-2.7-8.3l-36.3-35.4c-5.6-5.4-2.5-14.8 5.2-16l50.1-7.3c3-.4 5.7-2.4 7-5.1l22.4-45.4c3.4-7 13.3-7 16.8 0l22.4 45.4z"/></symbol><symbol id="fa-circle-check" viewBox="0 0 512 512"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></symbol><symbol id="fa-up-right-from-square" viewBox="0 0 512 512"><path d="M290.4 19.8C295.4 7.8 307.1 0 320 0L480 0c17.7 0 32 14.3 32 32l0 160c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9L400 157.3 246.6 310.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L354.7 112 297.4 54.6c-9.2-9.2-11.9-22.9-6.9-34.9zM0 176c0-44.2 35.8-80 80-80l80 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-80 0c-8.8 0-16 7.2-16 16l0 256c0 8.8 7.2 16 16 16l256 0c8.8 0 16-7.2 16-16l0-80c0-17.7 14.3-32 32-32s32 14.3 32 32l0 80c0 44.2-35.8 80-80 80L80 512c-44.2 0-80-35.8-80-80L0 176z"/></symbol><symbol id="fa-trash" viewBox="0 0 448 512"><path d="M136.7 5.9L128 32 32 32C14.3 32 0 46.3 0 64S14.3 96 32 96l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0-8.7-26.1C306.9-7.2 294.7-16 280.9-16L167.1-16c-13.8 0-26 8.8-30.4 21.9zM416 144L32 144 53.1 467.1C54.7 492.4 75.7 512 101 512L347 512c25.3 0 46.3-19.6 47.9-44.9L416 144z"/></symbol><symbol id="fa-triangle-exclamation" viewBox="0 0 512 512"><path d="M256 0c14.7 0 28.2 8.1 35.2 21l216 400c6.7 12.4 6.4 27.4-.8 39.5S486.1 480 472 480L40 480c-14.1 0-27.2-7.4-34.4-19.5s-7.5-27.1-.8-39.5l216-400c7-12.9 20.5-21 35.2-21zm0 352a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm0-192c-18.2 0-32.7 15.5-31.4 33.7l7.4 104c.9 12.5 11.4 22.3 23.9 22.3 12.6 0 23-9.7 23.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z"/></symbol><symbol id="fa-futbol" viewBox="0 0 512 512"><path d="M417.3 360.1l-71.6-4.8c-5.2-.3-10.3 1.1-14.5 4.2s-7.2 7.4-8.4 12.5l-17.6 69.6C289.5 445.8 273 448 256 448s-33.5-2.2-49.2-6.4L189.2 372c-1.3-5-4.3-9.4-8.4-12.5s-9.3-4.5-14.5-4.2l-71.6 4.8c-17.6-27.2-28.5-59.2-30.4-93.6L125 228.3c4.4-2.8 7.6-7 9.2-11.9s1.4-10.2-.5-15l-26.7-66.6C128 109.2 155.3 89 186.7 76.9l55.2 46c4 3.3 9 5.1 14.1 5.1s10.2-1.8 14.1-5.1l55.2-46c31.3 12.1 58.7 32.3 79.6 57.9l-26.7 66.6c-1.9 4.8-2.1 10.1-.5 15s4.9 9.1 9.2 11.9l60.7 38.2c-1.9 34.4-12.8 66.4-30.4 93.6zM256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm14.1-325.7c-8.4-6.1-19.8-6.1-28.2 0L194 221c-8.4 6.1-11.9 16.9-8.7 26.8l18.3 56.3c3.2 9.9 12.4 16.6 22.8 16.6l59.2 0c10.4 0 19.6-6.7 22.8-16.6l18.3-56.3c3.2-9.9-.3-20.7-8.7-26.8l-47.9-34.8z"/></symbol><symbol id="fa-fire" viewBox="0 0 448 512"><path d="M160.5-26.4c9.3-7.8 23-7.5 31.9 .9 12.3 11.6 23.3 24.4 33.9 37.4 13.5 16.5 29.7 38.3 45.3 64.2 5.2-6.8 10-12.8 14.2-17.9 1.1-1.3 2.2-2.7 3.3-4.1 7.9-9.8 17.7-22.1 30.8-22.1 13.4 0 22.8 11.9 30.8 22.1 1.3 1.7 2.6 3.3 3.9 4.8 10.3 12.4 24 30.3 37.7 52.4 27.2 43.9 55.6 106.4 55.6 176.6 0 123.7-100.3 224-224 224S0 411.7 0 288c0-91.1 41.1-170 80.5-225 19.9-27.7 39.7-49.9 54.6-65.1 8.2-8.4 16.5-16.7 25.5-24.2zM225.7 416c25.3 0 47.7-7 68.8-21 42.1-29.4 53.4-88.2 28.1-134.4-4.5-9-16-9.6-22.5-2l-25.2 29.3c-6.6 7.6-18.5 7.4-24.7-.5-17.3-22.1-49.1-62.4-65.3-83-5.4-6.9-15.2-8-21.5-1.9-18.3 17.8-51.5 56.8-51.5 104.3 0 68.6 50.6 109.2 113.7 109.2z"/></symbol><symbol id="fa-square" viewBox="0 0 448 512"><path d="M64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32z"/></symbol><symbol id="fa-chart-column" viewBox="0 0 512 512"><path d="M32 32c17.7 0 32 14.3 32 32l0 336c0 8.8 7.2 16 16 16l400 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L80 480c-44.2 0-80-35.8-80-80L0 64C0 46.3 14.3 32 32 32zM144 224c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32zm144-64l0 160c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-160c0-17.7 14.3-32 32-32s32 14.3 32 32zm80 32c17.7 0 32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96c0-17.7 14.3-32 32-32zM512 96l0 224c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-224c0-17.7 14.3-32 32-32s32 14.3 32 32z"/></symbol><symbol id="fa-arrows-rotate" viewBox="0 0 512 512"><path d="M65.9 228.5c13.3-93 93.4-164.5 190.1-164.5 53 0 101 21.5 135.8 56.2 .2 .2 .4 .4 .6 .6l7.6 7.2-47.9 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l128 0c17.7 0 32-14.3 32-32l0-128c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 53.4-11.3-10.7C390.5 28.6 326.5 0 256 0 127 0 20.3 95.4 2.6 219.5 .1 237 12.2 253.2 29.7 255.7s33.7-9.7 36.2-27.1zm443.5 64c2.5-17.5-9.7-33.7-27.1-36.2s-33.7 9.7-36.2 27.1c-13.3 93-93.4 164.5-190.1 164.5-53 0-101-21.5-135.8-56.2-.2-.2-.4-.4-.6-.6l-7.6-7.2 47.9 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 320c-8.5 0-16.7 3.4-22.7 9.5S-.1 343.7 0 352.3l1 127c.1 17.7 14.6 31.9 32.3 31.7S65.2 496.4 65 478.7l-.4-51.5 10.7 10.1c46.3 46.1 110.2 74.7 180.7 74.7 129 0 235.7-95.4 253.4-219.5z"/></symbol><symbol id="fa-shuffle" viewBox="0 0 512 512"><path d="M403.8 34.4c12-5 25.7-2.2 34.9 6.9l64 64c6 6 9.4 14.1 9.4 22.6s-3.4 16.6-9.4 22.6l-64 64c-9.2 9.2-22.9 11.9-34.9 6.9S384 204.9 384 192l0-32-32 0c-10.1 0-19.6 4.7-25.6 12.8l-32.4 43.2-40-53.3 21.2-28.3C293.3 110.2 321.8 96 352 96l32 0 0-32c0-12.9 7.8-24.6 19.8-29.6zM154 296l40 53.3-21.2 28.3C154.7 401.8 126.2 416 96 416l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0c10.1 0 19.6-4.7 25.6-12.8L154 296zM438.6 470.6c-9.2 9.2-22.9 11.9-34.9 6.9S384 460.9 384 448l0-32-32 0c-30.2 0-58.7-14.2-76.8-38.4L121.6 172.8c-6-8.1-15.5-12.8-25.6-12.8l-64 0c-17.7 0-32-14.3-32-32S14.3 96 32 96l64 0c30.2 0 58.7 14.2 76.8 38.4L326.4 339.2c6 8.1 15.5 12.8 25.6 12.8l32 0 0-32c0-12.9 7.8-24.6 19.8-29.6s25.7-2.2 34.9 6.9l64 64c6 6 9.4 14.1 9.4 22.6s-3.4 16.6-9.4 22.6l-64 64z"/></symbol><symbol id="fa-hand-fist" viewBox="0 0 384 512"><path d="M160 0c17.7 0 32 14.3 32 32l0 112-64 0 0-112c0-17.7 14.3-32 32-32zM32 64c0-17.7 14.3-32 32-32S96 46.3 96 64l0 80-64 0 0-80zm192 0c0-17.7 14.3-32 32-32s32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96zm96 64c0-17.7 14.3-32 32-32s32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64zm-96 88l0-.6c9.4 5.4 20.3 8.6 32 8.6 13.2 0 25.4-4 35.6-10.8 8.7 24.9 32.5 42.8 60.4 42.8 11.7 0 22.6-3.1 32-8.6l0 8.6c0 52.3-25.1 98.8-64 128l0 96c0 17.7-14.3 32-32 32l-160 0c-17.7 0-32-14.3-32-32l0-78.4c-17.3-7.9-33.2-18.8-46.9-32.5L37.5 357.5C13.5 333.5 0 300.9 0 267l0-27c0-35.3 28.7-64 64-64l88 0c22.1 0 40 17.9 40 40s-17.9 40-40 40l-56 0c-8.8 0-16 7.2-16 16s7.2 16 16 16l56 0c39.8 0 72-32.2 72-72z"/></symbol><symbol id="fa-camera" viewBox="0 0 512 512"><path d="M149.1 64.8L138.7 96 64 96C28.7 96 0 124.7 0 160L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64l-74.7 0-10.4-31.2C356.4 45.2 338.1 32 317.4 32L194.6 32c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/></symbol><symbol id="fa-user" viewBox="0 0 448 512"><path d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l356.6 0c16.4 0 29.7-13.3 29.7-29.7 0-98.5-79.8-178.3-178.3-178.3l-59.4 0z"/></symbol><symbol id="fa-calendar-days" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32zM64 240l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM64 368l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zm112 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16z"/></symbol><symbol id="fa-users" viewBox="0 0 640 512"><path d="M320 16a104 104 0 1 1 0 208 104 104 0 1 1 0-208zM96 88a72 72 0 1 1 0 144 72 72 0 1 1 0-144zM0 416c0-70.7 57.3-128 128-128 12.8 0 25.2 1.9 36.9 5.4-32.9 36.8-52.9 85.4-52.9 138.6l0 16c0 11.4 2.4 22.2 6.7 32L32 480c-17.7 0-32-14.3-32-32l0-32zm521.3 64c4.3-9.8 6.7-20.6 6.7-32l0-16c0-53.2-20-101.8-52.9-138.6 11.7-3.5 24.1-5.4 36.9-5.4 70.7 0 128 57.3 128 128l0 32c0 17.7-14.3 32-32 32l-86.7 0zM472 160a72 72 0 1 1 144 0 72 72 0 1 1 -144 0zM160 432c0-88.4 71.6-160 160-160s160 71.6 160 160l0 16c0 17.7-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32l0-16z"/></symbol><symbol id="fa-hourglass-half" viewBox="0 0 384 512"><path d="M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l0 11c0 42.4 16.9 83.1 46.9 113.1l67.9 67.9-67.9 67.9C48.9 353.9 32 394.6 32 437l0 11c-17.7 0-32 14.3-32 32s14.3 32 32 32l320 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-11c0-42.4-16.9-83.1-46.9-113.1l-67.9-67.9 67.9-67.9c30-30 46.9-70.7 46.9-113.1l0-11c17.7 0 32-14.3 32-32S369.7 0 352 0L32 0zM96 75l0-11 192 0 0 11c0 19-5.6 37.4-16 53L112 128c-10.3-15.6-16-34-16-53zm16 309c3.5-5.3 7.6-10.3 12.1-14.9l67.9-67.9 67.9 67.9c4.6 4.6 8.6 9.6 12.2 14.9L112 384z"/></symbol><symbol id="fa-location-dot" viewBox="0 0 384 512"><path d="M0 188.6C0 84.4 86 0 192 0S384 84.4 384 188.6c0 119.3-120.2 262.3-170.4 316.8-11.8 12.8-31.5 12.8-43.3 0-50.2-54.5-170.4-197.5-170.4-316.8zM192 256a64 64 0 1 0 0-128 64 64 0 1 0 0 128z"/></symbol><symbol id="fa-gamepad" viewBox="0 0 640 512"><path d="M448 64c106 0 192 86 192 192S554 448 448 448l-256 0C86 448 0 362 0 256S86 64 192 64l256 0zM192 176c-13.3 0-24 10.7-24 24l0 32-32 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l32 0 0 32c0 13.3 10.7 24 24 24s24-10.7 24-24l0-32 32 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-32 0 0-32c0-13.3-10.7-24-24-24zm240 96a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm64-96a32 32 0 1 0 0 64 32 32 0 1 0 0-64z"/></symbol><symbol id="fa-magnifying-glass" viewBox="0 0 512 512"><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></symbol><symbol id="fa-circle" viewBox="0 0 512 512"><path d="M0 256a256 256 0 1 1 512 0 256 256 0 1 1 -512 0z"/></symbol><symbol id="fa-gear" viewBox="0 0 512 512"><path d="M195.1 9.5C198.1-5.3 211.2-16 226.4-16l59.8 0c15.2 0 28.3 10.7 31.3 25.5L332 79.5c14.1 6 27.3 13.7 39.3 22.8l67.8-22.5c14.4-4.8 30.2 1.2 37.8 14.4l29.9 51.8c7.6 13.2 4.9 29.8-6.5 39.9L447 233.3c.9 7.4 1.3 15 1.3 22.7s-.5 15.3-1.3 22.7l53.4 47.5c11.4 10.1 14 26.8 6.5 39.9l-29.9 51.8c-7.6 13.1-23.4 19.2-37.8 14.4l-67.8-22.5c-12.1 9.1-25.3 16.7-39.3 22.8l-14.4 69.9c-3.1 14.9-16.2 25.5-31.3 25.5l-59.8 0c-15.2 0-28.3-10.7-31.3-25.5l-14.4-69.9c-14.1-6-27.2-13.7-39.3-22.8L73.5 432.3c-14.4 4.8-30.2-1.2-37.8-14.4L5.8 366.1c-7.6-13.2-4.9-29.8 6.5-39.9l53.4-47.5c-.9-7.4-1.3-15-1.3-22.7s.5-15.3 1.3-22.7L12.3 185.8c-11.4-10.1-14-26.8-6.5-39.9L35.7 94.1c7.6-13.2 23.4-19.2 37.8-14.4l67.8 22.5c12.1-9.1 25.3-16.7 39.3-22.8L195.1 9.5zM256.3 336a80 80 0 1 0 -.6-160 80 80 0 1 0 .6 160z"/></symbol><symbol id="fa-bars" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"/></symbol><symbol id="fa-xmark" viewBox="0 0 384 512"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></symbol></svg>
+
   <div class="theme-switcher" id="themeSwitcher">
-    <button class="${currentTheme==='normal'?'active':''}" data-theme-value="normal" onclick="setTheme('normal')" title="Normal theme" aria-label="Switch to Normal theme" aria-pressed="${currentTheme==='normal'}">🏟️</button>
-    <button class="${currentTheme==='light'?'active':''}" data-theme-value="light" onclick="setTheme('light')" title="Esports theme" aria-label="Switch to Esports Fire theme" aria-pressed="${currentTheme==='light'}">🔥</button>
-    <button class="${currentTheme==='dark'?'active':''}" data-theme-value="dark" onclick="setTheme('dark')" title="Black &amp; White theme" aria-label="Switch to Black &amp; White theme" aria-pressed="${currentTheme==='dark'}">⬛</button>
+    <button class="${currentTheme==='normal'?'active':''}" data-theme-value="normal" onclick="setTheme('normal')" title="Normal theme" aria-label="Switch to Normal theme" aria-pressed="${currentTheme==='normal'}"><svg class="fa-ic"><use href="#fa-futbol"/></svg></button>
+    <button class="${currentTheme==='light'?'active':''}" data-theme-value="light" onclick="setTheme('light')" title="Esports theme" aria-label="Switch to Esports Fire theme" aria-pressed="${currentTheme==='light'}"><svg class="fa-ic"><use href="#fa-fire"/></svg></button>
+    <button class="${currentTheme==='dark'?'active':''}" data-theme-value="dark" onclick="setTheme('dark')" title="Black &amp; White theme" aria-label="Switch to Black &amp; White theme" aria-pressed="${currentTheme==='dark'}"><svg class="fa-ic"><use href="#fa-square"/></svg></button>
   </div>
   <a class="back" href="#" onclick="window.close();return false;">← Close this tab</a>
   <div class="head">
@@ -1448,15 +1702,17 @@
     <button type="button" class="pz-close" aria-label="Close zoomed photo" onclick="closeProfileZoom()">✕</button>
     <img id="pzImg" src="${hasPhoto ? PHOTOS[name] : ''}" alt="${name}">
   </div>
+  ${streakBadge}
   <div class="stat-row">
     <div class="stat-box"><div class="n">${stats.titles}</div><div class="l">Titles</div></div>
     <div class="stat-box"><div class="n">${stats.runnerups}</div><div class="l">Runner-ups</div></div>
     <div class="stat-box"><div class="n">${totalMatches}</div><div class="l">Matches</div></div>
     <div class="stat-box"><div class="n">${totalWins}</div><div class="l">Wins</div></div>
   </div>
-  <h2>🏆 Achievements</h2>
+  <button type="button" class="share-btn" onclick="downloadCard()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Download as image</button>
+  <h2><svg class="fa-ic"><use href="#fa-trophy"/></svg> Achievements</h2>
   ${achievementsHtml}
-  <h2>📊 Tournament Breakdown</h2>
+  <h2><svg class="fa-ic"><use href="#fa-chart-column"/></svg> Tournament Breakdown</h2>
   ${breakdownHtml}
   <footer>Generated live from eFootball Narikkuni · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</footer>
   <script>
@@ -1471,6 +1727,159 @@
         b.classList.toggle('active', isActive);
         b.setAttribute('aria-pressed', isActive);
       });
+    }
+
+    /* ---------------- SHAREABLE PROFILE CARD (canvas → PNG download) ---------------- */
+    const CARD_DATA = ${JSON.stringify({
+      name, initials,
+      photo: hasPhoto ? PHOTOS[name] : null,
+      titles: stats.titles, runnerups: stats.runnerups, matches: totalMatches, wins: totalWins
+    })};
+
+    function loadImg(src){
+      return new Promise(function(resolve, reject){
+        const img = new Image();
+        img.onload = function(){ resolve(img); };
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y, x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r);
+      ctx.arcTo(x, y, x+w, y, r);
+      ctx.closePath();
+    }
+
+    async function downloadCard(){
+      const btn = document.querySelector('.share-btn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+      try{
+        const cs = getComputedStyle(document.documentElement);
+        const ink = cs.getPropertyValue('--ink').trim();
+        const pitch = cs.getPropertyValue('--pitch').trim();
+        const pitchDeep = cs.getPropertyValue('--pitch-deep').trim();
+        const gold = cs.getPropertyValue('--gold').trim();
+        const floodlight = cs.getPropertyValue('--floodlight').trim();
+        const muted = cs.getPropertyValue('--muted').trim();
+        const cardBg = cs.getPropertyValue('--card').trim();
+        const fontDisplay = cs.getPropertyValue('--font-display').trim() || "'Oswald',sans-serif";
+        const fontMono = "'Roboto Mono',monospace";
+
+        await Promise.all([
+          document.fonts.load('64px ' + fontDisplay),
+          document.fonts.load('56px ' + fontDisplay),
+          document.fonts.load('120px ' + fontDisplay),
+          document.fonts.load('20px ' + fontMono),
+        ]);
+        await document.fonts.ready;
+
+        const W = 1000, H = 1260;
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d');
+
+        const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+        bgGrad.addColorStop(0, pitchDeep);
+        bgGrad.addColorStop(1, ink);
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        const glow = ctx.createRadialGradient(W*0.3, 60, 20, W*0.3, 60, 520);
+        glow.addColorStop(0, pitch);
+        glow.addColorStop(1, ink);
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = 1;
+
+        const cx = W/2, cy = 300, r = 160;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.closePath();
+        ctx.clip();
+        if(CARD_DATA.photo){
+          const img = await loadImg(CARD_DATA.photo);
+          const scale = Math.max((r*2)/img.width, (r*2)/img.height);
+          const iw = img.width*scale, ih = img.height*scale;
+          ctx.drawImage(img, cx-iw/2, cy-ih/2, iw, ih);
+        } else {
+          ctx.fillStyle = cardBg;
+          ctx.fillRect(cx-r, cy-r, r*2, r*2);
+          ctx.fillStyle = 'rgba(255,255,255,0.14)';
+          ctx.font = '120px ' + fontDisplay;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(CARD_DATA.initials, cx, cy+14);
+        }
+        ctx.restore();
+        ctx.strokeStyle = gold;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = floodlight;
+        ctx.font = '64px ' + fontDisplay;
+        ctx.fillText(CARD_DATA.name.toUpperCase(), W/2, 540);
+
+        ctx.fillStyle = gold;
+        ctx.font = '22px ' + fontMono;
+        ctx.fillText('EFOOTBALL NARIKKUNI', W/2, 578);
+
+        const statList = [
+          { label:'TITLES', value: CARD_DATA.titles },
+          { label:'RUNNER-UPS', value: CARD_DATA.runnerups },
+          { label:'MATCHES', value: CARD_DATA.matches },
+          { label:'WINS', value: CARD_DATA.wins }
+        ];
+        const boxW = 200, gap = 24, totalW = statList.length*boxW + (statList.length-1)*gap;
+        let x = (W-totalW)/2;
+        const boxY = 660, boxH = 160;
+        statList.forEach(function(s){
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          roundRect(ctx, x, boxY, boxW, boxH, 14);
+          ctx.fill();
+          ctx.fillStyle = gold;
+          ctx.font = '56px ' + fontDisplay;
+          ctx.fillText(String(s.value), x+boxW/2, boxY+86);
+          ctx.fillStyle = muted;
+          ctx.font = '18px ' + fontMono;
+          ctx.fillText(s.label, x+boxW/2, boxY+120);
+          x += boxW + gap;
+        });
+
+        ctx.fillStyle = muted;
+        ctx.font = '20px ' + fontMono;
+        ctx.fillText('NARIKKUNI, KERALA', W/2, H-40);
+
+        canvas.toBlob(function(blob){
+          if(!blob){ btn.disabled = false; btn.innerHTML = originalHtml; return; }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = CARD_DATA.name.replace(/[^a-z0-9]+/gi,'_') + '_eFootball_Narikkuni.png';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+        }, 'image/png');
+      }catch(err){
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        alert('Could not generate the image: ' + err.message);
+      }
     }
   <\/script>
 </body></html>`;
@@ -1541,7 +1950,7 @@
 
   function applyEditModeUI(){
     const btn = document.getElementById('editModeBtn');
-    btn.textContent = editModeEnabled ? '🔓 Edit Mode: ON' : '🔒 Edit Mode';
+    btn.innerHTML = editModeEnabled ? '<svg class="fa-ic"><use href="#fa-lock-open"/></svg> Edit Mode: ON' : '<svg class="fa-ic"><use href="#fa-lock"/></svg> Edit Mode';
     btn.classList.toggle('active', editModeEnabled);
     document.getElementById('addPlayerRow').style.display = editModeEnabled ? 'flex' : 'none';
     // leave the save bar up if a save-sync countdown is still running, even after Edit Mode is switched off
@@ -1581,13 +1990,13 @@
     const tick = () => {
       statusEl.className = 'save-status ok';
       if(remaining <= 0){
-        statusEl.textContent = '✅ Saved — should be live for everyone now. Reload the page to check.';
+        statusEl.textContent = '<svg class="fa-ic"><use href="#fa-circle-check"/></svg> Saved — should be live for everyone now. Reload the page to check.';
         clearInterval(syncCountdownInterval);
         syncCountdownInterval = null;
         return;
       }
       const m = Math.floor(remaining / 60), s = remaining % 60;
-      statusEl.textContent = `✅ Saved to GitHub — live for everyone in ~${m}:${String(s).padStart(2,'0')} (GitHub's cache needs a moment to refresh).`;
+      statusEl.textContent = `<svg class="fa-ic"><use href="#fa-circle-check"/></svg> Saved to GitHub — live for everyone in ~${m}:${String(s).padStart(2,'0')} (GitHub's cache needs a moment to refresh).`;
       remaining--;
     };
     tick();
@@ -1664,7 +2073,7 @@
     const addIdx = pendingAdditions.indexOf(oldName);
     if(addIdx > -1){ pendingAdditions[addIdx] = newName; delete pendingRenames[oldName]; }
 
-    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons);
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards();
     markDirty();
   }
 
@@ -1675,6 +2084,7 @@
     if(pendingAdditions.includes(name)) pendingAdditions = pendingAdditions.filter(n => n !== name);
     else pendingRemovals.push(name);
     renderRoster(); renderSideStats(); renderHomeCounts();
+    populateH2HSelects(); renderAwards();
     markDirty();
   }
 
@@ -1688,7 +2098,16 @@
     pendingAdditions.push(name);
     input.value = '';
     renderRoster(); renderSideStats(); renderHomeCounts();
+    populateH2HSelects(); renderAwards();
     markDirty();
+  }
+
+  function filterPlayers(){
+    const q = document.getElementById('playerSearch').value.trim().toLowerCase();
+    document.querySelectorAll('#rosterGrid .player-card').forEach(card => {
+      const name = (card.getAttribute('data-player') || '').toLowerCase();
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
   }
 
   function openMergeDuplicatesModal(){
@@ -1726,7 +2145,7 @@
     
     pendingRemovals.push(fromName);
     closeMergeDuplicatesModal();
-    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons);
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards();
     markDirty();
   }
 
@@ -1791,7 +2210,7 @@
     if(!editModeEnabled) return;
     const statusEl = document.getElementById('saveStatus');
     const token = document.getElementById('ghToken').value.trim();
-    if(!token){ statusEl.className = 'save-status err'; statusEl.textContent = '⚠ Paste a GitHub token first.'; return; }
+    if(!token){ statusEl.className = 'save-status err'; statusEl.textContent = '<svg class="fa-ic"><use href="#fa-triangle-exclamation"/></svg> Paste a GitHub token first.'; return; }
 
     const OWNER = 'mavc2613', REPO = 'fixture-flow', PATH = 'roster-overrides.json', BRANCH = 'main';
     const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
@@ -1835,7 +2254,7 @@
       startSyncCountdown();
     }catch(err){
       statusEl.className = 'save-status err';
-      statusEl.textContent = `⚠ ${err.message}`;
+      statusEl.textContent = `<svg class="fa-ic"><use href="#fa-triangle-exclamation"/></svg> ${err.message}`;
     }
   }
 
@@ -1906,8 +2325,17 @@
   const menuBtn = document.getElementById('menuBtn');
   const sideNav = document.getElementById('sideNav');
   if(menuBtn){
-    menuBtn.addEventListener('click', ()=> sideNav.classList.toggle('open'));
-    links.forEach(l=> l.addEventListener('click', ()=> sideNav.classList.remove('open')));
+    const barsIcon = document.getElementById('menuBtnIconBars');
+    const closeIcon = document.getElementById('menuBtnIconClose');
+    const syncMenuBtn = () => {
+      const open = sideNav.classList.contains('open');
+      barsIcon.style.display = open ? 'none' : '';
+      closeIcon.style.display = open ? '' : 'none';
+      menuBtn.setAttribute('aria-expanded', open);
+      menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    };
+    menuBtn.addEventListener('click', ()=>{ sideNav.classList.toggle('open'); syncMenuBtn(); });
+    links.forEach(l=> l.addEventListener('click', ()=>{ sideNav.classList.remove('open'); syncMenuBtn(); }));
   }
 
   /* ---------------- MANUAL FIXTURE FLOW IMPORT ----------------
@@ -2070,17 +2498,19 @@
       renderSideStats();
       renderKnockoutTable();
       renderHomeCounts();
+      populateH2HSelects();
+      renderAwards();
       renderAssignPanel(unmapped);
 
       const expDate = raw.exported
         ? new Date(raw.exported).toLocaleString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
         : 'unknown';
       statusEl.className = 'upload-sub ok';
-      statusEl.innerHTML = `🟢 <b style="color:var(--turf-bright);">Live</b> — synced from Fixture Flow, data as of <b style="color:var(--gold);">${expDate}</b>. Auto-refreshes every time this page loads.` +
-        (unmapped.length ? `<br><span style="color:var(--gold);">👤 ${unmapped.length} name${unmapped.length!==1?'s':''} not recognised — assign below if actually an existing player.</span>` : '');
+      statusEl.innerHTML = `<svg class="fa-ic"><use href="#fa-circle"/></svg> <b style="color:var(--turf-bright);">Live</b> — synced from Fixture Flow, data as of <b style="color:var(--gold);">${expDate}</b>. Auto-refreshes every time this page loads.` +
+        (unmapped.length ? `<br><span style="color:var(--gold);"><svg class="fa-ic"><use href="#fa-user"/></svg> ${unmapped.length} name${unmapped.length!==1?'s':''} not recognised — assign below if actually an existing player.</span>` : '');
     }catch(err){
       statusEl.className = 'upload-sub err';
-      statusEl.innerHTML = `⚠ Live feed unreachable (${err.message}) — showing last saved data.`;
+      statusEl.innerHTML = `<svg class="fa-ic"><use href="#fa-triangle-exclamation"/></svg> Live feed unreachable (${err.message}) — showing last saved data.`;
     }
   }
 
@@ -2093,7 +2523,7 @@
 
     panel.style.display = 'block';
     panel.innerHTML = `
-      <div class="assign-head">👤 Assign new names</div>
+      <div class="assign-head"><svg class="fa-ic"><use href="#fa-user"/></svg> Assign new names</div>
       <div class="assign-sub">These names weren't recognised. If one is actually an existing player under a nickname or alt name, pick them below — all their stats will merge together. Leave as "Keep as new player" if they're genuinely new.</div>
       ${unmapped.map((u,i) => `
         <div class="assign-row">
@@ -2106,7 +2536,7 @@
         </div>`).join('')}
       <button class="assign-apply" onclick="applyAssignments()">Apply &amp; refresh</button>
       <div style="margin-top:24px;padding-top:24px;border-top:1px dashed var(--card-line);">
-        <div style="font-family:'Roboto Mono';font-size:0.68rem;color:var(--muted);margin-bottom:12px;">⚙️ OR merge two existing roster players:</div>
+        <div style="font-family:'Roboto Mono';font-size:0.68rem;color:var(--muted);margin-bottom:12px;"><svg class="fa-ic"><use href="#fa-gear"/></svg> OR merge two existing roster players:</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <select id="mergeExistingFrom" style="flex:1;min-width:140px;background:var(--pitch-deep);color:var(--floodlight);border:1px solid var(--card-line);border-radius:6px;padding:8px;font-family:'Oswald';font-size:0.9rem;"></select>
           <select id="mergeExistingTo" style="flex:1;min-width:140px;background:var(--pitch-deep);color:var(--floodlight);border:1px solid var(--card-line);border-radius:6px;padding:8px;font-family:'Oswald';font-size:0.9rem;"></select>
@@ -2138,13 +2568,13 @@
     if(addIdx > -1) pendingAdditions.splice(addIdx, 1);
     if(!pendingRemovals.includes(fromName)) pendingRemovals.push(fromName);
     
-    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons);
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards();
     renderAssignPanel([]); // clear panel
     markDirty();
     
     const statusEl = document.getElementById('uploadStatus');
     statusEl.className = 'upload-sub ok';
-    statusEl.innerHTML = `✅ ${fromName} merged into ${toName}. All stats consolidated. <b style="color:var(--gold);">Save to GitHub to make permanent</b>.`;
+    statusEl.innerHTML = `<svg class="fa-ic"><use href="#fa-circle-check"/></svg> ${fromName} merged into ${toName}. All stats consolidated. <b style="color:var(--gold);">Save to GitHub to make permanent</b>.`;
   }
 
   /* Season edit modal */
@@ -2253,6 +2683,8 @@
       renderKnockoutTable();
       renderHomeCounts();
       renderTable('leagueRows', leagueSeasons);
+      populateH2HSelects();
+      renderAwards();
     }
 
     document.getElementById('assignPanel').style.display = 'none';
@@ -2261,7 +2693,7 @@
     const parts = [];
     if(changed) parts.push(`${changed} name${changed!==1?'s':''} merged`);
     if(confirmedNew) parts.push(`${confirmedNew} confirmed as new player${confirmedNew!==1?'s':''}`);
-    statusEl.innerHTML = `✅ ${parts.join(', ')}. <b style="color:var(--gold);">Save to GitHub to make permanent</b> — or reload to lose changes.`;
+    statusEl.innerHTML = `<svg class="fa-ic"><use href="#fa-circle-check"/></svg> ${parts.join(', ')}. <b style="color:var(--gold);">Save to GitHub to make permanent</b> — or reload to lose changes.`;
     markDirty();
   }
 </script>
@@ -2308,7 +2740,7 @@
 <!-- Merge duplicates modal -->
 <div class="modal-overlay" id="mergeDuplicatesModal">
   <div class="modal-content">
-    <div class="modal-title">🔀 Merge Duplicate Players</div>
+    <div class="modal-title"><svg class="fa-ic"><use href="#fa-shuffle"/></svg> Merge Duplicate Players</div>
     <div class="modal-field">
       <label>Merge FROM (will be removed)</label>
       <select id="mergeFrom"></select>
