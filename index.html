@@ -168,29 +168,6 @@
       radial-gradient(ellipse 70% 60% at 85% 90%, rgba(255,255,255,0.08), transparent 60%),
       linear-gradient(160deg, var(--pitch-deep) 0%, var(--ink) 70%);
   }
-  .hero-bubbles{
-    --bubble-magenta:#e026c4; --bubble-cyan:#26c9e0;
-    position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none;
-    background:
-      radial-gradient(circle at 6% 12%, var(--bubble-cyan) 0%, transparent 58%),
-      radial-gradient(circle at 90% 8%, var(--bubble-magenta) 0%, transparent 55%),
-      radial-gradient(circle at 18% 68%, var(--bubble-magenta) 0%, transparent 50%),
-      radial-gradient(circle at 40% 25%, var(--floodlight) 0%, transparent 45%),
-      radial-gradient(circle at 60% 80%, var(--bubble-cyan) 0%, transparent 52%),
-      radial-gradient(circle at 82% 55%, var(--bubble-cyan) 0%, transparent 48%),
-      radial-gradient(circle at 95% 75%, var(--bubble-magenta) 0%, transparent 50%),
-      radial-gradient(circle at 30% 90%, var(--floodlight) 0%, transparent 40%),
-      radial-gradient(circle at 70% 15%, var(--gold) 0%, transparent 38%),
-      radial-gradient(circle at 50% 50%, var(--bubble-cyan) 0%, transparent 35%);
-    background-size:32% 32%, 26% 26%, 22% 22%, 16% 16%, 28% 28%, 20% 20%, 18% 18%, 14% 14%, 12% 12%, 24% 24%;
-    background-repeat:no-repeat;
-    opacity:0.32; filter:blur(5px);
-    animation:bubbleDrift 24s ease-in-out infinite alternate;
-  }
-  @keyframes bubbleDrift{
-    0%{transform:scale(1) translateY(0);}
-    100%{transform:scale(1.08) translateY(-2%);}
-  }
   .hero-eyebrow{position:relative; z-index:2; font-family:'Roboto Mono',monospace; letter-spacing:0.22em; text-transform:uppercase; font-size:0.78rem; color:var(--turf-bright); margin-bottom:18px;}
   .hero h1{position:relative; z-index:2; font-size:clamp(3.2rem, 9vw, 7.5rem); line-height:0.92; color:var(--floodlight); font-family:var(--font-display); text-shadow:0 4px 0 rgba(0,0,0,0.3);}
   .hero h1 .accent{color:var(--gold); -webkit-text-stroke:2px var(--gold);}
@@ -243,6 +220,37 @@
   .quick-card .icon{font-size:1.6rem;}
   .quick-card h4{font-family:'Oswald'; font-size:1.3rem; color:var(--floodlight);}
   .quick-card p{color:var(--muted); font-size:0.92rem; line-height:1.5;}
+
+  /* ---------- INTERACTIVE DEPTH: 3D tilt + glare on hoverable cards ---------- */
+  .comp-card, .live-card, .player-card{ transform-style:preserve-3d; will-change:transform; }
+  .comp-card::before, .live-card::before, .player-card::before{
+    content:""; position:absolute; inset:0; z-index:3; pointer-events:none; border-radius:inherit;
+    background:radial-gradient(220px circle at var(--glare-x,50%) var(--glare-y,50%), rgba(255,255,255,0.16), transparent 62%);
+    opacity:var(--glare-opacity,0); transition:opacity .3s ease;
+  }
+  .live-card{position:relative;}
+
+  /* ---------- INTERACTIVE DEPTH: click ripple ---------- */
+  .ripple-fx{
+    position:absolute; border-radius:50%; background:rgba(255,255,255,0.45);
+    transform:scale(0); pointer-events:none; animation:rippleOut .6s ease-out forwards;
+  }
+  html[data-theme="light"] .ripple-fx{background:rgba(10,5,3,0.25);}
+  @keyframes rippleOut{ to{ transform:scale(2.8); opacity:0; } }
+
+  /* ---------- INTERACTIVE DEPTH: cursor-tracking glow on primary buttons ---------- */
+  .btn-primary::before{
+    content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none;
+    background:radial-gradient(160px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.4), transparent 65%);
+    opacity:0; transition:opacity .25s ease;
+  }
+  .btn-primary:hover::before{opacity:1;}
+
+  @media (prefers-reduced-motion: reduce){
+    .comp-card, .live-card, .player-card{transform:none !important;}
+    .comp-card::before, .live-card::before, .player-card::before, .btn-primary::before{display:none;}
+    .ripple-fx{display:none;}
+  }
 
   /* ---------- RESULTS TABLE ---------- */
   .results-table{border:1px solid var(--card-line); border-radius:16px; overflow:hidden; background:var(--card);}
@@ -715,7 +723,6 @@
     <!-- HOME -->
     <section id="home">
       <div class="hero">
-        <div class="hero-bubbles" aria-hidden="true"></div>
         <div class="hero-eyebrow">// local eFootball league</div>
         <h1>EFOOTBALL<br><span class="accent">NARIKKUNI</span></h1>
         <p class="hero-sub">Every season, every shield, every bragging right — tracked in one place. This is where the Narikkuni squad settles it on the pitch.</p>
@@ -1670,15 +1677,38 @@
   }
   renderLeaderboard();
 
+  /* animates the leading number in a stat line from its current value to the new one —
+     re-running this on every re-render (live sync, roster edit, etc.) means the counters
+     visibly tick up/down instead of just snapping, without needing a fresh element to trigger on */
+  function setCountText(el, text){
+    if(!el) return;
+    const newMatch = text.match(/\d+/);
+    if(!newMatch || window.matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent = text; return; }
+    const newNum = parseInt(newMatch[0], 10);
+    const oldMatch = el.textContent.match(/\d+/);
+    const oldNum = oldMatch ? parseInt(oldMatch[0], 10) : 0;
+    if(oldNum === newNum){ el.textContent = text; return; }
+    const prefix = text.slice(0, newMatch.index);
+    const suffix = text.slice(newMatch.index + newMatch[0].length);
+    const duration = 700;
+    const start = performance.now();
+    (function tick(now){
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = `${prefix}${Math.round(oldNum + (newNum - oldNum) * eased)}${suffix}`;
+      if(p < 1) requestAnimationFrame(tick);
+    })(start);
+  }
+
   function renderHomeCounts(){
-    document.getElementById('leagueCount').textContent = `${leagueSeasons.length} seasons played`;
+    setCountText(document.getElementById('leagueCount'), `${leagueSeasons.length} seasons played`);
     const allKnockout = [...knockoutSeasons, ...deriveKnockoutFromTournaments()];
     const doneCount = allKnockout.filter(s=>s.status==='done').length;
     const liveCount = allKnockout.filter(s=>s.status==='live').length;
-    document.getElementById('knockoutCount').textContent = `${doneCount} seasons played${liveCount ? ` · ${liveCount} live` : ''}`;
-    document.getElementById('leagueKoCount').textContent = `${leagueKoSeasons.length} season played`;
-    document.getElementById('rosterBlurb').textContent = `${rosterOrder.length} regulars — profiles, titles, and runner-up finishes.`;
-    document.getElementById('rosterCount').textContent = `${rosterOrder.length} players tracked across every League, Knockout, and League+KO season.`;
+    setCountText(document.getElementById('knockoutCount'), `${doneCount} seasons played${liveCount ? ` · ${liveCount} live` : ''}`);
+    setCountText(document.getElementById('leagueKoCount'), `${leagueKoSeasons.length} season played`);
+    setCountText(document.getElementById('rosterBlurb'), `${rosterOrder.length} regulars — profiles, titles, and runner-up finishes.`);
+    setCountText(document.getElementById('rosterCount'), `${rosterOrder.length} players tracked across every League, Knockout, and League+KO season.`);
   }
   renderKnockoutTable();
       renderHomeCounts();
@@ -2660,6 +2690,60 @@
   });
 
   showSection((location.hash || '#home').slice(1));
+
+  /* ---------------- INTERACTIVE DEPTH: 3D tilt, magnetic glow, click ripple ---------------- */
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const TILT_SELECTOR = '.comp-card, .live-card, .player-card';
+    let activeTiltCard = null;
+    document.addEventListener('mousemove', (e) => {
+      const card = e.target.closest ? e.target.closest(TILT_SELECTOR) : null;
+      if(!card){
+        if(activeTiltCard){ activeTiltCard.style.transform = ''; activeTiltCard.style.setProperty('--glare-opacity', '0'); activeTiltCard = null; }
+        return;
+      }
+      activeTiltCard = card;
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      card.style.transform = `perspective(900px) translateY(-6px) rotateX(${(0.5 - py) * 8}deg) rotateY(${(px - 0.5) * 12}deg)`;
+      card.style.setProperty('--glare-x', `${px * 100}%`);
+      card.style.setProperty('--glare-y', `${py * 100}%`);
+      card.style.setProperty('--glare-opacity', '1');
+    });
+    document.addEventListener('mouseout', (e) => {
+      const card = e.target.closest ? e.target.closest(TILT_SELECTOR) : null;
+      if(card && (!e.relatedTarget || !card.contains(e.relatedTarget))){
+        card.style.transform = '';
+        card.style.setProperty('--glare-opacity', '0');
+        if(activeTiltCard === card) activeTiltCard = null;
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      const btn = e.target.closest ? e.target.closest('.btn-primary') : null;
+      if(!btn) return;
+      const r = btn.getBoundingClientRect();
+      btn.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      btn.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  }
+
+  document.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest ? e.target.closest('.btn, .p-ic-btn, .sec-back, .save-btn, .nlink') : null;
+    if(!el) return;
+    const cs = getComputedStyle(el);
+    if(cs.position === 'static') el.style.position = 'relative';
+    if(cs.overflow !== 'hidden') el.style.overflow = 'hidden';
+    const r = el.getBoundingClientRect();
+    const size = Math.max(r.width, r.height) * 1.4;
+    const span = document.createElement('span');
+    span.className = 'ripple-fx';
+    span.style.width = span.style.height = `${size}px`;
+    span.style.left = `${e.clientX - r.left - size / 2}px`;
+    span.style.top = `${e.clientY - r.top - size / 2}px`;
+    el.appendChild(span);
+    span.addEventListener('animationend', () => span.remove());
+  });
 
   /* ---------------- MOBILE MENU ---------------- */
   const menuBtn = document.getElementById('menuBtn');
