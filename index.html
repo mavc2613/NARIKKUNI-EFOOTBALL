@@ -168,6 +168,33 @@
       radial-gradient(ellipse 70% 60% at 85% 90%, rgba(255,255,255,0.08), transparent 60%),
       linear-gradient(160deg, var(--pitch-deep) 0%, var(--ink) 70%);
   }
+  .kick{
+    position:relative; z-index:2; display:inline-block;
+    font-family:'Roboto Mono',monospace; font-size:0.75rem; letter-spacing:0.05em;
+    color:var(--floodlight); border:1px solid var(--floodlight);
+    padding:8px 18px; border-radius:999px; margin-bottom:20px;
+  }
+  #quoteBar{
+    max-width:620px; margin-left:auto; margin-right:auto;
+    line-height:1.55; font-style:italic; white-space:normal; letter-spacing:normal;
+  }
+  #quoteRefresh{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; padding:0;
+    margin-left:10px; vertical-align:middle;
+    background:transparent; border:1px solid var(--card-line); border-radius:50%;
+    color:var(--muted); opacity:0.75; cursor:pointer;
+    transition:opacity .15s ease, border-color .15s ease, color .15s ease;
+  }
+  #quoteRefresh:hover{opacity:1; border-color:var(--gold); color:var(--gold);}
+  #quoteRefresh svg{
+    width:13px; height:13px;
+    animation:quoteSpin .5s ease;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+  }
+  @keyframes quoteSpin{from{transform:rotate(-180deg);} to{transform:rotate(0);}}
+  @media (prefers-reduced-motion: reduce){ #quoteRefresh svg{animation:none;} }
+  #quoteBar .q-by{font-style:normal; font-weight:700; color:var(--gold); white-space:nowrap;}
   .hero-eyebrow{position:relative; z-index:2; font-family:'Roboto Mono',monospace; letter-spacing:0.22em; text-transform:uppercase; font-size:0.78rem; color:var(--turf-bright); margin-bottom:18px;}
   .hero h1{position:relative; z-index:2; font-size:clamp(3.2rem, 9vw, 7.5rem); line-height:0.92; color:var(--floodlight); font-family:var(--font-display); text-shadow:0 4px 0 rgba(0,0,0,0.3);}
   .hero h1 .accent{color:var(--gold); -webkit-text-stroke:2px var(--gold);}
@@ -250,7 +277,12 @@
     .comp-card, .live-card, .player-card{transform:none !important;}
     .comp-card::before, .live-card::before, .player-card::before, .btn-primary::before{display:none;}
     .ripple-fx{display:none;}
+    .fa-spin{animation:none;}
   }
+
+  /* ---------- LOADING SPINNER (a spinning football, used everywhere the site is fetching/generating) ---------- */
+  .fa-spin{display:inline-block; animation:footballSpin 0.8s linear infinite;}
+  @keyframes footballSpin{from{transform:rotate(0);} to{transform:rotate(360deg);}}
 
   /* ---------- RESULTS TABLE ---------- */
   .results-table{border:1px solid var(--card-line); border-radius:16px; overflow:hidden; background:var(--card);}
@@ -492,17 +524,49 @@
   .rename-row .go{background:var(--gold); color:var(--ink-fixed);}
   .rename-row .no{background:var(--card-line); color:var(--floodlight);}
 
-  .player-search-row{
+  .player-search-row{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; flex-wrap:wrap;}
+  .search-box{
     display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--card-line);
-    border-radius:10px; padding:12px 18px; margin-bottom:24px; max-width:420px; transition:border-color .2s ease;
+    border-radius:10px; padding:12px 18px; max-width:420px; flex:1; min-width:220px; transition:border-color .2s ease;
   }
-  .player-search-row:focus-within{border-color:var(--gold);}
-  .player-search-row svg{width:0.95rem; height:0.95rem; color:var(--muted); flex-shrink:0;}
-  .player-search-row input{
+  .search-box:focus-within{border-color:var(--gold);}
+  .search-box svg{width:0.95rem; height:0.95rem; color:var(--muted); flex-shrink:0;}
+  .search-box input{
     flex:1; background:transparent; border:none; outline:none; color:var(--floodlight);
     font-family:'Oswald'; font-size:0.95rem;
   }
-  .player-search-row input::placeholder{color:var(--muted);}
+  .search-box input::placeholder{color:var(--muted);}
+  .roster-view-toggle{display:inline-flex; gap:6px; flex-shrink:0;}
+  .view-btn{
+    width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+    background:var(--card); border:1px solid var(--card-line); border-radius:8px;
+    color:var(--muted); cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .view-btn:hover{border-color:var(--gold); color:var(--gold);}
+  .view-btn.active{border-color:var(--gold); color:var(--gold); background:rgba(226,166,59,0.1);}
+  .view-btn .grid-ic{display:grid; grid-template-columns:1fr 1fr; gap:3px; width:14px; height:14px;}
+  .view-btn .grid-ic span{background:currentColor; border-radius:2px;}
+
+  .roster-table-wrap{border:1px solid var(--card-line); border-radius:14px; overflow:hidden; overflow-x:auto; background:var(--card);}
+  .roster-table{width:100%; border-collapse:collapse; min-width:640px;}
+  .roster-table thead th{
+    text-align:left; padding:14px 18px; font-family:'Roboto Mono'; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--muted); background:rgba(226,166,59,0.06); border-bottom:1px solid var(--card-line); white-space:nowrap;
+  }
+  .roster-table tbody tr{cursor:pointer; transition:background .15s ease;}
+  .roster-table tbody tr:hover{background:rgba(255,255,255,0.03);}
+  .roster-table tbody tr:last-child td{border-bottom:none;}
+  .roster-table tbody td{padding:10px 18px; border-bottom:1px dashed var(--card-line); vertical-align:middle;}
+  .rt-rank{font-family:'Roboto Mono'; color:var(--gold); font-weight:700; width:1%; white-space:nowrap;}
+  .rt-name-cell{display:flex; align-items:center; gap:12px;}
+  .rt-avatar{width:36px; height:36px; border-radius:50%; overflow:hidden; background:var(--pitch-deep); display:flex; align-items:center; justify-content:center; font-family:'Oswald'; font-size:0.7rem; color:var(--muted); flex-shrink:0;}
+  .rt-avatar img{width:100%; height:100%; object-fit:cover; object-position:center top;}
+  .rt-name{display:flex; flex-direction:column; gap:2px;}
+  .rt-name b{font-family:'Oswald'; font-weight:600; font-size:0.95rem; color:var(--floodlight);}
+  .rt-role{font-family:'Roboto Mono'; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;}
+  .rt-num{font-family:var(--font-display); color:var(--gold); font-size:1rem;}
+  .rt-actions{display:flex; gap:6px; justify-content:flex-end; white-space:nowrap;}
+  .rt-actions .p-ic-btn{width:32px; height:32px; font-size:0.75rem;}
   .add-player-row{display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;}
   .add-player-row input{
     flex:1; min-width:200px; font-family:'Oswald'; font-size:0.95rem; background:var(--card); color:var(--floodlight);
@@ -556,6 +620,17 @@
   .player-photo{height:170px; position:relative; overflow:hidden; background:linear-gradient(145deg, var(--pitch), var(--pitch-deep)); display:flex; align-items:center; justify-content:center;}
   .player-photo .init{font-family:var(--font-display); font-size:3.6rem; color:rgba(255,255,255,0.08);}
   .player-photo .num{position:absolute; top:12px; right:14px; font-family:var(--font-display); font-size:1.5rem; color:var(--gold); opacity:0.8;}
+  .form-badge{
+    position:absolute; top:12px; left:14px; width:28px; height:28px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-size:0.9rem; font-weight:700;
+    background:rgba(10,14,12,0.6); border:2px solid currentColor;
+  }
+  .rt-form-grade{
+    display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%;
+    font-family:var(--font-display); font-size:0.75rem; font-weight:700; border:2px solid currentColor;
+    margin-right:8px; flex-shrink:0; vertical-align:middle;
+  }
   .player-body{padding:16px 18px;}
   .player-body .role{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--turf-bright); margin-bottom:6px; min-height:2.2em; line-height:1.4;}
   .player-body h4{font-family:'Oswald'; font-weight:600; font-size:1.18rem; color:var(--floodlight);}
@@ -595,7 +670,14 @@
   .h2h-meeting{display:flex; justify-content:space-between; gap:12px; font-size:0.85rem; flex-wrap:wrap;}
   .h2h-meeting span{color:var(--muted); font-family:'Roboto Mono'; font-size:0.68rem;}
   .h2h-meeting b{font-family:'Oswald'; font-weight:600; color:var(--floodlight);}
-  .awards-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .awards-scope{display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap;}
+  .awards-scope label{font-family:'Roboto Mono'; font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);}
+  .awards-scope select{
+    background:var(--pitch-deep); color:var(--floodlight); border:1px solid var(--card-line);
+    border-radius:8px; padding:10px 14px; font-family:'Oswald'; font-size:0.95rem; cursor:pointer; transition:border-color .2s ease; min-width:220px;
+  }
+  .awards-scope select:hover, .awards-scope select:focus{border-color:var(--gold);}
+  .awards-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:20px;}
   .award-card{border:1px solid var(--card-line); border-radius:14px; background:var(--card); padding:26px; text-align:center; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;}
   .award-card:hover{transform:translateY(-4px); border-color:var(--gold); box-shadow:0 14px 32px rgba(0,0,0,0.3);}
   .award-ic{width:1.6rem; height:1.6rem; color:var(--gold); margin-bottom:10px;}
@@ -700,12 +782,10 @@
       <a href="#home" class="nlink active"><span class="n">01</span> Home</a>
       <a href="#fixtures" class="nlink"><span class="n">02</span> Fixtures</a>
       <a href="#leaderboard" class="nlink"><span class="n">03</span> Leaderboard</a>
-      <a href="#league" class="nlink"><span class="n">04</span> League</a>
-      <a href="#knockout" class="nlink"><span class="n">05</span> Knockout</a>
-      <a href="#leagueko" class="nlink"><span class="n">06</span> League + KO</a>
-      <a href="#players" class="nlink"><span class="n">07</span> Players</a>
-      <a href="#analytics" class="nlink"><span class="n">08</span> Analytics</a>
-      <a href="#about" class="nlink"><span class="n">09</span> About</a>
+      <a href="#competitions" class="nlink"><span class="n">04</span> Competitions</a>
+      <a href="#players" class="nlink"><span class="n">05</span> Players</a>
+      <a href="#analytics" class="nlink"><span class="n">06</span> Analytics</a>
+      <a href="#about" class="nlink"><span class="n">07</span> About</a>
     </div>
     <div class="side-stats" id="sideStats"></div>
     <div class="side-theme">
@@ -723,6 +803,7 @@
     <!-- HOME -->
     <section id="home">
       <div class="hero">
+        <div class="kick" id="quoteBar"></div>
         <div class="hero-eyebrow">// local eFootball league</div>
         <h1>EFOOTBALL<br><span class="accent">NARIKKUNI</span></h1>
         <p class="hero-sub">Every season, every shield, every bragging right — tracked in one place. This is where the Narikkuni squad settles it on the pitch.</p>
@@ -798,10 +879,10 @@
 
         <div class="upload-box reveal">
           <div class="upload-left">
-            <div class="upload-ic"><svg class="fa-ic"><use href="#fa-arrows-rotate"/></svg></div>
+            <div class="upload-ic"><svg class="fa-ic fa-spin"><use href="#fa-futbol"/></svg></div>
             <div>
               <div class="upload-title">Live sync status</div>
-              <div class="upload-sub" id="uploadStatus"><svg class="fa-ic"><use href="#fa-arrows-rotate"/></svg> Checking live feed…</div>
+              <div class="upload-sub" id="uploadStatus"><svg class="fa-ic fa-spin"><use href="#fa-futbol"/></svg> Checking live feed…</div>
             </div>
           </div>
         </div>
@@ -825,6 +906,30 @@
         </div>
         <div class="lb-tabs" id="lbTabs"></div>
         <div id="lbTables"></div>
+      </div>
+    </section>
+
+    <!-- COMPETITIONS -->
+    <section id="competitions">
+      <div class="section-inner">
+        <button type="button" class="sec-back reveal" onclick="showSection('home')"><svg class="fa-ic"><use href="#fa-arrow-left"/></svg> Back to Home</button>
+        <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">Competitions</div></div>
+        <h2 class="sec-title reveal">Three formats. One trophy cabinet.</h2>
+        <p class="sec-desc reveal">The league decides the season's best over the long run. The knockout decides who's got nerve when it's win-or-go-home. The Shield combines both into one overall season standing.</p>
+        <div class="comp-grid">
+          <a href="#league" class="comp-card league reveal">
+            <span class="arrow"><svg class="fa-ic"><use href="#fa-up-right-from-square"/></svg></span>
+            <div><div class="tag">Round robin</div><h3>League</h3><div class="count" id="leagueCount2"></div></div>
+          </a>
+          <a href="#knockout" class="comp-card knockout reveal">
+            <span class="arrow"><svg class="fa-ic"><use href="#fa-up-right-from-square"/></svg></span>
+            <div><div class="tag">Single elimination</div><h3>Knockout</h3><div class="count" id="knockoutCount2"></div></div>
+          </a>
+          <a href="#leagueko" class="comp-card combined reveal">
+            <span class="arrow"><svg class="fa-ic"><use href="#fa-up-right-from-square"/></svg></span>
+            <div><div class="tag">Combined standing</div><h3>League + KO</h3><div class="count" id="leagueKoCount2"></div></div>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -900,11 +1005,27 @@
         </div>
 
         <div class="player-search-row reveal">
-          <svg class="fa-ic"><use href="#fa-magnifying-glass"/></svg>
-          <input type="text" id="playerSearch" placeholder="Search players…" oninput="filterPlayers()" aria-label="Search players">
+          <div class="search-box">
+            <svg class="fa-ic"><use href="#fa-magnifying-glass"/></svg>
+            <input type="text" id="playerSearch" placeholder="Search players…" oninput="filterPlayers()" aria-label="Search players">
+          </div>
+          <div class="roster-view-toggle" id="rosterViewToggle">
+            <button type="button" class="view-btn active" data-view="grid" onclick="setRosterView('grid')" title="Grid view" aria-label="Grid view" aria-pressed="true">
+              <span class="grid-ic"><span></span><span></span><span></span><span></span></span>
+            </button>
+            <button type="button" class="view-btn" data-view="table" onclick="setRosterView('table')" title="Table view" aria-label="Table view" aria-pressed="false">
+              <svg class="fa-ic"><use href="#fa-bars"/></svg>
+            </button>
+          </div>
         </div>
 
         <div class="roster-grid" id="rosterGrid"></div>
+        <div class="roster-table-wrap" id="rosterTableWrap" style="display:none;">
+          <table class="roster-table">
+            <thead><tr><th>#</th><th>Player</th><th>Titles</th><th>Runner-ups</th><th>Form</th><th></th></tr></thead>
+            <tbody id="rosterTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -925,6 +1046,10 @@
           <div id="h2hResult"></div>
         </div>
 
+        <div class="awards-scope">
+          <label for="awardsScopeSelect">Viewing</label>
+          <select id="awardsScopeSelect" onchange="setAwardsScope(this.value)"></select>
+        </div>
         <div class="awards-grid" id="awardsGrid"></div>
 
         <button type="button" class="btn btn-primary reveal" id="seasonWrapBtn" style="margin-top:32px; display:none;" onclick="downloadSeasonWrap()">
@@ -1228,8 +1353,29 @@
     return null;
   }
 
+  // signed trailing streak — positive for a run of wins, negative for a run of losses,
+  // 0 if the most recent match was a draw or the player hasn't played yet
+  function netFormStreak(name){
+    const results = matchResults.filter(m => m.player === name).map(m => m.result);
+    if(!results.length) return 0;
+    const last = results[results.length - 1];
+    if(last === 'D') return 0;
+    let count = 0;
+    for(let i = results.length - 1; i >= 0; i--){ if(results[i] === last) count++; else break; }
+    return last === 'W' ? count : -count;
+  }
+
+  // A-E form grade + its color, driven entirely by the current win/loss streak —
+  // an original letter-grade convention, not tied to any particular game's UI
+  const FORM_GRADE_COLORS = { A:'#22c55e', B:'#4ade80', C:'#eab308', D:'#f97316', E:'#ef4444' };
+  function formGradeFor(name){
+    const streak = netFormStreak(name);
+    const grade = streak >= 3 ? 'A' : streak === 2 ? 'B' : streak === 1 ? 'C' : streak === 0 ? 'D' : 'E';
+    return { grade, color: FORM_GRADE_COLORS[grade] };
+  }
+
   function getSeasonAwards(){
-    const goalsFor = {}, goalsAgainst = {}, matchesPlayed = {};
+    const goalsFor = {}, goalsAgainst = {}, matchesPlayed = {}, winsCount = {}, cleanSheets = {};
     let biggestWin = null;
     TOURNAMENT_DATA.forEach(t => {
       t.rounds.forEach(r => {
@@ -1240,6 +1386,10 @@
           goalsFor[m.a] = (goalsFor[m.a]||0) + m.ga;
           goalsAgainst[m.h] = (goalsAgainst[m.h]||0) + m.ga;
           goalsAgainst[m.a] = (goalsAgainst[m.a]||0) + m.gh;
+          if(m.ga === 0) cleanSheets[m.h] = (cleanSheets[m.h]||0) + 1;
+          if(m.gh === 0) cleanSheets[m.a] = (cleanSheets[m.a]||0) + 1;
+          if(m.gh > m.ga) winsCount[m.h] = (winsCount[m.h]||0) + 1;
+          else if(m.ga > m.gh) winsCount[m.a] = (winsCount[m.a]||0) + 1;
           if(m.gh !== m.ga){
             const diff = Math.abs(m.gh - m.ga);
             if(!biggestWin || diff > biggestWin.diff){
@@ -1257,7 +1407,19 @@
     const bestDefense = Object.entries(goalsAgainst)
       .filter(([p]) => (matchesPlayed[p]||0) >= 3)
       .sort((a,b) => a[1]-b[1])[0];
-    return { topScorer, bestDefense, biggestWin };
+    const mostWins = Object.entries(winsCount).sort((a,b) => b[1]-a[1])[0];
+    const bestWinRate = Object.entries(winsCount)
+      .filter(([p]) => (matchesPlayed[p]||0) >= 3)
+      .map(([p,w]) => [p, w/matchesPlayed[p]])
+      .sort((a,b) => b[1]-a[1])[0];
+    const ironMan = Object.entries(matchesPlayed).sort((a,b) => b[1]-a[1])[0];
+    const cleanSheetKing = Object.entries(cleanSheets).sort((a,b) => b[1]-a[1])[0];
+    let longestStreak = null;
+    rosterOrder.forEach(p => {
+      const s = getStreak(p);
+      if(s && s.type === 'win' && (!longestStreak || s.count > longestStreak.count)) longestStreak = { name:p, count:s.count };
+    });
+    return { topScorer, bestDefense, biggestWin, mostWins, bestWinRate, ironMan, cleanSheetKing, longestStreak };
   }
 
   function formDotsHtml(name, limit){
@@ -1275,22 +1437,30 @@
   }
 
   function getPlayerRadarStats(name){
-    const goalsFor = {}, matchesPlayed = {};
+    const goalsFor = {}, matchesPlayed = {}, cleanSheets = {};
     TOURNAMENT_DATA.forEach(t => t.rounds.forEach(r => r.matches.forEach(m => {
       if(m.status === 'upcoming' || m.h === 'TBD') return;
       [m.h, m.a].forEach(p => { matchesPlayed[p] = (matchesPlayed[p]||0) + 1; });
       goalsFor[m.h] = (goalsFor[m.h]||0) + m.gh;
       goalsFor[m.a] = (goalsFor[m.a]||0) + m.ga;
+      if(m.ga === 0) cleanSheets[m.h] = (cleanSheets[m.h]||0) + 1;
+      if(m.gh === 0) cleanSheets[m.a] = (cleanSheets[m.a]||0) + 1;
     })));
     const winsMap = {};
     matchResults.forEach(m => { if(m.result === 'W') winsMap[m.player] = (winsMap[m.player]||0) + 1; });
+    function longestWinStreak(p){
+      const results = matchResults.filter(m => m.player === p).map(m => m.result);
+      let best = 0, cur = 0;
+      results.forEach(r => { cur = r === 'W' ? cur + 1 : 0; if(cur > best) best = cur; });
+      return best;
+    }
     function metricsFor(p){
       const mp = matchesPlayed[p] || 0;
       const wins = winsMap[p] || 0;
       const goals = goalsFor[p] || 0;
       const stats = computeStats(p);
       const form = getRecentForm(p, 5).filter(r => r === 'W').length;
-      return { winRate: mp ? wins/mp : 0, titles: stats.titles, goalsPerMatch: mp ? goals/mp : 0, matches: mp, form };
+      return { winRate: mp ? wins/mp : 0, titles: stats.titles, goalsPerMatch: mp ? goals/mp : 0, matches: mp, form, cleanSheets: cleanSheets[p]||0, streak: longestWinStreak(p) };
     }
     const all = rosterOrder.map(metricsFor);
     const maxOf = key => Math.max(1, ...all.map(x => x[key]));
@@ -1300,24 +1470,62 @@
       { label:'TITLES', value: m.titles/maxOf('titles'), raw: String(m.titles) },
       { label:'GOALS/MATCH', value: m.goalsPerMatch/maxOf('goalsPerMatch'), raw: m.goalsPerMatch.toFixed(1) },
       { label:'MATCHES', value: m.matches/maxOf('matches'), raw: String(m.matches) },
-      { label:'FORM', value: m.form/5, raw: m.form+'/5' }
+      { label:'FORM', value: m.form/5, raw: m.form+'/5' },
+      { label:'CLEAN SHEETS', value: m.cleanSheets/maxOf('cleanSheets'), raw: String(m.cleanSheets) },
+      { label:'STREAK', value: m.streak/maxOf('streak'), raw: String(m.streak) }
     ];
   }
 
   function getTournamentAwards(tournamentName){
-    const goalsFor = {};
+    const goalsFor = {}, goalsAgainst = {}, matchesPlayed = {}, winsCount = {}, cleanSheets = {};
     let topMatch = null;
     TOURNAMENT_DATA.forEach(t => {
       if(t.name !== tournamentName) return;
       t.rounds.forEach(r => r.matches.forEach(m => {
         if(m.status === 'upcoming' || m.h === 'TBD') return;
+        [m.h, m.a].forEach(p => { matchesPlayed[p] = (matchesPlayed[p]||0) + 1; });
         goalsFor[m.h] = (goalsFor[m.h]||0) + m.gh;
         goalsFor[m.a] = (goalsFor[m.a]||0) + m.ga;
+        goalsAgainst[m.h] = (goalsAgainst[m.h]||0) + m.ga;
+        goalsAgainst[m.a] = (goalsAgainst[m.a]||0) + m.gh;
+        if(m.ga === 0) cleanSheets[m.h] = (cleanSheets[m.h]||0) + 1;
+        if(m.gh === 0) cleanSheets[m.a] = (cleanSheets[m.a]||0) + 1;
+        if(m.gh > m.ga) winsCount[m.h] = (winsCount[m.h]||0) + 1;
+        else if(m.ga > m.gh) winsCount[m.a] = (winsCount[m.a]||0) + 1;
         if(!topMatch || Math.abs(m.gh-m.ga) > Math.abs(topMatch.gh-topMatch.ga)) topMatch = m;
       }));
     });
     const topScorer = Object.entries(goalsFor).sort((a,b) => b[1]-a[1])[0];
-    return { topScorer, topMatch };
+    const bestDefense = Object.entries(goalsAgainst)
+      .filter(([p]) => (matchesPlayed[p]||0) >= 2)
+      .sort((a,b) => a[1]-b[1])[0];
+    const mostWins = Object.entries(winsCount).sort((a,b) => b[1]-a[1])[0];
+    const bestWinRate = Object.entries(winsCount)
+      .filter(([p]) => (matchesPlayed[p]||0) >= 2)
+      .map(([p,w]) => [p, w/matchesPlayed[p]])
+      .sort((a,b) => b[1]-a[1])[0];
+    const ironMan = Object.entries(matchesPlayed).sort((a,b) => b[1]-a[1])[0];
+    const cleanSheetKing = Object.entries(cleanSheets).sort((a,b) => b[1]-a[1])[0];
+
+    // longest win streak within just this tournament — no minimum threshold, since even a
+    // 2-game run is notable in a short knockout, unlike the career-wide >=3 bar used elsewhere
+    let longestStreak = null;
+    rosterOrder.forEach(p => {
+      const results = matchResults.filter(m => m.tournament === tournamentName && m.player === p).map(m => m.result);
+      let best = 0, cur = 0;
+      results.forEach(r => { cur = r === 'W' ? cur + 1 : 0; if(cur > best) best = cur; });
+      if(best >= 2 && (!longestStreak || best > longestStreak.count)) longestStreak = { name:p, count:best };
+    });
+
+    // same {winner, loser, score} shape as getSeasonAwards().biggestWin, so both scopes
+    // can share one card-building path wherever this is displayed
+    const biggestWin = topMatch && topMatch.gh !== topMatch.ga ? {
+      winner: topMatch.gh > topMatch.ga ? topMatch.h : topMatch.a,
+      loser: topMatch.gh > topMatch.ga ? topMatch.a : topMatch.h,
+      score: `${Math.max(topMatch.gh,topMatch.ga)}-${Math.min(topMatch.gh,topMatch.ga)}`,
+    } : null;
+
+    return { topScorer, topMatch, biggestWin, bestDefense, mostWins, bestWinRate, ironMan, cleanSheetKing, longestStreak };
   }
 
   function getUpcomingFixtures(limit){
@@ -1383,13 +1591,35 @@
     const btn = document.getElementById('seasonWrapBtn');
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.textContent = 'Generating…';
+    btn.innerHTML = '<svg class="fa-ic fa-spin"><use href="#fa-futbol"/></svg> Generating…';
     try{
       const completed = TOURNAMENT_DATA.filter(t => t.status === 'completed' && t.winner);
       if(!completed.length) throw new Error('no completed seasons yet');
       const latest = completed.slice().sort((a,b) => new Date(b.date) - new Date(a.date))[0];
-      const awards = getTournamentAwards(latest.name);
+      const tournamentAwards = getTournamentAwards(latest.name);
+      const seasonAwards = getSeasonAwards();
       const totalMatches = latest.rounds.reduce((acc,r) => acc + r.matches.filter(m => m.status !== 'upcoming' && m.h !== 'TBD').length, 0);
+
+      // same award categories, read from two different scopes: this one tournament vs. every tournament ever played
+      const tBoxes = [];
+      if(tournamentAwards.topScorer) tBoxes.push({ label:'TOP SCORER', name: tournamentAwards.topScorer[0], detail: tournamentAwards.topScorer[1] + ' goal' + (tournamentAwards.topScorer[1]!==1?'s':'') });
+      if(tournamentAwards.bestDefense) tBoxes.push({ label:'BEST DEFENSE', name: tournamentAwards.bestDefense[0], detail: tournamentAwards.bestDefense[1] + ' conceded' });
+      if(tournamentAwards.biggestWin) tBoxes.push({ label:'BIGGEST MARGIN', name: tournamentAwards.biggestWin.winner, detail: tournamentAwards.biggestWin.score });
+      if(tournamentAwards.mostWins) tBoxes.push({ label:'MOST WINS', name: tournamentAwards.mostWins[0], detail: tournamentAwards.mostWins[1] + ' win' + (tournamentAwards.mostWins[1]!==1?'s':'') });
+      if(tournamentAwards.bestWinRate) tBoxes.push({ label:'BEST WIN RATE', name: tournamentAwards.bestWinRate[0], detail: Math.round(tournamentAwards.bestWinRate[1]*100) + '%' });
+      if(tournamentAwards.ironMan) tBoxes.push({ label:'IRON MAN', name: tournamentAwards.ironMan[0], detail: tournamentAwards.ironMan[1] + ' matches' });
+      if(tournamentAwards.cleanSheetKing) tBoxes.push({ label:'CLEAN SHEETS', name: tournamentAwards.cleanSheetKing[0], detail: tournamentAwards.cleanSheetKing[1] + ' clean sheet' + (tournamentAwards.cleanSheetKing[1]!==1?'s':'') });
+      if(tournamentAwards.longestStreak) tBoxes.push({ label:'WIN STREAK', name: tournamentAwards.longestStreak.name, detail: tournamentAwards.longestStreak.count + ' in a row' });
+
+      const sBoxes = [];
+      if(seasonAwards.topScorer) sBoxes.push({ label:'TOP SCORER', name: seasonAwards.topScorer[0], detail: seasonAwards.topScorer[1] + ' goal' + (seasonAwards.topScorer[1]!==1?'s':'') });
+      if(seasonAwards.bestDefense) sBoxes.push({ label:'BEST DEFENSE', name: seasonAwards.bestDefense[0], detail: seasonAwards.bestDefense[1] + ' conceded' });
+      if(seasonAwards.biggestWin) sBoxes.push({ label:'BIGGEST WIN', name: seasonAwards.biggestWin.winner, detail: seasonAwards.biggestWin.score + ' vs ' + seasonAwards.biggestWin.loser });
+      if(seasonAwards.mostWins) sBoxes.push({ label:'MOST WINS', name: seasonAwards.mostWins[0], detail: seasonAwards.mostWins[1] + ' win' + (seasonAwards.mostWins[1]!==1?'s':'') });
+      if(seasonAwards.bestWinRate) sBoxes.push({ label:'BEST WIN RATE', name: seasonAwards.bestWinRate[0], detail: Math.round(seasonAwards.bestWinRate[1]*100) + '%' });
+      if(seasonAwards.ironMan) sBoxes.push({ label:'IRON MAN', name: seasonAwards.ironMan[0], detail: seasonAwards.ironMan[1] + ' matches' });
+      if(seasonAwards.cleanSheetKing) sBoxes.push({ label:'CLEAN SHEETS', name: seasonAwards.cleanSheetKing[0], detail: seasonAwards.cleanSheetKing[1] + ' clean sheet' + (seasonAwards.cleanSheetKing[1]!==1?'s':'') });
+      if(seasonAwards.longestStreak) sBoxes.push({ label:'WIN STREAK', name: seasonAwards.longestStreak.name, detail: seasonAwards.longestStreak.count + ' in a row' });
 
       const cs = getComputedStyle(document.documentElement);
       const ink = cs.getPropertyValue('--ink').trim();
@@ -1408,7 +1638,18 @@
       ]);
       await document.fonts.ready;
 
-      const W = 1000, H = 1260;
+      // canvas height flexes to however many rows the two stat sections actually need —
+      // an early season with few qualifying awards shouldn't leave a wall of empty space
+      const cols = 3, boxW = 290, boxH = 140, gapX = 20, gapY = 20, sectionLabelH = 40, sectionGap = 46;
+      const rowsFor = n => Math.ceil(n / cols);
+      const sectionHeight = n => n ? sectionLabelH + rowsFor(n) * boxH + (rowsFor(n) - 1) * gapY : 0;
+      const gridTop = 620;
+      const W = 1000;
+      const H = gridTop
+        + sectionHeight(tBoxes.length)
+        + (tBoxes.length && sBoxes.length ? sectionGap : 0)
+        + sectionHeight(sBoxes.length)
+        + 110;
       const canvas = document.createElement('canvas');
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
@@ -1456,29 +1697,39 @@
         ctx.fillText('Runner-up: ' + latest.runnerUp, W/2, 490);
       }
 
-      // stat boxes: top scorer + biggest margin
-      const boxes = [];
-      if(awards.topScorer) boxes.push({ label:'TOP SCORER', name: awards.topScorer[0], detail: awards.topScorer[1] + ' goals' });
-      if(awards.topMatch) boxes.push({ label:'BIGGEST MARGIN', name: (awards.topMatch.gh > awards.topMatch.ga ? awards.topMatch.h : awards.topMatch.a), detail: awards.topMatch.gh + '-' + awards.topMatch.ga });
-      const boxW = 340, boxH = 170, gap = 24;
-      const totalW = boxes.length*boxW + Math.max(0, boxes.length-1)*gap;
-      let bx = (W-totalW)/2;
-      const boxY = 620;
-      boxes.forEach(function(b){
-        roundRectMain(ctx, bx, boxY, boxW, boxH, 14);
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fill();
-        ctx.fillStyle = muted;
-        ctx.font = '16px ' + fontMono;
-        ctx.fillText(b.label, bx+boxW/2, boxY+40);
+      // draws one labeled stat grid (wrapped 3-per-row) and returns the y just below it,
+      // so the next section can stack underneath without any hardcoded row count
+      function drawStatSection(sectionLabel, boxes, startY){
+        if(!boxes.length) return startY;
         ctx.fillStyle = gold;
-        ctx.font = '38px ' + fontDisplay;
-        ctx.fillText(b.name, bx+boxW/2, boxY+95);
-        ctx.fillStyle = floodlight;
         ctx.font = '20px ' + fontMono;
-        ctx.fillText(b.detail, bx+boxW/2, boxY+135);
-        bx += boxW + gap;
-      });
+        ctx.fillText(sectionLabel, W/2, startY);
+        const gridStartY = startY + sectionLabelH - 10;
+        boxes.forEach(function(b, i){
+          const col = i % cols, row = Math.floor(i / cols);
+          const itemsInRow = Math.min(cols, boxes.length - row*cols);
+          const rowStartX = (W - (itemsInRow*boxW + Math.max(0, itemsInRow-1)*gapX)) / 2;
+          const bx = rowStartX + col*(boxW+gapX);
+          const by = gridStartY + row*(boxH+gapY);
+          roundRectMain(ctx, bx, by, boxW, boxH, 14);
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          ctx.fill();
+          ctx.fillStyle = muted;
+          ctx.font = '14px ' + fontMono;
+          ctx.fillText(b.label, bx+boxW/2, by+32);
+          ctx.fillStyle = gold;
+          ctx.font = '30px ' + fontDisplay;
+          ctx.fillText(b.name, bx+boxW/2, by+78);
+          ctx.fillStyle = floodlight;
+          ctx.font = '17px ' + fontMono;
+          ctx.fillText(b.detail, bx+boxW/2, by+112);
+        });
+        return gridStartY + rowsFor(boxes.length)*boxH + (rowsFor(boxes.length)-1)*gapY;
+      }
+
+      let sectionY = drawStatSection('THIS TOURNAMENT', tBoxes, gridTop);
+      if(tBoxes.length && sBoxes.length) sectionY += sectionGap;
+      drawStatSection('ALL-TIME RECORDS', sBoxes, sectionY);
 
       ctx.fillStyle = muted;
       ctx.font = '20px ' + fontMono;
@@ -1701,17 +1952,91 @@
   }
 
   function renderHomeCounts(){
-    setCountText(document.getElementById('leagueCount'), `${leagueSeasons.length} seasons played`);
+    const leagueText = `${leagueSeasons.length} seasons played`;
+    setCountText(document.getElementById('leagueCount'), leagueText);
+    setCountText(document.getElementById('leagueCount2'), leagueText);
+
     const allKnockout = [...knockoutSeasons, ...deriveKnockoutFromTournaments()];
     const doneCount = allKnockout.filter(s=>s.status==='done').length;
     const liveCount = allKnockout.filter(s=>s.status==='live').length;
-    setCountText(document.getElementById('knockoutCount'), `${doneCount} seasons played${liveCount ? ` · ${liveCount} live` : ''}`);
-    setCountText(document.getElementById('leagueKoCount'), `${leagueKoSeasons.length} season played`);
+    const knockoutText = `${doneCount} seasons played${liveCount ? ` · ${liveCount} live` : ''}`;
+    setCountText(document.getElementById('knockoutCount'), knockoutText);
+    setCountText(document.getElementById('knockoutCount2'), knockoutText);
+
+    const leagueKoText = `${leagueKoSeasons.length} season played`;
+    setCountText(document.getElementById('leagueKoCount'), leagueKoText);
+    setCountText(document.getElementById('leagueKoCount2'), leagueKoText);
+
     setCountText(document.getElementById('rosterBlurb'), `${rosterOrder.length} regulars — profiles, titles, and runner-up finishes.`);
     setCountText(document.getElementById('rosterCount'), `${rosterOrder.length} players tracked across every League, Knockout, and League+KO season.`);
   }
   renderKnockoutTable();
       renderHomeCounts();
+
+  /* ---------------- QUOTE BAR ---------------- */
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  const QUOTES = [
+    ["Success is no accident. It is hard work, perseverance, learning, studying, sacrifice, and most of all, love of what you are doing.", "Pelé"],
+    ["No individual can win a game by himself.", "Pelé"],
+    ["I've never scored a goal in my life without wanting to score another one.", "Pelé"],
+    ["Playing football is very simple, but playing simple football is the hardest thing there is.", "Johan Cruyff"],
+    ["The right place at the right moment.", "Johan Cruyff"],
+    ["Football is a game of mistakes. Whoever makes the fewest mistakes wins.", "Johan Cruyff"],
+    ["A team is not made up of isolated individuals — always stay in the group, this way you have the strength of the group and the strength of the individual.", "Diego Maradona"],
+    ["When people succeed, it is because of hard work. Luck has nothing to do with success.", "Diego Maradona"],
+    ["You have to fight to reach your dream. You have to sacrifice and work hard for it.", "Lionel Messi"],
+    ["I learned all about life with a ball at my feet.", "Ronaldinho"],
+    ["Why be an ordinary player when you can be a legend?", "Ronaldinho"],
+    ["If you're not playing with passion, then you're not playing at all.", "Thierry Henry"],
+    ["If you are determined and confident, there is nothing in this great existence that can stop you from achieving what you want.", "Zinedine Zidane"],
+    ["Everything in life is a lesson, even a loss.", "Zinedine Zidane"],
+    ["Everything is practice.", "Andrés Iniesta"],
+    ["The only thing that matters is what you leave on the pitch.", "Andrés Iniesta"],
+    ["Some people believe football is a matter of life and death. I can assure them it is much more important than that.", "Bill Shankly"],
+    ["If you are first you are first. If you are second, you are nothing.", "Bill Shankly"],
+    ["First, you need people who want to run twelve kilometers, who want to suffer, who want to give everything, even when they're tired.", "Pep Guardiola"],
+    ["If you train badly, you play badly. If you work like a beast in training, you play the same way.", "Pep Guardiola"],
+    ["In football, you win as a group, you lose as a group, and you must celebrate as a group.", "Jürgen Klopp"],
+    ["I just hate losing, and that gives you an extra determination to work harder.", "Wayne Rooney"],
+    ["Football is more than just a game. It can bring hope and joy to people's lives.", "Didier Drogba"],
+    ["Football is played with your head. Your feet are just the tools.", "Andrea Pirlo"],
+    ["If you do not believe you can do it, then you have no chance at all.", "Arsène Wenger"],
+    ["Football is an art, like dancing. It requires whole-hearted concentration.", "Arsène Wenger"],
+    ["Skill is the result of a love affair between the child and the ball.", "Roy Keane"],
+    ["Defense is not just about stopping goals; it's about starting attacks.", "Paolo Maldini"],
+    ["A defender's pride is a clean sheet.", "Franz Beckenbauer"],
+    ["If there is one thing more than others that a successful footballer needs, it is energy.", "Michel Platini"],
+    ["A calm keeper gives confidence to the entire team.", "Iker Casillas"],
+    ["Play every match like it's the one you always dreamed of.", "Kylian Mbappé"],
+    ["Talent without working hard is nothing.", "Cristiano Ronaldo"],
+    ["If you don't believe you are the best, then you will never achieve all that you are capable of.", "Cristiano Ronaldo"],
+    ["Every day provides a new opportunity to get even better.", "Erling Haaland"],
+    ["The biggest part of leadership is that you lead by example with your performance first and foremost.", "Jude Bellingham"],
+    ["I'm not afraid of making mistakes, and if I make them, I'll just keep trying. I play with joy.", "Vinícius Júnior"],
+    ["I just want to be better every day, to get better every day, not to be better than anyone else.", "Neymar"],
+    ["In my career I always tried to improve to become one of the great players, because I felt I had received a gift and I had to make good use of it.", "Zico"],
+    ["In the end, for me, football is still a game. Even if you are a professional, you need to have fun when you are on the field.", "Kevin De Bruyne"],
+    ["I would rather intercept and steal ten balls than shoot.", "Sergio Busquets"],
+    ["I am not afraid of failure, I am afraid of not trying.", "Zlatan Ibrahimović"],
+    ["I love a challenge; it motivates me.", "Zlatan Ibrahimović"],
+  ];
+
+  let lastQuoteIdx = -1;
+  function renderQuote(){
+    const bar = document.getElementById('quoteBar');
+    if(!bar) return;
+    let i;
+    do { i = Math.floor(Math.random() * QUOTES.length); }
+    while(QUOTES.length > 1 && i === lastQuoteIdx);
+    lastQuoteIdx = i;
+    const [q, by] = QUOTES[i];
+    bar.innerHTML = '“' + escapeHtml(q) + '” <span class="q-by">— ' + escapeHtml(by) + '</span>'
+      + '<button id="quoteRefresh" title="New quote" aria-label="New quote" onclick="renderQuote()">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+      + '<path d="M20 11 A8 8 0 1 0 20 15"/><polyline points="20 5 20 11 14 11"/></svg></button>';
+  }
+  renderQuote();
 
   /* ---------------- TICKER ---------------- */
   const tickerItems = [];
@@ -1762,11 +2087,82 @@
   };
   function escAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
 
+  /* Downscales+re-encodes an image (any data URL source) to a capped size — keeps player
+     photos small so the roster grid doesn't have to decode a full-resolution phone photo on
+     every single re-render (init, every live sync, every edit — it adds up fast). */
+  function compressImageSrc(src, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  function compressImageFile(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (evt) => compressImageSrc(evt.target.result, maxDim, quality).then(resolve, reject);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  let rosterViewMode = 'grid'; // 'grid' or 'table' — an alternative, denser view of the same ranked roster
+
+  function setRosterView(mode){
+    rosterViewMode = mode;
+    document.getElementById('rosterGrid').style.display = mode === 'grid' ? '' : 'none';
+    document.getElementById('rosterTableWrap').style.display = mode === 'table' ? '' : 'none';
+    document.querySelectorAll('#rosterViewToggle .view-btn').forEach(btn => {
+      const active = btn.getAttribute('data-view') === mode;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    filterPlayers(); // re-apply the current search text to whichever view is now visible
+  }
+
+  // table view has no inline expand-to-edit row like the grid cards do, so rename goes
+  // through a plain prompt() instead — same validation/render chain as the grid's confirmRename
+  function renamePlayerViaPrompt(oldName){
+    if(!editModeEnabled) return;
+    const newName = (prompt(`Rename ${oldName} to:`, oldName) || '').trim();
+    if(!newName || newName === oldName) return;
+    if(rosterOrder.includes(newName)){ alert('That name already exists on the roster.'); return; }
+
+    renameEverywhere(oldName, newName);
+    pendingRenames[oldName] = newName;
+    const addIdx = pendingAdditions.indexOf(oldName);
+    if(addIdx > -1){ pendingAdditions[addIdx] = newName; delete pendingRenames[oldName]; }
+
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay();
+    markDirty();
+  }
+
   function renderRoster(){
     const grid = document.getElementById('rosterGrid');
+    const tbody = document.getElementById('rosterTableBody');
     grid.innerHTML = '';
-    rosterOrder.forEach((name, i) => {
-      const stats = computeStats(name);
+    tbody.innerHTML = '';
+    // ranked by achievement — most titles first, runner-ups as tiebreak, then name — so
+    // the #01 badge means "best record", not just "however they happen to sit in the array"
+    const ranked = rosterOrder
+      .map(name => ({ name, ...computeStats(name) }))
+      .sort((a,b) => b.titles - a.titles || b.runnerups - a.runnerups || a.name.localeCompare(b.name));
+    ranked.forEach(({name, titles, runnerups}, i) => {
+      const stats = {titles, runnerups};
+      const form = formGradeFor(name);
       const initials = name.slice(0,2).toUpperCase();
       const card = document.createElement('div');
       card.className = 'player-card reveal in';
@@ -1789,7 +2185,7 @@
           <button type="button" class="p-ic-btn" title="Rename" aria-label="Rename ${escAttr(name)}" onclick="event.stopPropagation(); toggleRename(this)"><svg class="fa-ic"><use href="#fa-pen"/></svg></button>
           <button type="button" class="p-ic-btn danger" title="Delete player" aria-label="Delete ${escAttr(name)} from roster" onclick="event.stopPropagation(); deletePlayer('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>
         </div>` : ''}
-        <div class="player-photo">${photoBlock}<span class="num">#${(i+1).toString().padStart(2,'0')}</span>${photoControls}</div>
+        <div class="player-photo">${photoBlock}<span class="num">#${(i+1).toString().padStart(2,'0')}</span><span class="form-badge" style="color:${form.color};" title="Form: ${form.grade}">${form.grade}</span>${photoControls}</div>
         <div class="player-body">
           <div class="role">${roleFor(name, stats.titles, stats.runnerups)}</div>
           <h4>${name}</h4>
@@ -1805,6 +2201,30 @@
           <button class="no" onclick="event.stopPropagation(); toggleRename(this)">✕</button>
         </div>` : ''}`;
       grid.appendChild(card);
+
+      const row = document.createElement('tr');
+      row.setAttribute('data-player', name);
+      row.onclick = () => viewProfile(name);
+      row.innerHTML = `
+        <td class="rt-rank">#${(i+1).toString().padStart(2,'0')}</td>
+        <td>
+          <div class="rt-name-cell">
+            <div class="rt-avatar">${hasPhoto ? `<img src="${PHOTOS[name]}" alt="${name}">` : initials}</div>
+            <div class="rt-name"><b>${name}</b><span class="rt-role">${roleFor(name, stats.titles, stats.runnerups)}</span></div>
+          </div>
+        </td>
+        <td class="rt-num">${stats.titles}</td>
+        <td class="rt-num">${stats.runnerups}</td>
+        <td><span class="rt-form-grade" style="color:${form.color};" title="Form: ${form.grade}">${form.grade}</span>${formDotsHtml(name) || '<span style="color:var(--muted);font-family:\'Roboto Mono\';font-size:0.75rem;">—</span>'}</td>
+        <td>
+          <div class="rt-actions" onclick="event.stopPropagation();">
+            ${editModeEnabled ? `
+              <button type="button" class="p-ic-btn" title="Rename" aria-label="Rename ${escAttr(name)}" onclick="renamePlayerViaPrompt('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-pen"/></svg></button>
+              <button type="button" class="p-ic-btn danger" title="Delete player" aria-label="Delete ${escAttr(name)} from roster" onclick="deletePlayer('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>
+            ` : ''}
+          </div>
+        </td>`;
+      tbody.appendChild(row);
     });
   }
   renderRoster();
@@ -1840,14 +2260,90 @@
     renderH2H();
   }
 
-  function renderAwards(){
-    const grid = document.getElementById('awardsGrid');
-    if(!grid) return;
-    const a = getSeasonAwards();
+  let awardsScopeTournament = ''; // '' = all-time; '__league'/'__knockout'/'__leagueko' = a whole competition; otherwise a single tournament name
+
+  function setAwardsScope(value){
+    awardsScopeTournament = value;
+    renderAwards();
+  }
+
+  // League and League+KO seasons only ever record champion/runner-up/shield — no goal-by-goal
+  // match data exists for them (unlike Knockout, which syncs full matches from the fixture feed) —
+  // so "by competition" awards for those two are built from titles, not goals.
+  function getCompetitionTitleStats(seasons){
+    const titles = {}, runnerUps = {}, shields = {};
+    seasons.forEach(s => {
+      if(s.champion) titles[s.champion] = (titles[s.champion]||0) + 1;
+      if(s.runner) runnerUps[s.runner] = (runnerUps[s.runner]||0) + 1;
+      if(s.secondRunner) runnerUps[s.secondRunner] = (runnerUps[s.secondRunner]||0) + 1;
+      if(s.shieldWinner) shields[s.shieldWinner] = (shields[s.shieldWinner]||0) + 1;
+    });
+    return {
+      mostTitles: Object.entries(titles).sort((a,b) => b[1]-a[1])[0],
+      mostRunnerUps: Object.entries(runnerUps).sort((a,b) => b[1]-a[1])[0],
+      mostShields: Object.entries(shields).sort((a,b) => b[1]-a[1])[0],
+    };
+  }
+
+  function goalAwardsToCards(a){
     const cards = [];
     if(a.topScorer) cards.push({icon:'futbol', label:'Top Scorer', name:a.topScorer[0], detail:`${a.topScorer[1]} goal${a.topScorer[1]!==1?'s':''}`});
     if(a.bestDefense) cards.push({icon:'shield-halved', label:'Best Defense', name:a.bestDefense[0], detail:`${a.bestDefense[1]} conceded`});
     if(a.biggestWin) cards.push({icon:'fire', label:'Biggest Win', name:a.biggestWin.winner, detail:`${a.biggestWin.score} vs ${a.biggestWin.loser}`});
+    if(a.mostWins) cards.push({icon:'medal', label:'Most Wins', name:a.mostWins[0], detail:`${a.mostWins[1]} win${a.mostWins[1]!==1?'s':''}`});
+    if(a.bestWinRate) cards.push({icon:'chart-column', label:'Best Win Rate', name:a.bestWinRate[0], detail:`${Math.round(a.bestWinRate[1]*100)}%`});
+    if(a.ironMan) cards.push({icon:'gamepad', label:'Iron Man', name:a.ironMan[0], detail:`${a.ironMan[1]} matches played`});
+    if(a.cleanSheetKing) cards.push({icon:'lock', label:'Clean Sheet King', name:a.cleanSheetKing[0], detail:`${a.cleanSheetKing[1]} clean sheet${a.cleanSheetKing[1]!==1?'s':''}`});
+    if(a.longestStreak) cards.push({icon:'hand-fist', label:'Longest Win Streak', name:a.longestStreak.name, detail:`${a.longestStreak.count} in a row`});
+    return cards;
+  }
+
+  function renderAwards(){
+    const grid = document.getElementById('awardsGrid');
+    if(!grid) return;
+
+    const scopeSelect = document.getElementById('awardsScopeSelect');
+    if(scopeSelect){
+      const sortedT = [...TOURNAMENT_DATA].reverse();
+      const competitionScopes = ['__league', '__knockout', '__leagueko'];
+      // if the previously-selected tournament got renamed/removed since the last render, fall back to all-time
+      if(awardsScopeTournament && !competitionScopes.includes(awardsScopeTournament) && !sortedT.some(t => t.name === awardsScopeTournament)) awardsScopeTournament = '';
+      const opt = (value, label) => `<option value="${value}" ${value === awardsScopeTournament ? 'selected' : ''}>${label}</option>`;
+      scopeSelect.innerHTML = opt('', 'All Tournaments (All-Time)') +
+        `<optgroup label="By Competition">
+          ${opt('__league', 'League (All Seasons)')}
+          ${opt('__knockout', 'Knockout (All Tournaments)')}
+          ${opt('__leagueko', 'League+KO (All Seasons)')}
+        </optgroup>` +
+        (sortedT.length ? `<optgroup label="Individual Tournaments">${sortedT.map(t => opt(t.name, t.name)).join('')}</optgroup>` : '');
+    }
+
+    let cards;
+    if(awardsScopeTournament === '__league'){
+      const stats = getCompetitionTitleStats(leagueSeasons);
+      cards = [];
+      if(stats.mostTitles) cards.push({icon:'trophy', label:'Most League Titles', name:stats.mostTitles[0], detail:`${stats.mostTitles[1]} title${stats.mostTitles[1]!==1?'s':''}`});
+      if(stats.mostRunnerUps) cards.push({icon:'medal', label:'Most Runner-Up Finishes', name:stats.mostRunnerUps[0], detail:`${stats.mostRunnerUps[1]} finish${stats.mostRunnerUps[1]!==1?'es':''}`});
+    } else if(awardsScopeTournament === '__leagueko'){
+      const stats = getCompetitionTitleStats(leagueKoSeasons);
+      cards = [];
+      if(stats.mostTitles) cards.push({icon:'hand-fist', label:'Most Playoff Titles', name:stats.mostTitles[0], detail:`${stats.mostTitles[1]} title${stats.mostTitles[1]!==1?'s':''}`});
+      if(stats.mostShields) cards.push({icon:'shield-halved', label:'Most Shields', name:stats.mostShields[0], detail:`${stats.mostShields[1]} shield${stats.mostShields[1]!==1?'s':''}`});
+      if(stats.mostRunnerUps) cards.push({icon:'medal', label:'Most Runner-Up Finishes', name:stats.mostRunnerUps[0], detail:`${stats.mostRunnerUps[1]} finish${stats.mostRunnerUps[1]!==1?'es':''}`});
+    } else if(awardsScopeTournament === '__knockout'){
+      // Knockout is the one competition with real match data (synced live), so it keeps the
+      // full goal-based awards, plus title counts across every Knockout season ever — including
+      // the older manually-tracked ones that predate the live fixture feed.
+      const stats = getCompetitionTitleStats([...knockoutSeasons, ...deriveKnockoutFromTournaments()]);
+      cards = [];
+      if(stats.mostTitles) cards.push({icon:'trophy', label:'Most Knockout Titles', name:stats.mostTitles[0], detail:`${stats.mostTitles[1]} title${stats.mostTitles[1]!==1?'s':''}`});
+      if(stats.mostRunnerUps) cards.push({icon:'medal', label:'Most Runner-Up Finishes', name:stats.mostRunnerUps[0], detail:`${stats.mostRunnerUps[1]} finish${stats.mostRunnerUps[1]!==1?'es':''}`});
+      cards.push(...goalAwardsToCards(getSeasonAwards()));
+    } else {
+      const a = awardsScopeTournament ? getTournamentAwards(awardsScopeTournament) : getSeasonAwards();
+      cards = goalAwardsToCards(a);
+    }
+
     grid.innerHTML = cards.length
       ? cards.map(c => `
         <div class="award-card">
@@ -1926,8 +2422,17 @@
       </div>` : '';
     const streakBadge = streakBadgeHtml(name);
     const radarAxes = getPlayerRadarStats(name);
+    // every other roster player's radar, embedded up front so the compare-with dropdown can
+    // switch instantly with no round-trip back to the opener window (which may not even be open)
+    const allRadarData = {};
+    rosterOrder.forEach(p => { if(p !== name) allRadarData[p] = getPlayerRadarStats(p); });
     const totalMatches = breakdown.reduce((a,r)=>a+r.played,0);
     const totalWins = breakdown.reduce((a,r)=>a+r.won,0);
+    // same ranking the roster grid uses — most titles first, runner-ups as tiebreak, then name
+    const rankedRoster = rosterOrder
+      .map(n => ({ name: n, ...computeStats(n) }))
+      .sort((a,b) => b.titles - a.titles || b.runnerups - a.runnerups || a.name.localeCompare(b.name));
+    const rosterRank = rankedRoster.findIndex(p => p.name === name) + 1;
 
     const achievementsHtml = achievements.length
       ? achievements.map(a => `<div class="ach-row"><span class="ach-icon">${a.icon}</span><div><div class="ach-title">${a.title}</div><div class="ach-date">${a.date||''}</div></div></div>`).join('')
@@ -1955,6 +2460,8 @@
   .theme-switcher button:hover{color:var(--gold);}
   .theme-switcher button.active{background:var(--gold);color:var(--ink-fixed);}
   .fa-ic{width:1em;height:1em;display:inline-block;fill:currentColor;vertical-align:-0.125em;}
+  .fa-spin{animation:footballSpin 0.8s linear infinite;}
+  @keyframes footballSpin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
   *{scrollbar-width:thin;scrollbar-color:var(--card-line) transparent;}
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-track{background:transparent;}
@@ -1980,6 +2487,20 @@
   .pz-overlay.show{display:flex;}
   .pz-overlay img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.7);cursor:default;}
   .pz-close{position:absolute;top:20px;right:28px;font-family:'Oswald';font-size:1.4rem;padding:0;color:var(--floodlight);cursor:pointer;background:rgba(10,14,12,0.6);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--card-line);}
+  .crop-overlay{display:none;position:fixed;inset:0;background:rgba(10,14,12,0.92);z-index:220;align-items:center;justify-content:center;padding:24px;}
+  .crop-overlay.show{display:flex;}
+  .crop-modal{background:var(--card);border:1px solid var(--card-line);border-radius:16px;padding:28px;max-width:480px;width:100%;}
+  .crop-title{font-family:'Oswald';font-weight:600;font-size:1.15rem;color:var(--floodlight);margin-bottom:6px;}
+  .crop-sub{font-family:'Roboto Mono';font-size:0.72rem;color:var(--muted);line-height:1.5;margin-bottom:18px;}
+  .crop-frame{position:relative;width:100%;aspect-ratio:820/460;overflow:hidden;border-radius:16px;border:2px solid var(--gold);cursor:grab;touch-action:none;background:var(--pitch-deep);}
+  .crop-frame.dragging{cursor:grabbing;}
+  .crop-frame img{position:absolute;top:50%;left:50%;user-select:none;-webkit-user-drag:none;pointer-events:none;}
+  #cropZoom{width:100%;margin-top:16px;accent-color:var(--gold);}
+  .crop-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+  .crop-actions button{font-family:'Oswald';font-weight:600;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.03em;padding:11px 22px;border-radius:8px;cursor:pointer;border:1px solid var(--card-line);background:transparent;color:var(--muted);transition:border-color .15s ease,color .15s ease;}
+  .crop-actions .cancel:hover{border-color:#e07a6b;color:#e07a6b;}
+  .crop-actions .save{background:var(--gold);color:var(--ink-fixed);border-color:var(--gold);}
+  .crop-actions .save:hover{background:var(--gold-soft,var(--gold));}
   h1{font-family:var(--font-display);font-size:2.6rem;color:var(--floodlight);text-transform:uppercase;}
   .sub{font-family:'Roboto Mono';font-size:0.8rem;color:var(--turf-bright);margin-top:6px;}
   .stat-row{display:flex;gap:14px;margin-bottom:36px;flex-wrap:wrap;}
@@ -1995,8 +2516,36 @@
   table.bt th{font-family:'Roboto Mono';font-size:0.6rem;text-transform:uppercase;color:var(--muted);padding:10px;background:rgba(128,128,128,0.08);}
   table.bt td{font-family:'Oswald';font-size:0.9rem;padding:10px;text-align:center;border-top:1px dashed var(--card-line);}
   table.bt td.pts{color:var(--gold);font-family:var(--font-display);}
-  .radar-wrap{display:flex;justify-content:center;margin:16px 0 32px;}
+  .chart-view-toggle{display:inline-flex;gap:6px;margin-bottom:16px;}
+  .cv-btn{
+    font-family:'Roboto Mono';font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;
+    background:var(--pitch-deep);border:1px solid var(--card-line);color:var(--muted);
+    padding:8px 16px;border-radius:999px;cursor:pointer;transition:border-color .15s ease,color .15s ease,background .15s ease;
+  }
+  .cv-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .cv-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(226,166,59,0.1);}
+  .bar-graph-wrap{display:flex;flex-direction:column;gap:14px;margin:16px 0 12px;}
+  .bar-graph-wrap.radar-pop{animation:radarPop .5s cubic-bezier(.2,1.4,.4,1) both;}
+  .bar-group{display:flex;flex-direction:column;gap:4px;}
+  .bar-label{font-family:'Roboto Mono';font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+  .bar-row{display:flex;align-items:center;gap:10px;}
+  .bar-track{flex:1;height:10px;background:var(--card);border:1px solid var(--card-line);border-radius:999px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.2,1.4,.4,1);}
+  .bar-value{font-family:var(--font-display);font-size:0.85rem;min-width:44px;text-align:right;}
+  .radar-compare-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .radar-compare-row label{font-family:'Roboto Mono';font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);}
+  .radar-compare-row select{
+    background:var(--pitch-deep);color:var(--floodlight);border:1px solid var(--card-line);
+    border-radius:8px;padding:8px 12px;font-family:'Oswald';font-size:0.9rem;cursor:pointer;transition:border-color .2s ease;
+  }
+  .radar-compare-row select:hover, .radar-compare-row select:focus{border-color:var(--gold);}
+  .radar-wrap{display:flex;justify-content:center;margin:16px 0 12px;}
   .radar-wrap svg{width:100%;max-width:340px;height:auto;}
+  .radar-wrap svg.radar-pop{animation:radarPop .5s cubic-bezier(.2,1.4,.4,1) both;}
+  @keyframes radarPop{from{opacity:0;transform:scale(0.82);}to{opacity:1;transform:scale(1);}}
+  .radar-legend{display:flex;gap:18px;justify-content:center;margin-bottom:32px;font-family:'Roboto Mono';font-size:0.72rem;color:var(--floodlight);}
+  .rl-item{display:flex;align-items:center;gap:6px;}
+  .rl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
   footer{margin-top:48px;font-family:'Roboto Mono';font-size:0.65rem;color:var(--muted);text-align:center;}
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
@@ -2023,6 +2572,18 @@
     <button type="button" class="pz-close" aria-label="Close zoomed photo" onclick="closeProfileZoom()">✕</button>
     <img id="pzImg" src="${hasPhoto ? PHOTOS[name] : ''}" alt="${name}">
   </div>
+  <div class="crop-overlay" id="cropOverlay">
+    <div class="crop-modal">
+      <div class="crop-title">Adjust your photo</div>
+      <div class="crop-sub">Drag to reposition, use the slider to zoom — this is exactly how it'll be cropped on the card.</div>
+      <div class="crop-frame" id="cropFrame"><img id="cropImg" src="${hasPhoto ? PHOTOS[name] : ''}" alt="" draggable="false"></div>
+      <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1">
+      <div class="crop-actions">
+        <button type="button" class="cancel" onclick="cancelCrop()">Cancel</button>
+        <button type="button" class="save" onclick="confirmCrop()">Use This Crop</button>
+      </div>
+    </div>
+  </div>
   ${streakBadge}
   <div class="stat-row">
     <div class="stat-box"><div class="n">${stats.titles}</div><div class="l">Titles</div></div>
@@ -2030,13 +2591,26 @@
     <div class="stat-box"><div class="n">${totalMatches}</div><div class="l">Matches</div></div>
     <div class="stat-box"><div class="n">${totalWins}</div><div class="l">Wins</div></div>
   </div>
-  <button type="button" class="share-btn" onclick="downloadCard()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Download as image</button>
+  <button type="button" class="share-btn" onclick="startDownloadFlow()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Download as image</button>
   <h2><svg class="fa-ic"><use href="#fa-trophy"/></svg> Achievements</h2>
   ${achievementsHtml}
   <h2><svg class="fa-ic"><use href="#fa-chart-column"/></svg> Tournament Breakdown</h2>
   ${breakdownHtml}
   <h2><svg class="fa-ic"><use href="#fa-chart-column"/></svg> Player Radar</h2>
-  <div class="radar-wrap"><svg id="radarSvg" viewBox="0 0 340 300"></svg></div>
+  <div class="chart-view-toggle" id="chartViewToggle">
+    <button type="button" class="cv-btn active" data-view="radar" onclick="setChartView('radar')">Radar</button>
+    <button type="button" class="cv-btn" data-view="bar" onclick="setChartView('bar')">Bar Graph</button>
+  </div>
+  ${Object.keys(allRadarData).length ? `<div class="radar-compare-row">
+    <label for="radarCompareSelect">Compare with</label>
+    <select id="radarCompareSelect" onchange="redrawChart()">
+      <option value="">— None —</option>
+      ${Object.keys(allRadarData).sort((a,b) => a.localeCompare(b)).map(p => `<option value="${escAttr(p)}">${p}</option>`).join('')}
+    </select>
+  </div>` : ''}
+  <div class="radar-wrap" id="radarWrap"><svg id="radarSvg" viewBox="0 0 340 300"></svg></div>
+  <div class="bar-graph-wrap" id="radarBarWrap" style="display:none;"></div>
+  <div class="radar-legend" id="radarLegend" style="display:none;"></div>
   <footer>Generated live from eFootball Narikkuni · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</footer>
   <script>
     function openProfileZoom(){ document.getElementById('pzOverlay').classList.add('show'); }
@@ -2052,16 +2626,24 @@
       });
     }
 
-    /* ---------------- SHAREABLE PROFILE CARD (canvas → PNG download) ---------------- */
+    /* ---------------- SHAREABLE PROFILE CARD (canvas → PNG download) ----------------
+       Original card design — not a recreation of any game's licensed card template. */
     const CARD_DATA = ${JSON.stringify({
       name, initials,
       photo: hasPhoto ? PHOTOS[name] : null,
-      titles: stats.titles, runnerups: stats.runnerups, matches: totalMatches, wins: totalWins
+      titles: stats.titles, runnerups: stats.runnerups, matches: totalMatches, wins: totalWins,
+      role: roleFor(name, stats.titles, stats.runnerups),
+      rank: rosterRank,
+      form: formGradeFor(name)
     })};
 
     const RADAR_DATA = ${JSON.stringify(radarAxes)};
-    function drawRadar(){
+    const ALL_RADAR_DATA = ${JSON.stringify(allRadarData)};
+    const RADAR_NAME = ${JSON.stringify(name)};
+
+    function drawRadar(compareWith){
       const svg = document.getElementById('radarSvg');
+      const legend = document.getElementById('radarLegend');
       if(!svg || !RADAR_DATA.length) return;
       const cx = 170, cy = 150, R = 100;
       const n = RADAR_DATA.length;
@@ -2077,15 +2659,67 @@
         const p = pt(i, R);
         axisSvg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="var(--card-line)" stroke-width="1"/>';
         const lp = pt(i, R+30);
-        axisSvg += '<text x="'+lp[0]+'" y="'+lp[1]+'" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="var(--muted)" font-family=\'Roboto Mono\'>'+ax.label+'</text>';
-        const rp = pt(i, R+16);
-        axisSvg += '<text x="'+rp[0]+'" y="'+rp[1]+'" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="var(--gold)" font-family=\'Roboto Mono\'>'+ax.raw+'</text>';
+        axisSvg += '<text x="'+lp[0]+'" y="'+lp[1]+'" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="var(--muted)" font-family=\"Roboto Mono\">'+ax.label+'</text>';
       });
-      const dataPts = RADAR_DATA.map(function(ax, i){ return pt(i, Math.max(6, R*ax.value)).join(','); }).join(' ');
-      const dataSvg = '<polygon points="'+dataPts+'" fill="var(--gold)" fill-opacity="0.22" stroke="var(--gold)" stroke-width="2"/>';
-      svg.innerHTML = gridSvg + axisSvg + dataSvg;
+      function seriesPolygon(data, color){
+        const pts = data.map(function(ax, i){ return pt(i, Math.max(6, R*ax.value)).join(','); }).join(' ');
+        return '<polygon class="radar-series" points="'+pts+'" fill="'+color+'" fill-opacity="0.22" stroke="'+color+'" stroke-width="2"/>';
+      }
+      const compareData = compareWith ? ALL_RADAR_DATA[compareWith] : null;
+      let seriesSvg = '';
+      if(compareData) seriesSvg += seriesPolygon(compareData, 'var(--turf-bright)');
+      seriesSvg += seriesPolygon(RADAR_DATA, 'var(--gold)');
+      // raw value labels drawn last, on top of both polygons, always in the main player's gold
+      RADAR_DATA.forEach(function(ax, i){
+        const rp = pt(i, R+16);
+        axisSvg += '<text x="'+rp[0]+'" y="'+rp[1]+'" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="var(--gold)" font-family=\"Roboto Mono\">'+ax.raw+'</text>';
+      });
+      svg.innerHTML = gridSvg + axisSvg + seriesSvg;
+      svg.classList.remove('radar-pop'); void svg.offsetWidth; svg.classList.add('radar-pop');
     }
-    drawRadar();
+
+    function drawBarGraph(compareWith){
+      const wrap = document.getElementById('radarBarWrap');
+      if(!wrap || !RADAR_DATA.length) return;
+      const compareData = compareWith ? ALL_RADAR_DATA[compareWith] : null;
+      wrap.innerHTML = RADAR_DATA.map(function(ax, i){
+        const cAx = compareData ? compareData[i] : null;
+        let rowsHtml = '<div class="bar-row"><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(ax.value*100)+'%;background:var(--gold);"></div></div><div class="bar-value" style="color:var(--gold);">'+ax.raw+'</div></div>';
+        if(cAx) rowsHtml += '<div class="bar-row"><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(cAx.value*100)+'%;background:var(--turf-bright);"></div></div><div class="bar-value" style="color:var(--turf-bright);">'+cAx.raw+'</div></div>';
+        return '<div class="bar-group"><div class="bar-label">'+ax.label+'</div>'+rowsHtml+'</div>';
+      }).join('');
+      wrap.classList.remove('radar-pop'); void wrap.offsetWidth; wrap.classList.add('radar-pop');
+    }
+
+    let chartViewMode = 'radar';
+    function setChartView(mode){
+      chartViewMode = mode;
+      document.getElementById('radarWrap').style.display = mode === 'radar' ? '' : 'none';
+      document.getElementById('radarBarWrap').style.display = mode === 'bar' ? '' : 'none';
+      document.querySelectorAll('#chartViewToggle .cv-btn').forEach(function(b){
+        b.classList.toggle('active', b.getAttribute('data-view') === mode);
+      });
+      redrawChart();
+    }
+
+    function redrawChart(){
+      const sel = document.getElementById('radarCompareSelect');
+      const compareWith = sel ? (sel.value || null) : null;
+      const legend = document.getElementById('radarLegend');
+      if(legend){
+        if(compareWith){
+          legend.style.display = 'flex';
+          legend.innerHTML = '<span class="rl-item"><span class="rl-dot" style="background:var(--gold);"></span>'+RADAR_NAME+'</span>'
+            + '<span class="rl-item"><span class="rl-dot" style="background:var(--turf-bright);"></span>'+compareWith+'</span>';
+        } else {
+          legend.style.display = 'none';
+          legend.innerHTML = '';
+        }
+      }
+      if(chartViewMode === 'radar') drawRadar(compareWith);
+      else drawBarGraph(compareWith);
+    }
+    redrawChart();
 
     function loadImg(src){
       return new Promise(function(resolve, reject){
@@ -2106,11 +2740,89 @@
       ctx.closePath();
     }
 
-    async function downloadCard(){
+    /* ---------------- PHOTO CROP MODAL (drag to pan, slider to zoom) ---------------- */
+    let cropState = { offsetX:0, offsetY:0, zoom:1, baseScale:1, imgW:0, imgH:0, frameW:0, frameH:0 };
+
+    function startDownloadFlow(){
+      if(CARD_DATA.photo) openCropModal();
+      else generateCardImage();
+    }
+
+    function openCropModal(){
+      const overlay = document.getElementById('cropOverlay');
+      const frame = document.getElementById('cropFrame');
+      const img = document.getElementById('cropImg');
+      overlay.classList.add('show');
+      function ready(){
+        const rect = frame.getBoundingClientRect();
+        cropState.frameW = rect.width; cropState.frameH = rect.height;
+        cropState.imgW = img.naturalWidth; cropState.imgH = img.naturalHeight;
+        cropState.baseScale = Math.max(cropState.frameW/cropState.imgW, cropState.frameH/cropState.imgH);
+        cropState.zoom = 1; cropState.offsetX = 0; cropState.offsetY = 0;
+        document.getElementById('cropZoom').value = 1;
+        applyCropTransform();
+      }
+      if(img.complete && img.naturalWidth) ready(); else img.onload = ready;
+    }
+
+    function applyCropTransform(){
+      const img = document.getElementById('cropImg');
+      const scale = cropState.baseScale * cropState.zoom;
+      img.style.width = cropState.imgW + 'px';
+      img.style.height = cropState.imgH + 'px';
+      img.style.transform = 'translate(-50%,-50%) translate(' + cropState.offsetX + 'px,' + cropState.offsetY + 'px) scale(' + scale + ')';
+    }
+
+    function clampCropOffsets(){
+      const scale = cropState.baseScale * cropState.zoom;
+      const dispW = cropState.imgW*scale, dispH = cropState.imgH*scale;
+      const maxX = Math.max(0, (dispW - cropState.frameW)/2);
+      const maxY = Math.max(0, (dispH - cropState.frameH)/2);
+      cropState.offsetX = Math.max(-maxX, Math.min(maxX, cropState.offsetX));
+      cropState.offsetY = Math.max(-maxY, Math.min(maxY, cropState.offsetY));
+    }
+
+    (function setupCropControls(){
+      const frame = document.getElementById('cropFrame');
+      let dragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
+      frame.addEventListener('pointerdown', function(e){
+        dragging = true;
+        frame.classList.add('dragging');
+        frame.setPointerCapture(e.pointerId);
+        startX = e.clientX; startY = e.clientY;
+        origX = cropState.offsetX; origY = cropState.offsetY;
+      });
+      frame.addEventListener('pointermove', function(e){
+        if(!dragging) return;
+        cropState.offsetX = origX + (e.clientX - startX);
+        cropState.offsetY = origY + (e.clientY - startY);
+        clampCropOffsets();
+        applyCropTransform();
+      });
+      function endDrag(){ dragging = false; frame.classList.remove('dragging'); }
+      frame.addEventListener('pointerup', endDrag);
+      frame.addEventListener('pointercancel', endDrag);
+      document.getElementById('cropZoom').addEventListener('input', function(e){
+        cropState.zoom = parseFloat(e.target.value);
+        clampCropOffsets();
+        applyCropTransform();
+      });
+    })();
+
+    function cancelCrop(){
+      document.getElementById('cropOverlay').classList.remove('show');
+    }
+
+    function confirmCrop(){
+      document.getElementById('cropOverlay').classList.remove('show');
+      generateCardImage();
+    }
+
+    async function generateCardImage(){
       const btn = document.querySelector('.share-btn');
       const originalHtml = btn.innerHTML;
       btn.disabled = true;
-      btn.textContent = 'Generating…';
+      btn.innerHTML = '<svg class="fa-ic fa-spin"><use href="#fa-futbol"/></svg> Generating…';
       try{
         const cs = getComputedStyle(document.documentElement);
         const ink = cs.getPropertyValue('--ink').trim();
@@ -2150,42 +2862,113 @@
         ctx.fillRect(0, 0, W, H);
         ctx.globalAlpha = 1;
 
-        const cx = W/2, cy = 300, r = 160;
+        // outer card frame — a plain double-line border with corner brackets, our own
+        // motif (not a recreation of any game's card template)
+        ctx.strokeStyle = gold;
+        ctx.lineWidth = 3;
+        roundRect(ctx, 24, 24, W-48, H-48, 28);
+        ctx.stroke();
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, 36, 36, W-72, H-72, 20);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 3;
+        [[24,24,1,1],[W-24,24,-1,1],[24,H-24,1,-1],[W-24,H-24,-1,-1]].forEach(function(c){
+          const x0 = c[0], y0 = c[1], dx = c[2], dy = c[3];
+          ctx.beginPath();
+          ctx.moveTo(x0, y0 + dy*40);
+          ctx.lineTo(x0, y0);
+          ctx.lineTo(x0 + dx*40, y0);
+          ctx.stroke();
+        });
+
+        // roster-rank badge, top-left — same ranking as the roster grid (most titles first)
+        roundRect(ctx, 64, 64, 168, 168, 18);
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fill();
+        ctx.strokeStyle = gold;
+        ctx.lineWidth = 2.5;
+        roundRect(ctx, 64, 64, 168, 168, 18);
+        ctx.stroke();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = gold;
+        ctx.font = (CARD_DATA.rank >= 100 ? '56px ' : '64px ') + fontDisplay;
+        ctx.fillText('#' + CARD_DATA.rank, 64+84, 64+104);
+        ctx.fillStyle = muted;
+        ctx.font = '14px ' + fontMono;
+        ctx.fillText('ROSTER RANK', 64+84, 64+140);
+
+        // form badge, top-right — mirrors the rank badge, colored by the player's current
+        // win/loss streak (A=hot streak down to E=on a losing run); an original letter-grade
+        // convention, not tied to any particular game's UI
+        const fbx = W - 64 - 168;
+        roundRect(ctx, fbx, 64, 168, 168, 18);
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fill();
+        ctx.strokeStyle = CARD_DATA.form.color;
+        ctx.lineWidth = 2.5;
+        roundRect(ctx, fbx, 64, 168, 168, 18);
+        ctx.stroke();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = CARD_DATA.form.color;
+        ctx.font = '72px ' + fontDisplay;
+        ctx.fillText(CARD_DATA.form.grade, fbx+84, 64+108);
+        ctx.fillStyle = muted;
+        ctx.font = '14px ' + fontMono;
+        ctx.fillText('FORM', fbx+84, 64+140);
+
+        // photo panel — rectangular, not a recreation of any licensed card frame
+        const px = 90, py = 260, pw = 820, ph = 460;
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI*2);
-        ctx.closePath();
+        roundRect(ctx, px, py, pw, ph, 24);
         ctx.clip();
         if(CARD_DATA.photo){
           const img = await loadImg(CARD_DATA.photo);
-          const scale = Math.max((r*2)/img.width, (r*2)/img.height);
-          const iw = img.width*scale, ih = img.height*scale;
-          ctx.drawImage(img, cx-iw/2, cy-ih/2, iw, ih);
+          if(cropState.frameW){
+            // reproduce the exact pan/zoom the user set in the crop modal, scaled up
+            // from the on-screen frame to this panel's real canvas size
+            const canvasScale = pw / cropState.frameW;
+            const scale = cropState.baseScale * cropState.zoom * canvasScale;
+            const iw = img.width*scale, ih = img.height*scale;
+            const centerX = px + pw/2 + cropState.offsetX*canvasScale;
+            const centerY = py + ph/2 + cropState.offsetY*canvasScale;
+            ctx.drawImage(img, centerX-iw/2, centerY-ih/2, iw, ih);
+          } else {
+            const scale = Math.max(pw/img.width, ph/img.height);
+            const iw = img.width*scale, ih = img.height*scale;
+            ctx.drawImage(img, px+pw/2-iw/2, py+ph/2-ih/2, iw, ih);
+          }
         } else {
           ctx.fillStyle = cardBg;
-          ctx.fillRect(cx-r, cy-r, r*2, r*2);
+          ctx.fillRect(px, py, pw, ph);
           ctx.fillStyle = 'rgba(255,255,255,0.14)';
-          ctx.font = '120px ' + fontDisplay;
+          ctx.font = '160px ' + fontDisplay;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(CARD_DATA.initials, cx, cy+14);
+          ctx.fillText(CARD_DATA.initials, px+pw/2, py+ph/2+18);
         }
         ctx.restore();
         ctx.strokeStyle = gold;
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.lineWidth = 5;
+        roundRect(ctx, px, py, pw, ph, 24);
         ctx.stroke();
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = floodlight;
-        ctx.font = '64px ' + fontDisplay;
-        ctx.fillText(CARD_DATA.name.toUpperCase(), W/2, 540);
+        ctx.font = '58px ' + fontDisplay;
+        ctx.fillText(CARD_DATA.name.toUpperCase(), W/2, 800);
 
         ctx.fillStyle = gold;
-        ctx.font = '22px ' + fontMono;
-        ctx.fillText('EFOOTBALL NARIKKUNI', W/2, 578);
+        ctx.font = '19px ' + fontMono;
+        ctx.fillText(CARD_DATA.role.toUpperCase(), W/2, 836);
+
+        ctx.fillStyle = muted;
+        ctx.font = '18px ' + fontMono;
+        ctx.fillText('EFOOTBALL NARIKKUNI', W/2, 870);
 
         const statList = [
           { label:'TITLES', value: CARD_DATA.titles },
@@ -2195,23 +2978,46 @@
         ];
         const boxW = 200, gap = 24, totalW = statList.length*boxW + (statList.length-1)*gap;
         let x = (W-totalW)/2;
-        const boxY = 660, boxH = 160;
+        const boxY = 908, boxH = 148;
         statList.forEach(function(s){
           ctx.fillStyle = 'rgba(255,255,255,0.06)';
           roundRect(ctx, x, boxY, boxW, boxH, 14);
           ctx.fill();
           ctx.fillStyle = gold;
-          ctx.font = '56px ' + fontDisplay;
-          ctx.fillText(String(s.value), x+boxW/2, boxY+86);
+          ctx.font = '52px ' + fontDisplay;
+          ctx.fillText(String(s.value), x+boxW/2, boxY+82);
           ctx.fillStyle = muted;
-          ctx.font = '18px ' + fontMono;
-          ctx.fillText(s.label, x+boxW/2, boxY+120);
+          ctx.font = '17px ' + fontMono;
+          ctx.fillText(s.label, x+boxW/2, boxY+114);
           x += boxW + gap;
         });
 
+        // star strip — a generic "how good is this player" readout, drawn as plain
+        // polygons; not a recreation of any specific game's star-rating icon
+        function starPath(cx0, cy0, s){
+          ctx.beginPath();
+          for(let i = 0; i < 10; i++){
+            const rad = i % 2 === 0 ? s : s*0.42;
+            const a = (Math.PI/5)*i - Math.PI/2;
+            const px0 = cx0 + rad*Math.cos(a), py0 = cy0 + rad*Math.sin(a);
+            if(i === 0) ctx.moveTo(px0, py0); else ctx.lineTo(px0, py0);
+          }
+          ctx.closePath();
+        }
+        const starCount = Math.min(5, CARD_DATA.titles);
+        const starSize = 17, starGap = 14, starsTotalW = 5*(starSize*2) + 4*starGap;
+        let sx = (W - starsTotalW)/2 + starSize;
+        const starY = 1096;
+        for(let i = 0; i < 5; i++){
+          starPath(sx, starY, starSize);
+          ctx.fillStyle = i < starCount ? gold : 'rgba(255,255,255,0.12)';
+          ctx.fill();
+          sx += starSize*2 + starGap;
+        }
+
         ctx.fillStyle = muted;
         ctx.font = '20px ' + fontMono;
-        ctx.fillText('NARIKKUNI, KERALA', W/2, H-40);
+        ctx.fillText('NARIKKUNI, KERALA', W/2, H-46);
 
         canvas.toBlob(function(blob){
           if(!blob){ btn.disabled = false; btn.innerHTML = originalHtml; return; }
@@ -2242,8 +3048,10 @@
     const win = window.open('', '_blank');
     profileWindows[name] = win;
     if(win){
-      win.document.write(`<!DOCTYPE html><html><head><title>${name} — Loading…</title></head>
+      win.document.write(`<!DOCTYPE html><html><head><title>${name} — Loading…</title>
+        <style>@keyframes footballSpin{from{transform:rotate(0);}to{transform:rotate(360deg);}}</style></head>
         <body style="background:#0a0e0c;color:#9db3a8;font-family:sans-serif;padding:60px;text-align:center;">
+        <svg viewBox="0 0 512 512" width="32" height="32" fill="currentColor" style="display:block;margin:0 auto 16px;animation:footballSpin 0.8s linear infinite;"><path d="M417.3 360.1l-71.6-4.8c-5.2-.3-10.3 1.1-14.5 4.2s-7.2 7.4-8.4 12.5l-17.6 69.6C289.5 445.8 273 448 256 448s-33.5-2.2-49.2-6.4L189.2 372c-1.3-5-4.3-9.4-8.4-12.5s-9.3-4.5-14.5-4.2l-71.6 4.8c-17.6-27.2-28.5-59.2-30.4-93.6L125 228.3c4.4-2.8 7.6-7 9.2-11.9s1.4-10.2-.5-15l-26.7-66.6C128 109.2 155.3 89 186.7 76.9l55.2 46c4 3.3 9 5.1 14.1 5.1s10.2-1.8 14.1-5.1l55.2-46c31.3 12.1 58.7 32.3 79.6 57.9l-26.7 66.6c-1.9 4.8-2.1 10.1-.5 15s4.9 9.1 9.2 11.9l60.7 38.2c-1.9 34.4-12.8 66.4-30.4 93.6zM256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zm14.1-325.7c-8.4-6.1-19.8-6.1-28.2 0L194 221c-8.4 6.1-11.9 16.9-8.7 26.8l18.3 56.3c3.2 9.9 12.4 16.6 22.8 16.6l59.2 0c10.4 0 19.6-6.7 22.8-16.6l18.3-56.3c3.2-9.9-.3-20.7-8.7-26.8l-47.9-34.8z"/></svg>
         Loading ${name}'s profile…</body></html>`);
     }
     const openReal = () => {
@@ -2459,6 +3267,10 @@
       const name = (card.getAttribute('data-player') || '').toLowerCase();
       card.style.display = name.includes(q) ? '' : 'none';
     });
+    document.querySelectorAll('#rosterTableBody tr').forEach(row => {
+      const name = (row.getAttribute('data-player') || '').toLowerCase();
+      row.style.display = name.includes(q) ? '' : 'none';
+    });
   }
 
   function openMergeDuplicatesModal(){
@@ -2504,19 +3316,15 @@
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if(!file) return;
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const base64 = evt.target.result;
-        PHOTOS[name] = base64;
-        pendingPhotoUploads[name] = base64;
-        renderRoster();
-        markDirty();
-        refreshProfileWindow(name);
-      };
-      reader.readAsDataURL(file);
+      const base64 = await compressImageFile(file, 640, 0.82);
+      PHOTOS[name] = base64;
+      pendingPhotoUploads[name] = base64;
+      renderRoster();
+      markDirty();
+      refreshProfileWindow(name);
     };
     input.click();
   }
@@ -2565,7 +3373,7 @@
 
     const OWNER = 'mavc2613', REPO = 'fixture-flow', PATH = 'roster-overrides.json', BRANCH = 'main';
     const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
-    statusEl.className = 'save-status'; statusEl.textContent = 'Saving…';
+    statusEl.className = 'save-status'; statusEl.innerHTML = '<svg class="fa-ic fa-spin"><use href="#fa-futbol"/></svg> Saving…';
 
     try{
       let sha = null, existing = { renames:{}, additions:[], removals:[], aliases:{}, seasonEdits:{}, photos:{} };
@@ -2619,8 +3427,16 @@
       // Load aliases (name merges from fixture sync)
       sessionOverrides = { ...data.aliases||{} };
       
-      // Load photos
+      // Load photos — anything uploaded before compression was added can be a full-resolution
+      // phone photo (hundreds of KB), which makes every roster re-render decode it all over
+      // again. Shrink oversized ones in memory now so this session's roster stays fast.
       Object.entries(data.photos||{}).forEach(([name,base64]) => { PHOTOS[name] = base64; });
+      const oversizedPhotos = Object.entries(PHOTOS).filter(([, src]) => typeof src === 'string' && src.length > 60000);
+      if(oversizedPhotos.length){
+        await Promise.all(oversizedPhotos.map(([name, src]) =>
+          compressImageSrc(src, 640, 0.82).then(compressed => { PHOTOS[name] = compressed; }).catch(() => {})
+        ));
+      }
       
       // Load season edits
       Object.entries(data.seasonEdits||{}).forEach(([key, edit]) => {
