@@ -2730,6 +2730,36 @@
       });
     }
 
+    // same as loadImg, but flagged crossOrigin so a GitHub-hosted background doesn't
+    // taint the canvas and block the later toBlob() download
+    function loadImgCORS(src){
+      return new Promise(function(resolve, reject){
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function(){ resolve(img); };
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    /* Card backgrounds by star tier — lives at mavc2613/narikkuni-efootball, "player card/N star/".
+       Drop any number of images in a tier's folder and one is picked at random each time;
+       an empty or missing folder just falls back to the plain gradient background. */
+    async function getStarTierBackground(starCount){
+      const apiUrl = 'https://api.github.com/repos/mavc2613/narikkuni-efootball/contents/' + encodeURIComponent('player card/' + starCount + ' star');
+      try{
+        const res = await fetch(apiUrl, { headers: { Accept: 'application/vnd.github+json' } });
+        if(!res.ok) return null;
+        const files = await res.json();
+        if(!Array.isArray(files)) return null;
+        const images = files.filter(function(f){ return f.type === 'file' && /\.(png|jpe?g|webp)$/i.test(f.name); });
+        if(!images.length) return null;
+        return images[Math.floor(Math.random() * images.length)].download_url;
+      }catch(err){
+        return null; // rate-limited, offline, or the folder just isn't there yet — fall back quietly
+      }
+    }
+
     function roundRect(ctx, x, y, w, h, r){
       ctx.beginPath();
       ctx.moveTo(x+r, y);
@@ -2848,19 +2878,34 @@
         canvas.width = W; canvas.height = H;
         const ctx = canvas.getContext('2d');
 
-        const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-        bgGrad.addColorStop(0, pitchDeep);
-        bgGrad.addColorStop(1, ink);
-        ctx.fillStyle = bgGrad;
-        ctx.fillRect(0, 0, W, H);
+        const starCount = Math.min(5, CARD_DATA.titles);
+        const tierBgUrl = await getStarTierBackground(starCount);
+        let tierBgImg = null;
+        if(tierBgUrl){
+          try{ tierBgImg = await loadImgCORS(tierBgUrl); }catch(err){ tierBgImg = null; }
+        }
 
-        const glow = ctx.createRadialGradient(W*0.3, 60, 20, W*0.3, 60, 520);
-        glow.addColorStop(0, pitch);
-        glow.addColorStop(1, ink);
-        ctx.globalAlpha = 0.45;
-        ctx.fillStyle = glow;
-        ctx.fillRect(0, 0, W, H);
-        ctx.globalAlpha = 1;
+        if(tierBgImg){
+          const scale = Math.max(W/tierBgImg.width, H/tierBgImg.height);
+          const iw = tierBgImg.width*scale, ih = tierBgImg.height*scale;
+          ctx.drawImage(tierBgImg, W/2-iw/2, H/2-ih/2, iw, ih);
+        } else {
+          const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+          bgGrad.addColorStop(0, pitchDeep);
+          bgGrad.addColorStop(1, ink);
+          ctx.fillStyle = bgGrad;
+          ctx.fillRect(0, 0, W, H);
+        }
+
+        if(!tierBgImg){
+          const glow = ctx.createRadialGradient(W*0.3, 60, 20, W*0.3, 60, 520);
+          glow.addColorStop(0, pitch);
+          glow.addColorStop(1, ink);
+          ctx.globalAlpha = 0.45;
+          ctx.fillStyle = glow;
+          ctx.fillRect(0, 0, W, H);
+          ctx.globalAlpha = 1;
+        }
 
         // outer card frame — a plain double-line border with corner brackets, our own
         // motif (not a recreation of any game's card template)
@@ -3004,7 +3049,6 @@
           }
           ctx.closePath();
         }
-        const starCount = Math.min(5, CARD_DATA.titles);
         const starSize = 17, starGap = 14, starsTotalW = 5*(starSize*2) + 4*starGap;
         let sx = (W - starsTotalW)/2 + starSize;
         const starY = 1096;
