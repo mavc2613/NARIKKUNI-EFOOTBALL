@@ -3360,10 +3360,50 @@
           // off whatever doesn't fit the card's aspect ratio
           const scale = Math.min(W/tierBgImg.width, H/tierBgImg.height);
           const iw = tierBgImg.width*scale, ih = tierBgImg.height*scale;
-          ctx.drawImage(tierBgImg, W/2-iw/2, H/2-ih/2, iw, ih);
-        }
+          const tx = W/2-iw/2, ty = H/2-ih/2;
 
-        if(!tierBgImg){
+          if(CARD_DATA.photo){
+            // draw the photo BEHIND the template art, covering the same box the template
+            // occupies, then blend the template over it so its own photo-cutout — whatever
+            // shape or position it is on this particular tier's art — reveals the photo
+            // through naturally. No per-template coordinate tuning needed: it's pixel-exact
+            // by construction, because both layers share the same box.
+            const img = await loadImg(CARD_DATA.photo);
+            let piw, pih, pcx, pcy;
+            if(cropState.frameW){
+              // reproduce the exact pan/zoom the user set in the crop modal, scaled up
+              // from the on-screen frame to this box's real canvas size
+              const canvasScale = iw / cropState.frameW;
+              const scale2 = cropState.baseScale * cropState.zoom * canvasScale;
+              piw = img.width*scale2; pih = img.height*scale2;
+              pcx = tx + iw/2 + cropState.offsetX*canvasScale;
+              pcy = ty + ih/2 + cropState.offsetY*canvasScale;
+            } else {
+              const scale2 = Math.max(iw/img.width, ih/img.height);
+              piw = img.width*scale2; pih = img.height*scale2;
+              pcx = tx + iw/2; pcy = ty + ih/2;
+            }
+            ctx.save();
+            roundRect(ctx, tx, ty, iw, ih, 8);
+            ctx.clip();
+            ctx.drawImage(img, pcx-piw/2, pcy-pih/2, piw, pih);
+            ctx.restore();
+
+            // sample the template's own cutout color near its visual center to decide
+            // which blend punches through it — 'multiply' reveals the photo through a
+            // light/white cutout, 'screen' reveals it through a dark/black one (this
+            // "player card" folder has both styles across its star tiers)
+            const probe = document.createElement('canvas');
+            probe.width = tierBgImg.width; probe.height = tierBgImg.height;
+            const pctx = probe.getContext('2d');
+            pctx.drawImage(tierBgImg, 0, 0);
+            const [pr, pg, pb] = pctx.getImageData(Math.round(tierBgImg.width/2), Math.round(tierBgImg.height*0.35), 1, 1).data;
+            ctx.globalCompositeOperation = ((pr+pg+pb)/3 > 128) ? 'multiply' : 'screen';
+          }
+
+          ctx.drawImage(tierBgImg, tx, ty, iw, ih);
+          ctx.globalCompositeOperation = 'source-over';
+        } else {
           const glow = ctx.createRadialGradient(W*0.3, 60, 20, W*0.3, 60, 520);
           glow.addColorStop(0, pitch);
           glow.addColorStop(1, ink);
@@ -3371,66 +3411,60 @@
           ctx.fillStyle = glow;
           ctx.fillRect(0, 0, W, H);
           ctx.globalAlpha = 1;
-        }
 
-        // outer card frame — a plain double-line border with corner brackets, our own
-        // motif (not a recreation of any game's card template)
-        ctx.strokeStyle = gold;
-        ctx.lineWidth = 3;
-        roundRect(ctx, 24, 24, W-48, H-48, 28);
-        ctx.stroke();
-        ctx.globalAlpha = 0.35;
-        ctx.lineWidth = 1.5;
-        roundRect(ctx, 36, 36, W-72, H-72, 20);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = 3;
-        [[24,24,1,1],[W-24,24,-1,1],[24,H-24,1,-1],[W-24,H-24,-1,-1]].forEach(function(c){
-          const x0 = c[0], y0 = c[1], dx = c[2], dy = c[3];
-          ctx.beginPath();
-          ctx.moveTo(x0, y0 + dy*40);
-          ctx.lineTo(x0, y0);
-          ctx.lineTo(x0 + dx*40, y0);
+          // outer card frame — a plain double-line border with corner brackets, our own
+          // motif (not a recreation of any game's card template). Only for this plain
+          // fallback background — a star-tier template already has its own frame art.
+          ctx.strokeStyle = gold;
+          ctx.lineWidth = 3;
+          roundRect(ctx, 24, 24, W-48, H-48, 28);
           ctx.stroke();
-        });
+          ctx.globalAlpha = 0.35;
+          ctx.lineWidth = 1.5;
+          roundRect(ctx, 36, 36, W-72, H-72, 20);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.lineWidth = 3;
+          [[24,24,1,1],[W-24,24,-1,1],[24,H-24,1,-1],[W-24,H-24,-1,-1]].forEach(function(c){
+            const x0 = c[0], y0 = c[1], dx = c[2], dy = c[3];
+            ctx.beginPath();
+            ctx.moveTo(x0, y0 + dy*40);
+            ctx.lineTo(x0, y0);
+            ctx.lineTo(x0 + dx*40, y0);
+            ctx.stroke();
+          });
 
-        // photo panel — rectangular, not a recreation of any licensed card frame
-        const px = 90, py = 260, pw = 820, ph = 460;
-        ctx.save();
-        roundRect(ctx, px, py, pw, ph, 24);
-        ctx.clip();
-        if(CARD_DATA.photo){
-          const img = await loadImg(CARD_DATA.photo);
-          if(cropState.frameW){
-            // reproduce the exact pan/zoom the user set in the crop modal, scaled up
-            // from the on-screen frame to this panel's real canvas size
-            const canvasScale = pw / cropState.frameW;
-            const scale = cropState.baseScale * cropState.zoom * canvasScale;
-            const iw = img.width*scale, ih = img.height*scale;
-            const centerX = px + pw/2 + cropState.offsetX*canvasScale;
-            const centerY = py + ph/2 + cropState.offsetY*canvasScale;
-            ctx.drawImage(img, centerX-iw/2, centerY-ih/2, iw, ih);
+          // photo panel — rectangular, not a recreation of any licensed card frame.
+          // Only drawn here in the fallback case; a star-tier template gets its photo
+          // composited in above instead, aligned to its own cutout.
+          const px = 90, py = 260, pw = 820, ph = 460;
+          ctx.save();
+          roundRect(ctx, px, py, pw, ph, 24);
+          ctx.clip();
+          if(CARD_DATA.photo){
+            const img = await loadImg(CARD_DATA.photo);
+            if(cropState.frameW){
+              const canvasScale = pw / cropState.frameW;
+              const scale = cropState.baseScale * cropState.zoom * canvasScale;
+              const iw = img.width*scale, ih = img.height*scale;
+              const centerX = px + pw/2 + cropState.offsetX*canvasScale;
+              const centerY = py + ph/2 + cropState.offsetY*canvasScale;
+              ctx.drawImage(img, centerX-iw/2, centerY-ih/2, iw, ih);
+            } else {
+              const scale = Math.max(pw/img.width, ph/img.height);
+              const iw = img.width*scale, ih = img.height*scale;
+              ctx.drawImage(img, px+pw/2-iw/2, py+ph/2-ih/2, iw, ih);
+            }
           } else {
-            const scale = Math.max(pw/img.width, ph/img.height);
-            const iw = img.width*scale, ih = img.height*scale;
-            ctx.drawImage(img, px+pw/2-iw/2, py+ph/2-ih/2, iw, ih);
+            ctx.fillStyle = cardBg;
+            ctx.fillRect(px, py, pw, ph);
+            ctx.fillStyle = 'rgba(255,255,255,0.14)';
+            ctx.font = '160px ' + fontDisplay;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(CARD_DATA.initials, px+pw/2, py+ph/2+18);
           }
-        } else if(!tierBgImg){
-          // no photo AND no star-tier template art to show through — paint a plain
-          // placeholder panel so there's something there at all
-          ctx.fillStyle = cardBg;
-          ctx.fillRect(px, py, pw, ph);
-          ctx.fillStyle = 'rgba(255,255,255,0.14)';
-          ctx.font = '160px ' + fontDisplay;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(CARD_DATA.initials, px+pw/2, py+ph/2+18);
-        }
-        ctx.restore();
-        // the star-tier template art already has its own frame drawn around this photo
-        // gap, so only stroke a box here for the plain fallback background — otherwise
-        // it'd double up on the template's own framing
-        if(!tierBgImg){
+          ctx.restore();
           ctx.strokeStyle = gold;
           ctx.lineWidth = 5;
           roundRect(ctx, px, py, pw, ph, 24);
