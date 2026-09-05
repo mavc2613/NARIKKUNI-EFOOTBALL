@@ -3446,7 +3446,9 @@
             const iw = img.width*scale, ih = img.height*scale;
             ctx.drawImage(img, px+pw/2-iw/2, py+ph/2-ih/2, iw, ih);
           }
-        } else {
+        } else if(!tierBgImg){
+          // no photo AND no star-tier template art to show through — paint a plain
+          // placeholder panel so there's something there at all
           ctx.fillStyle = cardBg;
           ctx.fillRect(px, py, pw, ph);
           ctx.fillStyle = 'rgba(255,255,255,0.14)';
@@ -3456,10 +3458,15 @@
           ctx.fillText(CARD_DATA.initials, px+pw/2, py+ph/2+18);
         }
         ctx.restore();
-        ctx.strokeStyle = gold;
-        ctx.lineWidth = 5;
-        roundRect(ctx, px, py, pw, ph, 24);
-        ctx.stroke();
+        // the star-tier template art already has its own frame drawn around this photo
+        // gap, so only stroke a box here for the plain fallback background — otherwise
+        // it'd double up on the template's own framing
+        if(!tierBgImg){
+          ctx.strokeStyle = gold;
+          ctx.lineWidth = 5;
+          roundRect(ctx, px, py, pw, ph, 24);
+          ctx.stroke();
+        }
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'alphabetic';
