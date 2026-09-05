@@ -3386,37 +3386,11 @@
             ctx.clip();
             ctx.drawImage(img, pcx-piw/2, pcy-pih/2, piw, pih);
             ctx.restore();
-
-            // some of these template files already carry a real transparent cutout (several
-            // are actually PNGs with alpha, despite the ".jpeg"/".jpg" name) — when that's
-            // true, just draw them exactly as they are: zero modification, so the frame art
-            // keeps its own full, undiminished opacity and the real alpha hole shows the
-            // photo cleanly. Only synthesize a hole (by color-matching the cutout and zeroing
-            // its alpha) for the templates that are genuinely flat JPEGs with no alpha to use.
-            const probe = document.createElement('canvas');
-            probe.width = tierBgImg.width; probe.height = tierBgImg.height;
-            const pctx = probe.getContext('2d');
-            pctx.drawImage(tierBgImg, 0, 0);
-            const maskData = pctx.getImageData(0, 0, probe.width, probe.height);
-            const d = maskData.data;
-            let hasRealAlpha = false;
-            for(let i = 3; i < d.length; i += 4 * 997){
-              if(d[i] < 200){ hasRealAlpha = true; break; }
-            }
-            if(!hasRealAlpha){
-              const ci = (Math.round(probe.height*0.35)*probe.width + Math.round(probe.width/2)) * 4;
-              const gr = d[ci], gg = d[ci+1], gb = d[ci+2];
-              const threshold = 50;
-              for(let i = 0; i < d.length; i += 4){
-                const dr = d[i]-gr, dg = d[i+1]-gg, db = d[i+2]-gb;
-                if(Math.sqrt(dr*dr + dg*dg + db*db) < threshold) d[i+3] = 0;
-              }
-              pctx.putImageData(maskData, 0, 0);
-            }
-            ctx.drawImage(probe, tx, ty, iw, ih);
-          } else {
-            ctx.drawImage(tierBgImg, tx, ty, iw, ih);
           }
+
+          // draw the template exactly as it is — it already has its own transparent
+          // cutout baked in, so nothing needs to be added or synthesized here
+          ctx.drawImage(tierBgImg, tx, ty, iw, ih);
         } else {
           const glow = ctx.createRadialGradient(W*0.3, 60, 20, W*0.3, 60, 520);
           glow.addColorStop(0, pitch);
