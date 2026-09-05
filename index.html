@@ -3388,43 +3388,6 @@
           ctx.stroke();
         });
 
-        // roster-rank badge, top-left — same ranking as the roster grid (most titles first)
-        roundRect(ctx, 64, 64, 168, 168, 18);
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fill();
-        ctx.strokeStyle = gold;
-        ctx.lineWidth = 2.5;
-        roundRect(ctx, 64, 64, 168, 168, 18);
-        ctx.stroke();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = gold;
-        ctx.font = (CARD_DATA.rank >= 100 ? '56px ' : '64px ') + fontDisplay;
-        ctx.fillText('#' + CARD_DATA.rank, 64+84, 64+104);
-        ctx.fillStyle = muted;
-        ctx.font = '14px ' + fontMono;
-        ctx.fillText('ROSTER RANK', 64+84, 64+140);
-
-        // form badge, top-right — mirrors the rank badge, colored by the player's current
-        // win/loss streak (A=hot streak down to E=on a losing run); an original letter-grade
-        // convention, not tied to any particular game's UI
-        const fbx = W - 64 - 168;
-        roundRect(ctx, fbx, 64, 168, 168, 18);
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fill();
-        ctx.strokeStyle = CARD_DATA.form.color;
-        ctx.lineWidth = 2.5;
-        roundRect(ctx, fbx, 64, 168, 168, 18);
-        ctx.stroke();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = CARD_DATA.form.color;
-        ctx.font = '72px ' + fontDisplay;
-        ctx.fillText(CARD_DATA.form.grade, fbx+84, 64+108);
-        ctx.fillStyle = muted;
-        ctx.font = '14px ' + fontMono;
-        ctx.fillText('FORM', fbx+84, 64+140);
-
         // photo panel — rectangular, not a recreation of any licensed card frame
         const px = 90, py = 260, pw = 820, ph = 460;
         ctx.save();
