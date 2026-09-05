@@ -433,19 +433,20 @@
   .activity-score b{font-family:var(--font-display); color:var(--gold); font-size:1rem; flex-shrink:0;}
   .activity-score b small{font-family:'Roboto Mono'; font-size:0.55rem; color:var(--muted); font-weight:400;}
 
-  /* ---------- KNOCKOUT BRACKET ---------- */
+  /* ---------- KNOCKOUT BRACKET ----------
+     Rounds here don't always halve cleanly (a round can include byes, so e.g. a 4-match
+     "Round of 32" can feed an 8-match "Round of 16") — there's no reliable which-match-feeds-
+     which mapping in the data, so this doesn't try to draw literal connector lines between
+     specific matches. Each round is instead just vertically centered as a column (via
+     justify-content:center on equal-height flex children), which stays correct and honest
+     regardless of how lopsided the round sizes are. */
   .bracket-wrap{overflow-x:auto; padding-bottom:10px;}
-  .bracket{display:flex; gap:34px; min-width:max-content; padding:14px 4px 4px;}
+  .bracket{display:flex; align-items:stretch; gap:28px; min-width:max-content; padding:14px 4px 4px;}
   .bracket-round{display:flex; flex-direction:column; min-width:190px;}
   .bracket-round-title{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); text-align:center; margin-bottom:14px;}
-  .bracket-match{
-    background:var(--card); border:1px solid var(--card-line); border-radius:10px; overflow:hidden;
-    position:relative;
-  }
-  .bracket-match::after{
-    content:''; position:absolute; top:50%; right:-34px; width:34px; height:1px; background:var(--card-line);
-  }
-  .bracket-round:last-child .bracket-match::after{display:none;}
+  .bracket-round-title .bracket-round-count{display:block; margin-top:3px; opacity:0.6; letter-spacing:0.04em; text-transform:none;}
+  .bracket-round-matches{display:flex; flex-direction:column; justify-content:center; gap:16px; flex:1;}
+  .bracket-match{background:var(--card); border:1px solid var(--card-line); border-radius:10px; overflow:hidden;}
   .bracket-team{
     display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px;
     font-family:'Oswald'; font-size:0.86rem; color:var(--muted);
@@ -2015,24 +2016,22 @@
     renderFixtures();
   }
 
-  // classic "doubling gap" bracket layout: round ri's first match sits (2^ri - 1) units down,
-  // and every match after it in that round is spaced (2^(ri+1) - 1) units from the previous one —
-  // which keeps each match vertically centered between the two matches feeding into it, with
-  // nothing more than plain margin-top (no JS position math needed once the values are computed).
+  // rounds here can include byes (a round can hold FEWER matches than the round after it,
+  // e.g. a 4-match "Round of 32" feeding an 8-match "Round of 16"), so there's no reliable
+  // 2-matches-feed-1 mapping to hang literal connector lines off. Each round is just centered
+  // as its own column instead (see the CSS) — correct and honest for any round shape, unlike
+  // the fixed doubling-margin math this replaced, which assumed a perfect binary tree and drifted
+  // out of alignment (and off the bottom of the bracket) the moment that assumption didn't hold.
   function buildBracketHtml(t){
     const rounds = t.rounds.filter(r => r.matches.length);
     if(!rounds.length) return `<div style="padding:20px;color:var(--muted);font-family:'Roboto Mono';font-size:0.8rem;">No bracket data yet.</div>`;
-    const unit = 34;
-    const roundsHtml = rounds.map((r, ri) => {
-      const firstOffset = (Math.pow(2, ri) - 1) * unit;
-      const gap = (Math.pow(2, ri + 1) - 1) * unit;
-      const matchesHtml = r.matches.map((m, mi) => {
+    const roundsHtml = rounds.map(r => {
+      const matchesHtml = r.matches.map(m => {
         const isTbd = m.h === 'TBD' || m.a === 'TBD';
         const up = m.status === 'upcoming';
         const hw = !up && !isTbd && (m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga);
         const draw = !up && !isTbd && !m.pen && m.gh === m.ga;
-        const marginTop = mi === 0 ? firstOffset : gap;
-        return `<div class="bracket-match" style="margin-top:${marginTop}px;">
+        return `<div class="bracket-match">
           <div class="bracket-team ${hw ? 'winner' : ''}">
             <span class="bracket-name" title="${escAttr(m.h)}">${m.h}</span>
             ${!isTbd && !up ? `<span class="bracket-score">${m.gh}</span>` : ''}
@@ -2045,12 +2044,12 @@
         </div>`;
       }).join('');
       return `<div class="bracket-round">
-        <div class="bracket-round-title">${r.round}</div>
-        ${matchesHtml}
+        <div class="bracket-round-title">${r.round}<span class="bracket-round-count">${r.matches.length} match${r.matches.length!==1?'es':''}</span></div>
+        <div class="bracket-round-matches">${matchesHtml}</div>
       </div>`;
     }).join('');
     const championHtml = t.winner
-      ? `<div class="bracket-round"><div class="bracket-round-title">Champion</div><div class="bracket-champion" style="margin-top:${(Math.pow(2, rounds.length) - 1) * unit}px;"><svg class="fa-ic"><use href="#fa-trophy"/></svg> ${t.winner}</div></div>`
+      ? `<div class="bracket-round"><div class="bracket-round-title">Champion</div><div class="bracket-round-matches"><div class="bracket-champion"><svg class="fa-ic"><use href="#fa-trophy"/></svg> ${t.winner}</div></div></div>`
       : '';
     return `<div class="bracket-wrap"><div class="bracket">${roundsHtml}${championHtml}</div></div>`;
   }
