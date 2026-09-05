@@ -440,7 +440,21 @@
      specific matches. Each round is instead just vertically centered as a column (via
      justify-content:center on equal-height flex children), which stays correct and honest
      regardless of how lopsided the round sizes are. */
-  .bracket-wrap{overflow-x:auto; padding-bottom:10px;}
+  .bracket-shell{position:relative;}
+  .bracket-nav{
+    position:absolute; top:50%; transform:translateY(-50%); z-index:3;
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:var(--pitch-deep); border:1px solid var(--card-line); color:var(--floodlight); cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,0.35); transition:opacity .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .bracket-nav:hover{border-color:var(--gold); color:var(--gold);}
+  .bracket-nav.prev{left:-6px;}
+  .bracket-nav.next{right:-6px;}
+  .bracket-nav.disabled{opacity:0; pointer-events:none;}
+  .bracket-nav svg{width:0.8em; height:0.8em;}
+  .bracket-nav.prev svg{transform:rotate(90deg);}
+  .bracket-nav.next svg{transform:rotate(-90deg);}
+  .bracket-wrap{overflow-x:auto; padding-bottom:10px; scroll-behavior:smooth;}
   .bracket{display:flex; align-items:stretch; gap:28px; min-width:max-content; padding:14px 4px 4px;}
   .bracket-round{display:flex; flex-direction:column; min-width:190px;}
   .bracket-round-title{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); text-align:center; margin-bottom:14px;}
@@ -2051,8 +2065,37 @@
     const championHtml = t.winner
       ? `<div class="bracket-round"><div class="bracket-round-title">Champion</div><div class="bracket-round-matches"><div class="bracket-champion"><svg class="fa-ic"><use href="#fa-trophy"/></svg> ${t.winner}</div></div></div>`
       : '';
-    return `<div class="bracket-wrap"><div class="bracket">${roundsHtml}${championHtml}</div></div>`;
+    return `<div class="bracket-shell">
+      <button type="button" class="bracket-nav prev disabled" aria-label="Scroll bracket left" onclick="scrollBracket(this,-1)"><svg class="fa-ic"><use href="#fa-chevron-down"/></svg></button>
+      <div class="bracket-wrap" onscroll="updateBracketNav(this)">
+        <div class="bracket">${roundsHtml}${championHtml}</div>
+      </div>
+      <button type="button" class="bracket-nav next" aria-label="Scroll bracket right" onclick="scrollBracket(this,1)"><svg class="fa-ic"><use href="#fa-chevron-down"/></svg></button>
+    </div>`;
   }
+
+  // one click scrolls by roughly one round's width, so a click always reveals the next
+  // column rather than some arbitrary/awkward amount
+  function scrollBracket(btn, dir){
+    const shell = btn.closest('.bracket-shell');
+    const wrap = shell.querySelector('.bracket-wrap');
+    const round = wrap.querySelector('.bracket-round');
+    const step = (round ? round.getBoundingClientRect().width : 190) + 28;
+    wrap.scrollBy({ left: dir * step, behavior: 'smooth' });
+  }
+
+  // hides each arrow once there's nothing left to scroll to in that direction (and hides
+  // both when the bracket already fits without scrolling at all)
+  function updateBracketNav(wrap){
+    const shell = wrap.closest('.bracket-shell');
+    if(!shell) return;
+    const prev = shell.querySelector('.bracket-nav.prev');
+    const next = shell.querySelector('.bracket-nav.next');
+    const maxScroll = wrap.scrollWidth - wrap.clientWidth;
+    prev.classList.toggle('disabled', wrap.scrollLeft <= 1);
+    next.classList.toggle('disabled', maxScroll <= 1 || wrap.scrollLeft >= maxScroll - 1);
+  }
+  window.addEventListener('resize', () => document.querySelectorAll('.bracket-wrap').forEach(updateBracketNav));
 
   function renderFixtures() {
     const container = document.getElementById('fixtureList');
@@ -2131,6 +2174,7 @@
     }).join('');
 
     container.innerHTML = html;
+    document.querySelectorAll('.bracket-wrap').forEach(updateBracketNav);
 
     // Update homepage preview
     const live = TOURNAMENT_DATA.find(t => t.status === 'live');
