@@ -2492,16 +2492,17 @@
     const tbody = document.getElementById('rosterTableBody');
     grid.innerHTML = '';
     tbody.innerHTML = '';
-    // ranked by achievement — most titles first, runner-ups as tiebreak, then name — so
-    // the #01 badge means "best record", not just "however they happen to sit in the array"
-    const ranked = rosterOrder
-      .map(name => ({ name, ...computeStats(name) }))
-      .sort((a,b) => b.titles - a.titles || b.runnerups - a.runnerups || a.name.localeCompare(b.name));
+    // ranked by Elo rating — the #01 badge means "currently strongest", not just
+    // "however they happen to sit in the array" or a pure trophy count (see Hall of Fame
+    // above for the titles-based ranking instead)
     const eloTable = computeEloRatings().rows;
-    ranked.forEach(({name, titles, runnerups}, i) => {
+    const ranked = rosterOrder
+      .map(name => ({ name, ...computeStats(name), elo: eloTable[name] ? eloTable[name].rating : ELO_START }))
+      .sort((a,b) => b.elo - a.elo || a.name.localeCompare(b.name));
+    ranked.forEach(({name, titles, runnerups, elo: rawElo}, i) => {
       const stats = {titles, runnerups};
       const form = formGradeFor(name);
-      const elo = Math.round(eloTable[name] ? eloTable[name].rating : ELO_START);
+      const elo = Math.round(rawElo);
       const initials = name.slice(0,2).toUpperCase();
       const card = document.createElement('div');
       card.className = 'player-card reveal in';
@@ -2815,10 +2816,11 @@
     rosterOrder.forEach(p => { if(p !== name) allRadarData[p] = getPlayerRadarStats(p); });
     const totalMatches = breakdown.reduce((a,r)=>a+r.played,0);
     const totalWins = breakdown.reduce((a,r)=>a+r.won,0);
-    // same ranking the roster grid uses — most titles first, runner-ups as tiebreak, then name
+    // same ranking the roster grid uses — Elo rating, highest first, then name
+    const eloTableForRank = computeEloRatings().rows;
     const rankedRoster = rosterOrder
-      .map(n => ({ name: n, ...computeStats(n) }))
-      .sort((a,b) => b.titles - a.titles || b.runnerups - a.runnerups || a.name.localeCompare(b.name));
+      .map(n => ({ name: n, elo: eloTableForRank[n] ? eloTableForRank[n].rating : ELO_START }))
+      .sort((a,b) => b.elo - a.elo || a.name.localeCompare(b.name));
     const rosterRank = rankedRoster.findIndex(p => p.name === name) + 1;
 
     const achievementsHtml = achievements.length
