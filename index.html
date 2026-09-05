@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>eFootball Narikkuni</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#05041f">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Narikkuni">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Chakra+Petch:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&family=Saira+Stencil+One&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -410,6 +418,50 @@
   .fx-table td.td-home.winner, .fx-table td.td-away.winner{color:var(--gold); font-weight:700;}
   .fx-table td.td-score.upcoming{color:var(--muted); font-family:'Roboto Mono'; font-size:0.78rem; letter-spacing:0.06em;}
 
+  /* ---------- ACTIVITY FEED ---------- */
+  .activity-feed{display:flex; gap:12px; overflow-x:auto; padding-bottom:14px; margin-bottom:24px;}
+  .activity-row{
+    flex:0 0 auto; min-width:220px; background:var(--card); border:1px solid var(--card-line); border-radius:12px;
+    padding:14px 16px; transition:border-color .15s ease;
+  }
+  .activity-row:hover{border-color:var(--gold);}
+  .activity-meta{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; white-space:nowrap;}
+  .activity-score{display:flex; align-items:center; justify-content:space-between; gap:10px; font-family:'Oswald'; font-size:0.85rem; color:var(--muted);}
+  .activity-score span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;}
+  .activity-score span:last-child{text-align:right;}
+  .activity-score span.winner{color:var(--floodlight); font-weight:600;}
+  .activity-score b{font-family:var(--font-display); color:var(--gold); font-size:1rem; flex-shrink:0;}
+  .activity-score b small{font-family:'Roboto Mono'; font-size:0.55rem; color:var(--muted); font-weight:400;}
+
+  /* ---------- KNOCKOUT BRACKET ---------- */
+  .bracket-wrap{overflow-x:auto; padding-bottom:10px;}
+  .bracket{display:flex; gap:34px; min-width:max-content; padding:14px 4px 4px;}
+  .bracket-round{display:flex; flex-direction:column; min-width:190px;}
+  .bracket-round-title{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); text-align:center; margin-bottom:14px;}
+  .bracket-match{
+    background:var(--card); border:1px solid var(--card-line); border-radius:10px; overflow:hidden;
+    position:relative;
+  }
+  .bracket-match::after{
+    content:''; position:absolute; top:50%; right:-34px; width:34px; height:1px; background:var(--card-line);
+  }
+  .bracket-round:last-child .bracket-match::after{display:none;}
+  .bracket-team{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px;
+    font-family:'Oswald'; font-size:0.86rem; color:var(--muted);
+  }
+  .bracket-team:first-child{border-bottom:1px dashed var(--card-line);}
+  .bracket-team.winner{color:var(--floodlight); font-weight:600;}
+  .bracket-team .bracket-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bracket-team .bracket-score{font-family:var(--font-display); color:var(--gold); flex-shrink:0;}
+  .bracket-team.winner .bracket-score{color:var(--gold);}
+  .bracket-vs{text-align:center; font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.08em; color:var(--muted); padding:4px 0; border-top:1px dashed var(--card-line);}
+  .bracket-champion{
+    display:flex; align-items:center; gap:10px; padding:14px 16px; background:rgba(226,166,59,0.08);
+    border:1px solid var(--gold); border-radius:10px; font-family:var(--font-display); font-size:1.1rem; color:var(--gold);
+    justify-content:center; text-align:center; min-height:52px;
+  }
+
   /* ---------- LEADERBOARD ---------- */
   /* ---------- MANUAL UPLOAD ---------- */
   .upload-box{
@@ -670,6 +722,19 @@
   .h2h-meeting{display:flex; justify-content:space-between; gap:12px; font-size:0.85rem; flex-wrap:wrap;}
   .h2h-meeting span{color:var(--muted); font-family:'Roboto Mono'; font-size:0.68rem;}
   .h2h-meeting b{font-family:'Oswald'; font-weight:600; color:var(--floodlight);}
+  .rivalry-list{display:flex; flex-direction:column; gap:10px; margin-bottom:32px;}
+  .rivalry-row{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    background:var(--card); border:1px solid var(--card-line); border-radius:12px; padding:16px 20px;
+    transition:border-color .15s ease;
+  }
+  .rivalry-row:hover{border-color:var(--gold);}
+  .rivalry-names{font-family:'Oswald'; font-weight:600; font-size:1rem; color:var(--floodlight);}
+  .rivalry-names .vs{color:var(--muted); font-family:'Roboto Mono'; font-size:0.68rem; margin:0 8px;}
+  .rivalry-meta{display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+  .rivalry-record{font-family:var(--font-display); color:var(--gold); font-size:1rem;}
+  .rivalry-last{font-family:'Roboto Mono'; font-size:0.65rem; color:var(--muted);}
+  .rivalry-empty{color:var(--muted); font-family:'Roboto Mono'; font-size:0.85rem; text-align:center; padding:20px 0;}
   .awards-scope{display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap;}
   .awards-scope label{font-family:'Roboto Mono'; font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);}
   .awards-scope select{
@@ -889,6 +954,20 @@
 
         <div class="assign-panel" id="assignPanel" style="display:none;"></div>
 
+        <div class="sec-eyebrow reveal" style="margin-top:8px;"><div class="line"></div><div class="eyebrow">Recent Results</div></div>
+        <div class="activity-feed reveal" id="activityFeed"></div>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+          <div class="roster-view-toggle" id="fixturesViewToggle">
+            <button type="button" class="view-btn active" data-view="table" onclick="setFixturesView('table')" title="Table view" aria-label="Table view" aria-pressed="true">
+              <svg class="fa-ic"><use href="#fa-bars"/></svg>
+            </button>
+            <button type="button" class="view-btn" data-view="bracket" onclick="setFixturesView('bracket')" title="Bracket view" aria-label="Bracket view" aria-pressed="false">
+              <span class="grid-ic"><span></span><span></span><span></span><span></span></span>
+            </button>
+          </div>
+        </div>
+
         <div class="fixture-list reveal" id="fixtureList"></div>
       </div>
     </section>
@@ -1045,6 +1124,11 @@
           </div>
           <div id="h2hResult"></div>
         </div>
+
+        <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">Beef on the pitch</div></div>
+        <h2 class="sec-title reveal" style="font-size:clamp(1.6rem,3vw,2.2rem);">Biggest Rivalries</h2>
+        <p class="sec-desc reveal">The pairs who've faced off the most — ranked by matches played, closest records first.</p>
+        <div class="rivalry-list reveal" id="rivalryList"></div>
 
         <div class="awards-scope">
           <label for="awardsScopeSelect">Viewing</label>
@@ -1206,6 +1290,12 @@
       if(s.champion === name) titles++;
       if(s.runner === name || s.secondRunner === name) runnerups++;
     });
+    // Season 6 onward has no manual knockoutSeasons entry (see the comment above that array) —
+    // its titles/runner-ups live only in TOURNAMENT_DATA, so count those here too
+    TOURNAMENT_DATA.forEach(t=>{
+      if(t.winner === name) titles++;
+      if(t.runnerUp === name) runnerups++;
+    });
     return {titles, runnerups};
   }
 
@@ -1323,6 +1413,7 @@
     const norm = n => rosterOrder.find(r => r.toLowerCase() === n.toLowerCase()) || n;
     const ratings = {};
     const rows = {};
+    const histories = {}; // normalized name -> [{rating, delta, oppRatingBefore, opponent, result, tournament, round}]
     const ratingOf = n => (n in ratings) ? ratings[n] : ELO_START;
     const rowOf = n => rows[n] || (rows[n] = {name:n, rating:ELO_START, played:0, won:0, drawn:0, lost:0});
     TOURNAMENT_DATA.forEach(t => {
@@ -1335,24 +1426,76 @@
           const scoreH = draw ? 0.5 : hw ? 1 : 0;
           const rh = ratingOf(h), ra = ratingOf(a);
           const expH = 1 / (1 + Math.pow(10, (ra - rh) / 400));
-          ratings[h] = rh + ELO_K * (scoreH - expH);
-          ratings[a] = ra + ELO_K * ((1 - scoreH) - (1 - expH));
+          const newRh = rh + ELO_K * (scoreH - expH);
+          const newRa = ra + ELO_K * ((1 - scoreH) - (1 - expH));
+          ratings[h] = newRh;
+          ratings[a] = newRa;
           const rowH = rowOf(h), rowA = rowOf(a);
           rowH.played++; rowA.played++;
           if(draw){ rowH.drawn++; rowA.drawn++; }
           else if(hw){ rowH.won++; rowA.lost++; }
           else { rowH.lost++; rowA.won++; }
+          const resultFor = (win) => draw ? 'D' : win ? 'W' : 'L';
+          (histories[h] = histories[h] || []).push({ rating:newRh, delta:newRh-rh, oppRatingBefore:ra, opponent:a, result: resultFor(hw), tournament:t.name, round:r.round });
+          (histories[a] = histories[a] || []).push({ rating:newRa, delta:newRa-ra, oppRatingBefore:rh, opponent:h, result: resultFor(!hw), tournament:t.name, round:r.round });
         });
       });
     });
     Object.keys(rows).forEach(n => { rows[n].rating = ratings[n]; });
-    return rows; // normalized name -> {name, rating, played, won, drawn, lost}
+    return { rows, histories }; // rows: normalized name -> {name, rating, played, won, drawn, lost}
   }
 
   function getEloRating(name){
-    const rows = computeEloRatings();
+    const { rows } = computeEloRatings();
     const key = rosterOrder.find(r => r.toLowerCase() === name.toLowerCase()) || name;
     return Math.round(rows[key] ? rows[key].rating : ELO_START);
+  }
+
+  // standard Elo expected-score formula, read off *current* ratings — a live "if this
+  // kicked off right now" prediction, same idea as the leaderboard's Elo tab
+  function getWinProbability(h, a){
+    const rh = getEloRating(h), ra = getEloRating(a);
+    const pH = 1 / (1 + Math.pow(10, (ra - rh) / 400));
+    return { h: pH, a: 1 - pH };
+  }
+
+  function getEloHistoryFor(name){
+    const { histories } = computeEloRatings();
+    const key = rosterOrder.find(r => r.toLowerCase() === name.toLowerCase()) || name;
+    return histories[key] || [];
+  }
+
+  // renders a static line-chart SVG of rating over time — built server-side (at profile-page
+  // generation time) rather than client-side like the radar, since it never needs to redraw
+  // (no compare-with picker, no theme-relative recompute beyond CSS custom properties already
+  // doing that work via var(--…) fill/stroke values).
+  function buildEloChartSvg(history){
+    if(!history.length) return '';
+    const W = 640, H = 190, padL = 42, padR = 16, padT = 16, padB = 28;
+    const points = [{ rating: ELO_START, delta:0, tournament:'', round:'', opponent:'', result:'' }, ...history];
+    const ratings = points.map(p => p.rating);
+    let min = Math.min(...ratings), max = Math.max(...ratings);
+    if(max - min < 40){ const mid = (max + min) / 2; min = mid - 20; max = mid + 20; }
+    min -= 10; max += 10;
+    const innerW = W - padL - padR, innerH = H - padT - padB;
+    const x = i => padL + (points.length === 1 ? innerW / 2 : innerW * i / (points.length - 1));
+    const y = r => padT + innerH - ((r - min) / (max - min)) * innerH;
+    const pathD = points.map((p,i) => `${i===0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(p.rating).toFixed(1)}`).join(' ');
+    const gridLines = [max, (max+min)/2, min].map(v => `
+      <line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${W-padR}" y2="${y(v).toFixed(1)}" stroke="var(--card-line)" stroke-width="1" stroke-dasharray="3,4"/>
+      <text x="${padL-8}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)" font-family="Roboto Mono">${Math.round(v)}</text>`).join('');
+    const dots = points.map((p,i) => {
+      const isLast = i === points.length - 1;
+      const title = i === 0
+        ? 'Starting rating'
+        : `${p.tournament} · ${p.round} — vs ${p.opponent} (${p.result}) · ${p.delta >= 0 ? '+' : ''}${Math.round(p.delta)}`;
+      return `<circle cx="${x(i).toFixed(1)}" cy="${y(p.rating).toFixed(1)}" r="${isLast ? 5 : 3.5}" fill="${isLast ? 'var(--gold)' : 'var(--turf-bright)'}" stroke="var(--ink)" stroke-width="1.5"><title>${escapeHtml(title)}</title></circle>`;
+    }).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">
+      ${gridLines}
+      <path d="${pathD}" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+    </svg>`;
   }
 
   /* ---------------- HEAD-TO-HEAD / FORM / STREAKS / AWARDS ----------------
@@ -1379,6 +1522,22 @@
       else draws++;
     });
     return { meetings, aWins, bWins, draws, played: meetings.length };
+  }
+
+  // every unplayed pair costs nothing but an early-out inside getHeadToHead (no matches to
+  // scan for most pairs), so a full O(n^2) sweep over the roster is fine at this squad size
+  function computeRivalries(minPlayed){
+    minPlayed = minPlayed || 1;
+    const pairs = [];
+    for(let i = 0; i < rosterOrder.length; i++){
+      for(let j = i + 1; j < rosterOrder.length; j++){
+        const a = rosterOrder[i], b = rosterOrder[j];
+        const h2h = getHeadToHead(a, b);
+        if(h2h.played < minPlayed) continue;
+        pairs.push({ a, b, played: h2h.played, aWins: h2h.aWins, bWins: h2h.bWins, draws: h2h.draws, last: h2h.meetings[h2h.meetings.length - 1] });
+      }
+    }
+    return pairs.sort((x,y) => y.played - x.played || Math.abs(x.aWins-x.bWins) - Math.abs(y.aWins-y.bWins) || x.a.localeCompare(y.a));
   }
 
   function getRecentForm(name, limit){
@@ -1499,7 +1658,7 @@
       results.forEach(r => { cur = r === 'W' ? cur + 1 : 0; if(cur > best) best = cur; });
       return best;
     }
-    const eloTable = computeEloRatings();
+    const eloTable = computeEloRatings().rows;
     function metricsFor(p){
       const mp = matchesPlayed[p] || 0;
       const wins = winsMap[p] || 0;
@@ -1589,6 +1748,25 @@
     return list.slice(0, limit);
   }
 
+  // flattens every decided match in the same chronological order used everywhere else
+  // (TOURNAMENT_DATA listed oldest-first, rounds/matches in listed order), then reverses it —
+  // so index 0 is the most recently played match on record
+  function getActivityFeed(limit){
+    limit = limit || 8;
+    const feed = [];
+    TOURNAMENT_DATA.forEach(t => {
+      t.rounds.forEach(r => {
+        r.matches.forEach(m => {
+          if(m.status === 'upcoming' || m.h === 'TBD' || m.a === 'TBD') return;
+          const hw = m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga;
+          const draw = !m.pen && m.gh === m.ga;
+          feed.push({ tournament: t.name, round: r.round, h: m.h, a: m.a, gh: m.gh, ga: m.ga, pen: m.pen, winner: draw ? null : (hw ? m.h : m.a) });
+        });
+      });
+    });
+    return feed.reverse().slice(0, limit);
+  }
+
   function getOnThisDay(){
     const today = new Date();
     const hits = [];
@@ -1610,8 +1788,31 @@
     const upcoming = getUpcomingFixtures(4);
     tag.textContent = upcoming.length ? `${upcoming.length} lined up` : 'None scheduled';
     list.innerHTML = upcoming.length
-      ? upcoming.map(u => `<div class="upcoming-row"><span>${u.tournament} · ${u.round}</span><b>${u.h} vs ${u.a}</b></div>`).join('')
+      ? upcoming.map(u => {
+          const prob = getWinProbability(u.h, u.a);
+          const fav = prob.h >= prob.a ? { name: u.h, pct: prob.h } : { name: u.a, pct: prob.a };
+          return `<div class="upcoming-row"><span>${u.tournament} · ${u.round}</span><b>${u.h} vs ${u.a} <span style="color:var(--gold);font-family:'Roboto Mono';font-size:0.62rem;">(${fav.name} ${Math.round(fav.pct*100)}%)</span></b></div>`;
+        }).join('')
       : 'No fixtures scheduled right now.';
+  }
+
+  function renderActivityFeed(){
+    const el = document.getElementById('activityFeed');
+    if(!el) return;
+    const feed = getActivityFeed(8);
+    el.innerHTML = feed.length
+      ? feed.map(f => {
+          const draw = !f.winner;
+          return `<div class="activity-row">
+            <div class="activity-meta">${f.tournament} · ${f.round}</div>
+            <div class="activity-score">
+              <span class="${!draw && f.winner === f.h ? 'winner' : ''}">${f.h}</span>
+              <b>${f.gh}–${f.ga}${f.pen ? ` <small>(pen ${f.pen})</small>` : ''}</b>
+              <span class="${!draw && f.winner === f.a ? 'winner' : ''}">${f.a}</span>
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="rivalry-empty">No results logged yet.</div>`;
   }
 
   function renderOnThisDay(){
@@ -1803,6 +2004,57 @@
     }
   }
 
+  let fixturesViewMode = 'table';
+  function setFixturesView(mode){
+    fixturesViewMode = mode;
+    document.querySelectorAll('#fixturesViewToggle .view-btn').forEach(b => {
+      const active = b.dataset.view === mode;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-pressed', String(active));
+    });
+    renderFixtures();
+  }
+
+  // classic "doubling gap" bracket layout: round ri's first match sits (2^ri - 1) units down,
+  // and every match after it in that round is spaced (2^(ri+1) - 1) units from the previous one —
+  // which keeps each match vertically centered between the two matches feeding into it, with
+  // nothing more than plain margin-top (no JS position math needed once the values are computed).
+  function buildBracketHtml(t){
+    const rounds = t.rounds.filter(r => r.matches.length);
+    if(!rounds.length) return `<div style="padding:20px;color:var(--muted);font-family:'Roboto Mono';font-size:0.8rem;">No bracket data yet.</div>`;
+    const unit = 34;
+    const roundsHtml = rounds.map((r, ri) => {
+      const firstOffset = (Math.pow(2, ri) - 1) * unit;
+      const gap = (Math.pow(2, ri + 1) - 1) * unit;
+      const matchesHtml = r.matches.map((m, mi) => {
+        const isTbd = m.h === 'TBD' || m.a === 'TBD';
+        const up = m.status === 'upcoming';
+        const hw = !up && !isTbd && (m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga);
+        const draw = !up && !isTbd && !m.pen && m.gh === m.ga;
+        const marginTop = mi === 0 ? firstOffset : gap;
+        return `<div class="bracket-match" style="margin-top:${marginTop}px;">
+          <div class="bracket-team ${hw ? 'winner' : ''}">
+            <span class="bracket-name" title="${escAttr(m.h)}">${m.h}</span>
+            ${!isTbd && !up ? `<span class="bracket-score">${m.gh}</span>` : ''}
+          </div>
+          <div class="bracket-team ${!up && !isTbd && !hw && !draw ? 'winner' : ''}">
+            <span class="bracket-name" title="${escAttr(m.a)}">${m.a}</span>
+            ${!isTbd && !up ? `<span class="bracket-score">${m.ga}</span>` : ''}
+          </div>
+          ${up && !isTbd ? '<div class="bracket-vs">VS</div>' : ''}
+        </div>`;
+      }).join('');
+      return `<div class="bracket-round">
+        <div class="bracket-round-title">${r.round}</div>
+        ${matchesHtml}
+      </div>`;
+    }).join('');
+    const championHtml = t.winner
+      ? `<div class="bracket-round"><div class="bracket-round-title">Champion</div><div class="bracket-champion" style="margin-top:${(Math.pow(2, rounds.length) - 1) * unit}px;"><svg class="fa-ic"><use href="#fa-trophy"/></svg> ${t.winner}</div></div>`
+      : '';
+    return `<div class="bracket-wrap"><div class="bracket">${roundsHtml}${championHtml}</div></div>`;
+  }
+
   function renderFixtures() {
     const container = document.getElementById('fixtureList');
 
@@ -1828,7 +2080,14 @@
           const hw = !up && (m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga);
           const draw = !up && !m.pen && m.gh === m.ga;
           const scoreStr = up
-            ? `<span style="font-family:'Roboto Mono';font-size:0.75rem;letter-spacing:0.06em;color:var(--muted);">VS</span>`
+            ? (() => {
+                const prob = getWinProbability(m.h, m.a);
+                const favH = prob.h >= prob.a;
+                return `<span style="font-family:'Roboto Mono';font-size:0.75rem;letter-spacing:0.06em;color:var(--muted);">VS</span>
+                  <br><small class="predict-chip" style="font-size:0.58rem;font-family:'Roboto Mono';" title="Predicted from current Elo ratings">
+                    <span style="color:${favH ? 'var(--gold)' : 'var(--muted)'};">${Math.round(prob.h*100)}%</span> · <span style="color:${!favH ? 'var(--gold)' : 'var(--muted)'};">${Math.round(prob.a*100)}%</span>
+                  </small>`;
+              })()
             : `${m.gh}–${m.ga}${m.pen ? `<br><small style="font-size:0.58rem;opacity:0.65;font-family:'Roboto Mono'">pen ${m.pen}</small>` : ''}`;
           return `<tr>
             <td class="td-home${!up && hw ? ' winner' : ''}">${m.h}</td>
@@ -1867,7 +2126,7 @@
           <svg class="fa-ic accord-chevron"><use href="#fa-chevron-down"/></svg>
         </div>
         <div class="accord-body ${isOpen ? 'open' : ''}" id="accord-body-${ti}">
-          <div class="accord-inner">${roundsHtml}</div>
+          <div class="accord-inner">${fixturesViewMode === 'bracket' ? buildBracketHtml(t) : roundsHtml}</div>
         </div>
       </div>`;
     }).join('');
@@ -1932,7 +2191,7 @@
       </div>`).join('');
 
     if(lbActiveTournament === '__elo'){
-      const eloRows = Object.values(computeEloRatings()).sort((a,b) => b.rating - a.rating || b.played - a.played || a.name.localeCompare(b.name));
+      const eloRows = Object.values(computeEloRatings().rows).sort((a,b) => b.rating - a.rating || b.played - a.played || a.name.localeCompare(b.name));
       const eloRowsHtml = eloRows.map((r,i) => `
         <div class="lb-row ${i < 3 ? 'top3' : ''}">
           <div class="lb-rank">${i+1}</div>
@@ -2224,7 +2483,7 @@
     const addIdx = pendingAdditions.indexOf(oldName);
     if(addIdx > -1){ pendingAdditions[addIdx] = newName; delete pendingRenames[oldName]; }
 
-    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay();
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     markDirty();
   }
 
@@ -2238,7 +2497,7 @@
     const ranked = rosterOrder
       .map(name => ({ name, ...computeStats(name) }))
       .sort((a,b) => b.titles - a.titles || b.runnerups - a.runnerups || a.name.localeCompare(b.name));
-    const eloTable = computeEloRatings();
+    const eloTable = computeEloRatings().rows;
     ranked.forEach(({name, titles, runnerups}, i) => {
       const stats = {titles, runnerups};
       const form = formGradeFor(name);
@@ -2328,6 +2587,22 @@
       <div class="h2h-meetings">
         ${h2h.meetings.slice(-6).reverse().map(m => `<div class="h2h-meeting"><span>${m.tournament} · ${m.round}</span><b>${m.h} ${m.gh}-${m.ga} ${m.a}${m.pen ? ` (pen ${m.pen})` : ''}</b></div>`).join('')}
       </div>`;
+  }
+
+  function renderRivalries(){
+    const el = document.getElementById('rivalryList');
+    if(!el) return;
+    const rivalries = computeRivalries(2).slice(0, 8); // 2+ meetings, or the list is just "everyone who's ever met once"
+    el.innerHTML = rivalries.length
+      ? rivalries.map(r => `
+        <div class="rivalry-row">
+          <div class="rivalry-names">${r.a}<span class="vs">VS</span>${r.b}</div>
+          <div class="rivalry-meta">
+            <span class="rivalry-record">${r.aWins}-${r.draws}-${r.bWins}</span>
+            <span class="rivalry-last">${r.played} meeting${r.played!==1?'s':''}${r.last ? ` · last: ${r.last.h} ${r.last.gh}-${r.last.ga} ${r.last.a}` : ''}</span>
+          </div>
+        </div>`).join('')
+      : `<div class="rivalry-empty">No pair has met twice yet — check back once a few more seasons are in the books.</div>`;
   }
 
   function populateH2HSelects(){
@@ -2439,7 +2714,7 @@
     if(wrapBtn) wrapBtn.style.display = TOURNAMENT_DATA.some(t => t.status === 'completed') ? 'flex' : 'none';
   }
   populateH2HSelects();
-  renderAwards(); renderUpcoming(); renderOnThisDay();
+  renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
 
   const syncReady = loadRosterOverrides().then(() => autoSyncFixtureFeed()); // load aliases/renames FIRST so parseFixtureFlowBackup can resolve names immediately — no assign panel if aliases exist
 
@@ -2468,6 +2743,31 @@
     return list;
   }
 
+  // fixed badge set, each with a locked/unlocked state — distinct from getPlayerAchievements()
+  // above, which lists actual season-by-season trophy history rather than milestone criteria
+  function computeBadges(name){
+    const stats = computeStats(name);
+    let matches = 0, goals = 0, cleanSheets = 0;
+    TOURNAMENT_DATA.forEach(t => t.rounds.forEach(r => r.matches.forEach(m => {
+      if(m.status === 'upcoming' || m.h === 'TBD') return;
+      if(m.h === name){ matches++; goals += m.gh; if(m.ga === 0) cleanSheets++; }
+      else if(m.a === name){ matches++; goals += m.ga; if(m.gh === 0) cleanSheets++; }
+    })));
+    const results = matchResults.filter(m => m.player === name).map(m => m.result);
+    let bestStreak = 0, cur = 0;
+    results.forEach(r => { cur = r === 'W' ? cur + 1 : 0; if(cur > bestStreak) bestStreak = cur; });
+    const giantKiller = getEloHistoryFor(name).some(h => h.result === 'W' && (h.oppRatingBefore - (h.rating - h.delta)) >= 100);
+    const goalsPerMatch = matches ? goals / matches : 0;
+    return [
+      { icon:'trophy', label:'Trophy Winner', detail:'Win a title', achieved: stats.titles >= 1 },
+      { icon:'gamepad', label:'Iron Man', detail:'Play 10+ matches', achieved: matches >= 10 },
+      { icon:'fire', label:'Hot Streak', detail:'3+ match win streak', achieved: bestStreak >= 3 },
+      { icon:'medal', label:'Giant Killer', detail:'Beat a player rated 100+ Elo higher', achieved: giantKiller },
+      { icon:'futbol', label:'Sharpshooter', detail:'Avg. 2+ goals/match (5+ played)', achieved: matches >= 5 && goalsPerMatch >= 2 },
+      { icon:'shield-halved', label:'Clean Sheet Specialist', detail:'3+ clean sheets', achieved: cleanSheets >= 3 },
+    ];
+  }
+
   function getPlayerTournamentBreakdown(name){
     const by = {};
     matchResults.forEach(m => {
@@ -2489,7 +2789,11 @@
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'normal';
     const stats = computeStats(name);
     const eloRating = getEloRating(name);
+    const eloHistory = getEloHistoryFor(name);
+    const eloChartSvg = buildEloChartSvg(eloHistory);
+    const eloPeak = eloHistory.length ? Math.round(Math.max(ELO_START, ...eloHistory.map(h => h.rating))) : ELO_START;
     const achievements = getPlayerAchievements(name);
+    const badges = computeBadges(name);
     const breakdown = getPlayerTournamentBreakdown(name);
     const initials = name.slice(0,2).toUpperCase();
     const hasPhoto = !!PHOTOS[name];
@@ -2520,6 +2824,13 @@
     const achievementsHtml = achievements.length
       ? achievements.map(a => `<div class="ach-row"><span class="ach-icon">${a.icon}</span><div><div class="ach-title">${a.title}</div><div class="ach-date">${a.date||''}</div></div></div>`).join('')
       : `<div style="color:#9db3a8;font-family:'Roboto Mono';font-size:0.85rem;">No titles yet — every season starts somewhere.</div>`;
+
+    const badgesHtml = badges.map(b => `
+      <div class="badge-item ${b.achieved ? 'unlocked' : ''}" title="${escAttr(b.detail)}">
+        <svg class="fa-ic badge-icon"><use href="#fa-${b.icon}"/></svg>
+        <div class="badge-label">${b.label}</div>
+        <div class="badge-detail">${b.achieved ? 'Unlocked' : b.detail}</div>
+      </div>`).join('');
 
     const breakdownHtml = breakdown.length
       ? `<table class="bt"><thead><tr><th style="text-align:left;">Tournament</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr></thead><tbody>${
@@ -2599,6 +2910,19 @@
   table.bt th{font-family:'Roboto Mono';font-size:0.6rem;text-transform:uppercase;color:var(--muted);padding:10px;background:rgba(128,128,128,0.08);}
   table.bt td{font-family:'Oswald';font-size:0.9rem;padding:10px;text-align:center;border-top:1px dashed var(--card-line);}
   table.bt td.pts{color:var(--gold);font-family:var(--font-display);}
+  .elo-chart-wrap{background:var(--card);border:1px solid var(--card-line);border-radius:14px;padding:20px 20px 14px;}
+  .elo-chart-caption{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px;font-family:'Roboto Mono';font-size:0.68rem;color:var(--muted);}
+  .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
+  .badge-item{
+    display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;text-align:center;
+    background:var(--card);border:1px solid var(--card-line);border-radius:12px;
+    opacity:0.4;filter:grayscale(1);transition:opacity .2s ease,filter .2s ease,border-color .2s ease;
+  }
+  .badge-item.unlocked{opacity:1;filter:none;border-color:var(--gold);box-shadow:0 6px 18px rgba(0,0,0,0.25);}
+  .badge-icon{width:1.5rem;height:1.5rem;color:var(--gold);}
+  .badge-label{font-family:'Oswald';font-weight:600;font-size:0.78rem;color:var(--floodlight);}
+  .badge-detail{font-family:'Roboto Mono';font-size:0.58rem;color:var(--muted);}
+  .badge-item.unlocked .badge-detail{color:var(--gold);}
   .chart-view-toggle{display:inline-flex;gap:6px;margin-bottom:16px;}
   .cv-btn{
     font-family:'Roboto Mono';font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;
@@ -2676,8 +3000,15 @@
     <div class="stat-box"><div class="n">${totalWins}</div><div class="l">Wins</div></div>
   </div>
   <button type="button" class="share-btn" onclick="startDownloadFlow()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Download as image</button>
+  ${eloChartSvg ? `<h2><svg class="fa-ic"><use href="#fa-chart-column"/></svg> Elo Progression</h2>
+  <div class="elo-chart-wrap">
+    ${eloChartSvg}
+    <div class="elo-chart-caption"><span>Current: <b style="color:var(--gold);">${eloRating}</b></span><span>Peak: <b style="color:var(--gold);">${eloPeak}</b></span><span>${eloHistory.length} match${eloHistory.length!==1?'es':''} rated</span></div>
+  </div>` : ''}
   <h2><svg class="fa-ic"><use href="#fa-trophy"/></svg> Achievements</h2>
   ${achievementsHtml}
+  <h2><svg class="fa-ic"><use href="#fa-medal"/></svg> Badges</h2>
+  <div class="badge-grid">${badgesHtml}</div>
   <h2><svg class="fa-ic"><use href="#fa-chart-column"/></svg> Tournament Breakdown</h2>
   ${breakdownHtml}
   <h2><svg class="fa-ic"><use href="#fa-chart-column"/></svg> Player Radar</h2>
@@ -3360,7 +3691,7 @@
     const addIdx = pendingAdditions.indexOf(oldName);
     if(addIdx > -1){ pendingAdditions[addIdx] = newName; delete pendingRenames[oldName]; }
 
-    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay();
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     markDirty();
   }
 
@@ -3371,7 +3702,7 @@
     if(pendingAdditions.includes(name)) pendingAdditions = pendingAdditions.filter(n => n !== name);
     else pendingRemovals.push(name);
     renderRoster(); renderSideStats(); renderHomeCounts();
-    populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay();
+    populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     markDirty();
   }
 
@@ -3385,7 +3716,7 @@
     pendingAdditions.push(name);
     input.value = '';
     renderRoster(); renderSideStats(); renderHomeCounts();
-    populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay();
+    populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     markDirty();
   }
 
@@ -3436,7 +3767,7 @@
     
     pendingRemovals.push(fromName);
     closeMergeDuplicatesModal();
-    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay();
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     markDirty();
   }
 
@@ -3868,7 +4199,7 @@
       renderKnockoutTable();
       renderHomeCounts();
       populateH2HSelects();
-      renderAwards(); renderUpcoming(); renderOnThisDay();
+      renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
       renderAssignPanel(unmapped);
 
       const expDate = raw.exported
@@ -3937,7 +4268,7 @@
     if(addIdx > -1) pendingAdditions.splice(addIdx, 1);
     if(!pendingRemovals.includes(fromName)) pendingRemovals.push(fromName);
     
-    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay();
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts(); renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     renderAssignPanel([]); // clear panel
     markDirty();
     
@@ -4087,7 +4418,7 @@
       renderHomeCounts();
       renderTable('leagueRows', leagueSeasons);
       populateH2HSelects();
-      renderAwards(); renderUpcoming(); renderOnThisDay();
+      renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     }
 
     document.getElementById('assignPanel').style.display = 'none';
@@ -4098,6 +4429,11 @@
     if(confirmedNew) parts.push(`${confirmedNew} confirmed as new player${confirmedNew!==1?'s':''}`);
     statusEl.innerHTML = `<svg class="fa-ic"><use href="#fa-circle-check"/></svg> ${parts.join(', ')}. <b style="color:var(--gold);">Save to GitHub to make permanent</b> — or reload to lose changes.`;
     markDirty();
+  }
+
+  /* ---------------- PWA ---------------- */
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
 </script>
 
