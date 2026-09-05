@@ -3345,16 +3345,22 @@
           try{ tierBgImg = await loadImgCORS(tierBgUrl); }catch(err){ tierBgImg = null; }
         }
 
+        // backdrop first, always — so if the template's aspect ratio doesn't exactly
+        // match the card canvas, whatever margin is left around it (see "contain" fit
+        // below) is this gradient rather than a blank/black gap
+        const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+        bgGrad.addColorStop(0, pitchDeep);
+        bgGrad.addColorStop(1, ink);
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, W, H);
+
         if(tierBgImg){
-          const scale = Math.max(W/tierBgImg.width, H/tierBgImg.height);
+          // "contain" fit (Math.min, not Math.max) — shows the template's full design
+          // uncropped, rather than scaling it up to fill/cover the canvas and cutting
+          // off whatever doesn't fit the card's aspect ratio
+          const scale = Math.min(W/tierBgImg.width, H/tierBgImg.height);
           const iw = tierBgImg.width*scale, ih = tierBgImg.height*scale;
           ctx.drawImage(tierBgImg, W/2-iw/2, H/2-ih/2, iw, ih);
-        } else {
-          const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-          bgGrad.addColorStop(0, pitchDeep);
-          bgGrad.addColorStop(1, ink);
-          ctx.fillStyle = bgGrad;
-          ctx.fillRect(0, 0, W, H);
         }
 
         if(!tierBgImg){
