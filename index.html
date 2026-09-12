@@ -2940,6 +2940,28 @@
   .crop-actions .cancel:hover{border-color:#e07a6b;color:#e07a6b;}
   .crop-actions .save{background:var(--gold);color:var(--ink-fixed);border-color:var(--gold);}
   .crop-actions .save:hover{background:var(--gold-soft,var(--gold));}
+  .reveal-overlay{display:none;position:fixed;inset:0;background:#000;z-index:240;align-items:center;justify-content:center;padding:24px;}
+  .reveal-overlay.show{display:flex;}
+  .reveal-video{max-width:100%;max-height:80vh;border-radius:12px;opacity:1;transition:opacity .4s ease;}
+  .reveal-video.hide{opacity:0;pointer-events:none;position:absolute;}
+  .reveal-card-img{max-width:100%;max-height:80vh;border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,0.7);opacity:0;transform:scale(0.85);transition:opacity .5s ease,transform .5s cubic-bezier(.2,1.4,.4,1);}
+  .reveal-card-img.show{opacity:1;transform:scale(1);}
+  .reveal-tap{
+    position:absolute;display:none;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;
+    background:var(--gold);color:var(--ink-fixed);font-family:'Oswald';font-weight:600;font-size:0.95rem;
+    text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;border:none;
+  }
+  .reveal-tap.show{display:flex;}
+  .reveal-actions{position:absolute;bottom:28px;left:0;right:0;display:none;justify-content:center;gap:12px;padding:0 24px;}
+  .reveal-actions.show{display:flex;}
+  .reveal-actions button{
+    font-family:'Oswald';font-weight:600;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.03em;
+    padding:13px 26px;border-radius:999px;cursor:pointer;border:1px solid var(--card-line);background:rgba(255,255,255,0.06);
+    color:var(--floodlight);transition:border-color .15s ease,color .15s ease,background .15s ease;
+  }
+  .reveal-actions .save{background:var(--gold);color:var(--ink-fixed);border-color:var(--gold);}
+  .reveal-actions .save:hover{background:var(--gold-soft,var(--gold));}
+  .reveal-actions .close-btn:hover{border-color:var(--gold);color:var(--gold);}
   h1{font-family:var(--font-display);font-size:2.6rem;color:var(--floodlight);text-transform:uppercase;}
   .sub{font-family:'Roboto Mono';font-size:0.8rem;color:var(--turf-bright);margin-top:6px;}
   .stat-row{display:flex;gap:14px;margin-bottom:36px;flex-wrap:wrap;}
@@ -3034,6 +3056,15 @@
         <button type="button" class="cancel" onclick="cancelCrop()">Cancel</button>
         <button type="button" class="save" onclick="confirmCrop()">Use This Crop</button>
       </div>
+    </div>
+  </div>
+  <div class="reveal-overlay" id="revealOverlay">
+    <video class="reveal-video" id="revealVideo" muted playsinline></video>
+    <button type="button" class="reveal-tap" id="revealTap" onclick="revealTapPlay()"><svg class="fa-ic"><use href="#fa-futbol"/></svg> Tap to reveal</button>
+    <img class="reveal-card-img" id="revealCardImg" alt="Your player card">
+    <div class="reveal-actions" id="revealActions">
+      <button type="button" class="close-btn" onclick="closeCardReveal()">Close</button>
+      <button type="button" class="save" onclick="downloadRevealedCard()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Save Image</button>
     </div>
   </div>
   ${streakBadge}
@@ -3345,19 +3376,79 @@
           try{ tierBgImg = await loadImgCORS(tierBgUrl); }catch(err){ tierBgImg = null; }
         }
 
-        if(tierBgImg){
-          const scale = Math.max(W/tierBgImg.width, H/tierBgImg.height);
-          const iw = tierBgImg.width*scale, ih = tierBgImg.height*scale;
-          ctx.drawImage(tierBgImg, W/2-iw/2, H/2-ih/2, iw, ih);
-        } else {
-          const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-          bgGrad.addColorStop(0, pitchDeep);
-          bgGrad.addColorStop(1, ink);
-          ctx.fillStyle = bgGrad;
-          ctx.fillRect(0, 0, W, H);
-        }
+        // backdrop first, always — so if the template's aspect ratio doesn't exactly
+        // match the card canvas, whatever margin is left around it (see "contain" fit
+        // below) is this gradient rather than a blank/black gap
+        const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+        bgGrad.addColorStop(0, pitchDeep);
+        bgGrad.addColorStop(1, ink);
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, W, H);
 
-        if(!tierBgImg){
+        if(tierBgImg){
+          // "contain" fit (Math.min, not Math.max) — shows the template's full design
+          // uncropped, rather than scaling it up to fill/cover the canvas and cutting
+          // off whatever doesn't fit the card's aspect ratio
+          const scale = Math.min(W/tierBgImg.width, H/tierBgImg.height);
+          const iw = tierBgImg.width*scale, ih = tierBgImg.height*scale;
+          const tx = W/2-iw/2, ty = H/2-ih/2;
+
+          if(CARD_DATA.photo){
+            // draw the photo BEHIND the template art, covering the same box the template
+            // occupies. No per-template coordinate tuning needed for where it lines up:
+            // it's pixel-exact by construction, because both layers share the same box.
+            const img = await loadImg(CARD_DATA.photo);
+            let piw, pih, pcx, pcy;
+            if(cropState.frameW){
+              // reproduce the exact pan/zoom the user set in the crop modal, scaled up
+              // from the on-screen frame to this box's real canvas size
+              const canvasScale = iw / cropState.frameW;
+              const scale2 = cropState.baseScale * cropState.zoom * canvasScale;
+              piw = img.width*scale2; pih = img.height*scale2;
+              pcx = tx + iw/2 + cropState.offsetX*canvasScale;
+              pcy = ty + ih/2 + cropState.offsetY*canvasScale;
+            } else {
+              const scale2 = Math.max(iw/img.width, ih/img.height);
+              piw = img.width*scale2; pih = img.height*scale2;
+              pcx = tx + iw/2; pcy = ty + ih/2;
+            }
+            ctx.save();
+            roundRect(ctx, tx, ty, iw, ih, 8);
+            ctx.clip();
+            ctx.drawImage(img, pcx-piw/2, pcy-pih/2, piw, pih);
+            ctx.restore();
+
+            // most of these template files already carry a real transparent cutout (several
+            // are actually PNGs saved under a ".jpeg"/".jpg" name) — when that's true, draw
+            // them completely untouched so the frame art keeps its own full opacity and the
+            // real alpha hole shows the photo. Only the handful that are genuinely flat JPEGs
+            // (no alpha channel exists in the file at all) get a synthesized hole here —
+            // otherwise the photo has nothing to show through on those and just vanishes.
+            const probe = document.createElement('canvas');
+            probe.width = tierBgImg.width; probe.height = tierBgImg.height;
+            const pctx = probe.getContext('2d');
+            pctx.drawImage(tierBgImg, 0, 0);
+            const maskData = pctx.getImageData(0, 0, probe.width, probe.height);
+            const d = maskData.data;
+            let hasRealAlpha = false;
+            for(let i = 3; i < d.length; i += 4 * 997){
+              if(d[i] < 200){ hasRealAlpha = true; break; }
+            }
+            if(!hasRealAlpha){
+              const ci = (Math.round(probe.height*0.35)*probe.width + Math.round(probe.width/2)) * 4;
+              const gr = d[ci], gg = d[ci+1], gb = d[ci+2];
+              const threshold = 50;
+              for(let i = 0; i < d.length; i += 4){
+                const dr = d[i]-gr, dg = d[i+1]-gg, db = d[i+2]-gb;
+                if(Math.sqrt(dr*dr + dg*dg + db*db) < threshold) d[i+3] = 0;
+              }
+              pctx.putImageData(maskData, 0, 0);
+            }
+            ctx.drawImage(probe, tx, ty, iw, ih);
+          } else {
+            ctx.drawImage(tierBgImg, tx, ty, iw, ih);
+          }
+        } else {
           const glow = ctx.createRadialGradient(W*0.3, 60, 20, W*0.3, 60, 520);
           glow.addColorStop(0, pitch);
           glow.addColorStop(1, ink);
@@ -3365,103 +3456,60 @@
           ctx.fillStyle = glow;
           ctx.fillRect(0, 0, W, H);
           ctx.globalAlpha = 1;
-        }
 
-        // outer card frame — a plain double-line border with corner brackets, our own
-        // motif (not a recreation of any game's card template)
-        ctx.strokeStyle = gold;
-        ctx.lineWidth = 3;
-        roundRect(ctx, 24, 24, W-48, H-48, 28);
-        ctx.stroke();
-        ctx.globalAlpha = 0.35;
-        ctx.lineWidth = 1.5;
-        roundRect(ctx, 36, 36, W-72, H-72, 20);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = 3;
-        [[24,24,1,1],[W-24,24,-1,1],[24,H-24,1,-1],[W-24,H-24,-1,-1]].forEach(function(c){
-          const x0 = c[0], y0 = c[1], dx = c[2], dy = c[3];
-          ctx.beginPath();
-          ctx.moveTo(x0, y0 + dy*40);
-          ctx.lineTo(x0, y0);
-          ctx.lineTo(x0 + dx*40, y0);
+          // outer card frame — a plain double-line border with corner brackets, our own
+          // motif (not a recreation of any game's card template). Only for this plain
+          // fallback background — a star-tier template already has its own frame art.
+          ctx.strokeStyle = gold;
+          ctx.lineWidth = 3;
+          roundRect(ctx, 24, 24, W-48, H-48, 28);
           ctx.stroke();
-        });
+          ctx.globalAlpha = 0.35;
+          ctx.lineWidth = 1.5;
+          roundRect(ctx, 36, 36, W-72, H-72, 20);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.lineWidth = 3;
+          [[24,24,1,1],[W-24,24,-1,1],[24,H-24,1,-1],[W-24,H-24,-1,-1]].forEach(function(c){
+            const x0 = c[0], y0 = c[1], dx = c[2], dy = c[3];
+            ctx.beginPath();
+            ctx.moveTo(x0, y0 + dy*40);
+            ctx.lineTo(x0, y0);
+            ctx.lineTo(x0 + dx*40, y0);
+            ctx.stroke();
+          });
 
-        // roster-rank badge, top-left — same ranking as the roster grid (most titles first)
-        roundRect(ctx, 64, 64, 168, 168, 18);
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fill();
-        ctx.strokeStyle = gold;
-        ctx.lineWidth = 2.5;
-        roundRect(ctx, 64, 64, 168, 168, 18);
-        ctx.stroke();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = gold;
-        ctx.font = (CARD_DATA.rank >= 100 ? '56px ' : '64px ') + fontDisplay;
-        ctx.fillText('#' + CARD_DATA.rank, 64+84, 64+104);
-        ctx.fillStyle = muted;
-        ctx.font = '14px ' + fontMono;
-        ctx.fillText('ROSTER RANK', 64+84, 64+140);
-
-        // form badge, top-right — mirrors the rank badge, colored by the player's current
-        // win/loss streak (A=hot streak down to E=on a losing run); an original letter-grade
-        // convention, not tied to any particular game's UI
-        const fbx = W - 64 - 168;
-        roundRect(ctx, fbx, 64, 168, 168, 18);
-        ctx.fillStyle = 'rgba(255,255,255,0.06)';
-        ctx.fill();
-        ctx.strokeStyle = CARD_DATA.form.color;
-        ctx.lineWidth = 2.5;
-        roundRect(ctx, fbx, 64, 168, 168, 18);
-        ctx.stroke();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = CARD_DATA.form.color;
-        ctx.font = '72px ' + fontDisplay;
-        ctx.fillText(CARD_DATA.form.grade, fbx+84, 64+108);
-        ctx.fillStyle = muted;
-        ctx.font = '14px ' + fontMono;
-        ctx.fillText('FORM', fbx+84, 64+140);
-
-        // photo panel — rectangular, not a recreation of any licensed card frame
-        const px = 90, py = 260, pw = 820, ph = 460;
-        ctx.save();
-        roundRect(ctx, px, py, pw, ph, 24);
-        ctx.clip();
-        if(CARD_DATA.photo){
-          const img = await loadImg(CARD_DATA.photo);
-          if(cropState.frameW){
-            // reproduce the exact pan/zoom the user set in the crop modal, scaled up
-            // from the on-screen frame to this panel's real canvas size
-            const canvasScale = pw / cropState.frameW;
-            const scale = cropState.baseScale * cropState.zoom * canvasScale;
-            const iw = img.width*scale, ih = img.height*scale;
-            const centerX = px + pw/2 + cropState.offsetX*canvasScale;
-            const centerY = py + ph/2 + cropState.offsetY*canvasScale;
-            ctx.drawImage(img, centerX-iw/2, centerY-ih/2, iw, ih);
+          // photo panel — rectangular, not a recreation of any licensed card frame.
+          // Only drawn here in the fallback case; a star-tier template gets its photo
+          // composited in above instead, aligned to its own cutout.
+          const px = 90, py = 260, pw = 820, ph = 460;
+          ctx.save();
+          roundRect(ctx, px, py, pw, ph, 24);
+          ctx.clip();
+          if(CARD_DATA.photo){
+            const img = await loadImg(CARD_DATA.photo);
+            if(cropState.frameW){
+              const canvasScale = pw / cropState.frameW;
+              const scale = cropState.baseScale * cropState.zoom * canvasScale;
+              const iw = img.width*scale, ih = img.height*scale;
+              const centerX = px + pw/2 + cropState.offsetX*canvasScale;
+              const centerY = py + ph/2 + cropState.offsetY*canvasScale;
+              ctx.drawImage(img, centerX-iw/2, centerY-ih/2, iw, ih);
+            } else {
+              const scale = Math.max(pw/img.width, ph/img.height);
+              const iw = img.width*scale, ih = img.height*scale;
+              ctx.drawImage(img, px+pw/2-iw/2, py+ph/2-ih/2, iw, ih);
+            }
           } else {
-            const scale = Math.max(pw/img.width, ph/img.height);
-            const iw = img.width*scale, ih = img.height*scale;
-            ctx.drawImage(img, px+pw/2-iw/2, py+ph/2-ih/2, iw, ih);
+            ctx.fillStyle = cardBg;
+            ctx.fillRect(px, py, pw, ph);
+            ctx.fillStyle = 'rgba(255,255,255,0.14)';
+            ctx.font = '160px ' + fontDisplay;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(CARD_DATA.initials, px+pw/2, py+ph/2+18);
           }
-        } else if(!tierBgImg){
-          // no photo AND no star-tier template art to show through — paint a plain
-          // placeholder panel so there's something there at all
-          ctx.fillStyle = cardBg;
-          ctx.fillRect(px, py, pw, ph);
-          ctx.fillStyle = 'rgba(255,255,255,0.14)';
-          ctx.font = '160px ' + fontDisplay;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(CARD_DATA.initials, px+pw/2, py+ph/2+18);
-        }
-        ctx.restore();
-        // the star-tier template art already has its own frame drawn around this photo
-        // gap, so only stroke a box here for the plain fallback background — otherwise
-        // it'd double up on the template's own framing
-        if(!tierBgImg){
+          ctx.restore();
           ctx.strokeStyle = gold;
           ctx.lineWidth = 5;
           roundRect(ctx, px, py, pw, ph, 24);
@@ -3530,24 +3578,91 @@
         ctx.font = '20px ' + fontMono;
         ctx.fillText('NARIKKUNI, KERALA', W/2, H-46);
 
-        canvas.toBlob(function(blob){
-          if(!blob){ btn.disabled = false; btn.innerHTML = originalHtml; return; }
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = CARD_DATA.name.replace(/[^a-z0-9]+/gi,'_') + '_eFootball_Narikkuni.png';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-          btn.disabled = false;
-          btn.innerHTML = originalHtml;
-        }, 'image/png');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        showCardReveal(canvas);
       }catch(err){
         btn.disabled = false;
         btn.innerHTML = originalHtml;
         alert('Could not generate the image: ' + err.message);
       }
+    }
+
+    /* ---------------- CARD REVEAL ANIMATION (pack-opening style) ---------------- */
+    const REVEAL_VIDEOS = [
+      'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/BIG%20TIME.mp4',
+      'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/SHOW%20TIME.mp4',
+    ];
+    let revealBlobUrl = null;
+
+    function showCardReveal(canvas){
+      canvas.toBlob(function(blob){
+        if(!blob) return;
+        if(revealBlobUrl) URL.revokeObjectURL(revealBlobUrl);
+        revealBlobUrl = URL.createObjectURL(blob);
+
+        const overlay = document.getElementById('revealOverlay');
+        const video = document.getElementById('revealVideo');
+        const tap = document.getElementById('revealTap');
+        const cardImg = document.getElementById('revealCardImg');
+        const actions = document.getElementById('revealActions');
+
+        video.classList.remove('hide');
+        tap.classList.remove('show');
+        cardImg.classList.remove('show');
+        actions.classList.remove('show');
+        cardImg.src = revealBlobUrl;
+        overlay.classList.add('show');
+
+        const revealCard = function(){
+          video.classList.add('hide');
+          cardImg.classList.add('show');
+          actions.classList.add('show');
+        };
+
+        // reduced-motion (or a video that fails to load) skips straight to the card —
+        // the animation is pure flourish, never a blocker to actually getting the image
+        if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+          video.style.display = 'none';
+          revealCard();
+          return;
+        }
+        video.style.display = '';
+        video.muted = true;
+        video.src = REVEAL_VIDEOS[Math.floor(Math.random() * REVEAL_VIDEOS.length)];
+        video.onended = revealCard;
+        video.onerror = revealCard;
+        video.load();
+        const playPromise = video.play();
+        if(playPromise && playPromise.catch){
+          playPromise.catch(function(){ tap.classList.add('show'); });
+        }
+      }, 'image/png');
+    }
+
+    function revealTapPlay(){
+      const video = document.getElementById('revealVideo');
+      const tap = document.getElementById('revealTap');
+      video.play().then(function(){ tap.classList.remove('show'); }).catch(function(){});
+    }
+
+    function closeCardReveal(){
+      const overlay = document.getElementById('revealOverlay');
+      const video = document.getElementById('revealVideo');
+      overlay.classList.remove('show');
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+    }
+
+    function downloadRevealedCard(){
+      if(!revealBlobUrl) return;
+      const a = document.createElement('a');
+      a.href = revealBlobUrl;
+      a.download = CARD_DATA.name.replace(/[^a-z0-9]+/gi,'_') + '_eFootball_Narikkuni.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     }
   <\/script>
 </body></html>`;
