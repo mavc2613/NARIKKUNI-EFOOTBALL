@@ -3797,11 +3797,18 @@
   /* Safety net: if a name has an alias mapping IT to a different name, its identity has
      moved on — it should never independently linger in the roster as a separate "ghost"
      entry. Run this after anything that can add to rosterOrder, so a rename/merge can never
-     leave the old name behind, no matter which code path touched it. */
+     leave the old name behind, no matter which code path touched it.
+     Only prune when that redirect target is itself a real, current roster member, matched
+     EXACTLY (not case-insensitively) — a genuine rename/merge always adds the new name to
+     rosterOrder with its exact typed casing, so an exact match is the real signal. A stale or
+     mistyped alias whose target doesn't exist verbatim (e.g. pointing at "ATHUL" when the
+     roster only has "Athul") must never make a real, distinct player silently vanish — a
+     case-insensitive match here previously deleted BOTH players in exactly that situation. */
   function pruneStaleAliasedRosterEntries(){
     rosterOrder = rosterOrder.filter(n => {
       const redirect = sessionOverrides[n.toLowerCase()];
-      return !(redirect && redirect !== n);
+      if(!redirect || redirect === n) return true;
+      return !rosterOrder.includes(redirect);
     });
   }
 
