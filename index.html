@@ -448,13 +448,16 @@
     box-shadow:0 4px 14px rgba(0,0,0,0.35); transition:opacity .15s ease, border-color .15s ease, color .15s ease;
   }
   .bracket-nav:hover{border-color:var(--gold); color:var(--gold);}
-  .bracket-nav.prev{left:-6px;}
-  .bracket-nav.next{right:-6px;}
+  /* sit fully inside the shell rather than straddling its edge (was left:-6px/right:-6px) —
+     on a narrow phone screen that overhang could poke past the section's own side padding
+     and get clipped by body{overflow-x:hidden}, instead of just floating over the bracket */
+  .bracket-nav.prev{left:4px;}
+  .bracket-nav.next{right:4px;}
   .bracket-nav.disabled{opacity:0; pointer-events:none;}
   .bracket-nav svg{width:0.8em; height:0.8em;}
   .bracket-nav.prev svg{transform:rotate(90deg);}
   .bracket-nav.next svg{transform:rotate(-90deg);}
-  .bracket-wrap{overflow-x:auto; padding-bottom:10px; scroll-behavior:smooth;}
+  .bracket-wrap{overflow-x:auto; overflow-y:hidden; max-width:100%; padding-bottom:10px; scroll-behavior:smooth;}
   .bracket{display:flex; align-items:stretch; gap:28px; min-width:max-content; padding:14px 4px 4px;}
   .bracket-round{display:flex; flex-direction:column; min-width:190px;}
   .bracket-round-title{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); text-align:center; margin-bottom:14px;}
@@ -2036,9 +2039,29 @@
   // as its own column instead (see the CSS) — correct and honest for any round shape, unlike
   // the fixed doubling-margin math this replaced, which assumed a perfect binary tree and drifted
   // out of alignment (and off the bottom of the bracket) the moment that assumption didn't hold.
+  // the standard progression these knockouts are named after — used to figure out which
+  // rounds still lie ahead of a live tournament's latest entered round, so the bracket can
+  // show them as empty placeholder columns instead of just stopping where the data does
+  const BRACKET_ROUND_SEQUENCE = ['Round of 32', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final'];
+
   function buildBracketHtml(t){
     const rounds = t.rounds.filter(r => r.matches.length);
     if(!rounds.length) return `<div style="padding:20px;color:var(--muted);font-family:'Roboto Mono';font-size:0.8rem;">No bracket data yet.</div>`;
+
+    // for a tournament still in progress, append blank columns for whatever standard
+    // rounds haven't been entered yet — just the header, no match boxes — so you can see
+    // the shape of what's still ahead (e.g. sat in the Quarter-finals, see Semi-finals and
+    // Final waiting blank) rather than the bracket just stopping at the last real round
+    const blankRounds = [];
+    if(t.status === 'live'){
+      const enteredNames = rounds.map(r => r.round);
+      const lastIdx = Math.max(...enteredNames.map(n => BRACKET_ROUND_SEQUENCE.indexOf(n)).filter(i => i >= 0), -1);
+      for(let i = lastIdx + 1; i < BRACKET_ROUND_SEQUENCE.length; i++){
+        const name = BRACKET_ROUND_SEQUENCE[i];
+        if(!enteredNames.includes(name)) blankRounds.push(name);
+      }
+    }
+
     const roundsHtml = rounds.map(r => {
       const matchesHtml = r.matches.map(m => {
         const isTbd = m.h === 'TBD' || m.a === 'TBD';
@@ -2062,13 +2085,18 @@
         <div class="bracket-round-matches">${matchesHtml}</div>
       </div>`;
     }).join('');
+    const blankRoundsHtml = blankRounds.map(name => `
+      <div class="bracket-round">
+        <div class="bracket-round-title">${name}</div>
+        <div class="bracket-round-matches"></div>
+      </div>`).join('');
     const championHtml = t.winner
       ? `<div class="bracket-round"><div class="bracket-round-title">Champion</div><div class="bracket-round-matches"><div class="bracket-champion"><svg class="fa-ic"><use href="#fa-trophy"/></svg> ${t.winner}</div></div></div>`
       : '';
     return `<div class="bracket-shell">
       <button type="button" class="bracket-nav prev disabled" aria-label="Scroll bracket left" onclick="scrollBracket(this,-1)"><svg class="fa-ic"><use href="#fa-chevron-down"/></svg></button>
       <div class="bracket-wrap" onscroll="updateBracketNav(this)">
-        <div class="bracket">${roundsHtml}${championHtml}</div>
+        <div class="bracket">${roundsHtml}${blankRoundsHtml}${championHtml}</div>
       </div>
       <button type="button" class="bracket-nav next" aria-label="Scroll bracket right" onclick="scrollBracket(this,1)"><svg class="fa-ic"><use href="#fa-chevron-down"/></svg></button>
     </div>`;
