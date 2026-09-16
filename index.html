@@ -479,6 +479,12 @@
     border:1px solid var(--gold); border-radius:10px; font-family:var(--font-display); font-size:1.1rem; color:var(--gold);
     justify-content:center; text-align:center; min-height:52px;
   }
+  .bracket-match.bracket-bye{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px;
+    background:transparent; border-style:dashed; opacity:0.7;
+  }
+  .bracket-match.bracket-bye .bracket-team{padding:0; border:none;}
+  .bracket-bye-tag{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); font-style:italic; flex-shrink:0;}
 
   /* ---------- LEADERBOARD ---------- */
   /* ---------- MANUAL UPLOAD ---------- */
@@ -2042,42 +2048,38 @@
   // the standard progression these knockouts are named after — used to figure out which
   // rounds still lie ahead of a live tournament's latest entered round, so the bracket can
   // show them as empty placeholder columns instead of just stopping where the data does
-  const BRACKET_ROUND_SEQUENCE = ['Round of 32', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final'];
+  // an "upcoming" match whose side is this (rather than a real player name) has
+  // no known opponent yet — a bare bracket placeholder ("Winner M7") or the
+  // generic default-data filler ("TBD") — so win-probability/roster logic must
+  // skip it rather than treating it like a real player
+  const PLACEHOLDER_NAME_RE = /^(TBD|Winner M\d+)$/;
 
   function buildBracketHtml(t){
     const rounds = t.rounds.filter(r => r.matches.length);
     if(!rounds.length) return `<div style="padding:20px;color:var(--muted);font-family:'Roboto Mono';font-size:0.8rem;">No bracket data yet.</div>`;
 
-    // for a tournament still in progress, append blank columns for whatever standard
-    // rounds haven't been entered yet — just the header, no match boxes — so you can see
-    // the shape of what's still ahead (e.g. sat in the Quarter-finals, see Semi-finals and
-    // Final waiting blank) rather than the bracket just stopping at the last real round
-    const blankRounds = [];
-    if(t.status === 'live' || t.status === 'upcoming'){
-      const enteredNames = rounds.map(r => r.round);
-      const lastIdx = Math.max(...enteredNames.map(n => BRACKET_ROUND_SEQUENCE.indexOf(n)).filter(i => i >= 0), -1);
-      for(let i = lastIdx + 1; i < BRACKET_ROUND_SEQUENCE.length; i++){
-        const name = BRACKET_ROUND_SEQUENCE[i];
-        if(!enteredNames.includes(name)) blankRounds.push(name);
-      }
-    }
-
     const roundsHtml = rounds.map(r => {
       const matchesHtml = r.matches.map(m => {
-        const isTbd = m.h === 'TBD' || m.a === 'TBD';
+        if(m.bye){
+          return `<div class="bracket-match bracket-bye">
+            <div class="bracket-team"><span class="bracket-name" title="${escAttr(m.h)}">${m.h}</span></div>
+            <div class="bracket-bye-tag">bye</div>
+          </div>`;
+        }
         const up = m.status === 'upcoming';
-        const hw = !up && !isTbd && (m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga);
-        const draw = !up && !isTbd && !m.pen && m.gh === m.ga;
+        const isPlaceholder = PLACEHOLDER_NAME_RE.test(m.h) || PLACEHOLDER_NAME_RE.test(m.a);
+        const hw = !up && (m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga);
+        const draw = !up && !m.pen && m.gh === m.ga;
         return `<div class="bracket-match">
           <div class="bracket-team ${hw ? 'winner' : ''}">
             <span class="bracket-name" title="${escAttr(m.h)}">${m.h}</span>
-            ${!isTbd && !up ? `<span class="bracket-score">${m.gh}</span>` : ''}
+            ${!up ? `<span class="bracket-score">${m.gh}</span>` : ''}
           </div>
-          <div class="bracket-team ${!up && !isTbd && !hw && !draw ? 'winner' : ''}">
+          <div class="bracket-team ${!up && !hw && !draw ? 'winner' : ''}">
             <span class="bracket-name" title="${escAttr(m.a)}">${m.a}</span>
-            ${!isTbd && !up ? `<span class="bracket-score">${m.ga}</span>` : ''}
+            ${!up ? `<span class="bracket-score">${m.ga}</span>` : ''}
           </div>
-          ${up && !isTbd ? '<div class="bracket-vs">VS</div>' : ''}
+          ${up && !isPlaceholder ? '<div class="bracket-vs">VS</div>' : ''}
         </div>`;
       }).join('');
       return `<div class="bracket-round">
@@ -2085,18 +2087,13 @@
         <div class="bracket-round-matches">${matchesHtml}</div>
       </div>`;
     }).join('');
-    const blankRoundsHtml = blankRounds.map(name => `
-      <div class="bracket-round">
-        <div class="bracket-round-title">${name}</div>
-        <div class="bracket-round-matches"></div>
-      </div>`).join('');
     const championHtml = t.winner
       ? `<div class="bracket-round"><div class="bracket-round-title">Champion</div><div class="bracket-round-matches"><div class="bracket-champion"><svg class="fa-ic"><use href="#fa-trophy"/></svg> ${t.winner}</div></div></div>`
       : '';
     return `<div class="bracket-shell">
       <button type="button" class="bracket-nav prev disabled" aria-label="Scroll bracket left" onclick="scrollBracket(this,-1)"><svg class="fa-ic"><use href="#fa-chevron-down"/></svg></button>
       <div class="bracket-wrap" onscroll="updateBracketNav(this)">
-        <div class="bracket">${roundsHtml}${blankRoundsHtml}${championHtml}</div>
+        <div class="bracket">${roundsHtml}${championHtml}</div>
       </div>
       <button type="button" class="bracket-nav next" aria-label="Scroll bracket right" onclick="scrollBracket(this,1)"><svg class="fa-ic"><use href="#fa-chevron-down"/></svg></button>
     </div>`;
@@ -2134,50 +2131,38 @@
     let html = sorted.map((t, ti) => {
       const sc = t.status === 'live' ? 'live' : t.status === 'completed' ? 'completed' : 'upcoming';
       const isOpen = t.status === 'live' || ti === 0; // open newest / live by default
-      const totalMatches = t.rounds.reduce((acc, r) => acc + r.matches.filter(m => m.h !== 'TBD').length, 0);
-      const played = t.rounds.reduce((acc, r) => acc + r.matches.filter(m => m.h !== 'TBD' && m.status !== 'upcoming').length, 0);
+      const totalMatches = t.rounds.reduce((acc, r) => acc + r.matches.filter(m => m.h !== 'TBD' && !m.bye).length, 0);
+      const played = t.rounds.reduce((acc, r) => acc + r.matches.filter(m => m.h !== 'TBD' && !m.bye && m.status !== 'upcoming').length, 0);
 
-      // for a tournament still in progress, add blank placeholder rounds for whatever
-      // standard stages (Round of 32 → ... → Final) haven't been entered yet, so the
-      // full Fixture Flow bracket shape is visible here too, not just in the bracket view
-      const blankRoundNames = [];
-      if(t.status === 'live' || t.status === 'upcoming'){
-        const enteredNames = t.rounds.map(r => r.round);
-        const lastIdx = Math.max(...enteredNames.map(n => BRACKET_ROUND_SEQUENCE.indexOf(n)).filter(i => i >= 0), -1);
-        for(let i = lastIdx + 1; i < BRACKET_ROUND_SEQUENCE.length; i++){
-          const name = BRACKET_ROUND_SEQUENCE[i];
-          if(!enteredNames.includes(name)) blankRoundNames.push(name);
-        }
-      }
-
-      // Rounds reversed (latest round first) — blank future rounds are chronologically
-      // last, so they lead the reversed list (shown ahead of the current round)
-      const rounds = [...blankRoundNames.map(name => ({ round: name, matches: [], blank: true })).reverse(), ...[...t.rounds].reverse()];
+      // Rounds reversed (latest round first)
+      const rounds = [...t.rounds].reverse();
 
       const roundsHtml = rounds.map(r => {
-        if(r.blank){
-          return `<div>
-            <div class="round-label">${r.round} <span class="r-count" style="opacity:0.6;">not started</span></div>
-            <div style="padding:16px 18px;color:var(--muted);font-family:'Roboto Mono';font-size:0.78rem;opacity:0.75;">Bracket not yet set — waiting on the previous round to finish.</div>
-          </div>`;
-        }
-        const real = r.matches.filter(m => m.h !== 'TBD');
-        if (!real.length) return '';
+        const byeEntries = r.matches.filter(m => m.bye);
+        const real = r.matches.filter(m => m.h !== 'TBD' && !m.bye);
+        if (!real.length && !byeEntries.length) return '';
         const upcomingCount = real.filter(m => m.status === 'upcoming').length;
+
+        const byesHtml = byeEntries.length ? `<div style="padding:2px 18px 12px;display:flex;flex-direction:column;gap:4px;">
+          ${byeEntries.map(m => `<div style="font-family:'Roboto Mono';font-size:0.72rem;color:var(--muted);font-style:italic;">${m.h} <span style="opacity:0.6;">— bye</span></div>`).join('')}
+        </div>` : '';
 
         const rowsHtml = real.map(m => {
           const up = m.status === 'upcoming';
+          const isPlaceholder = PLACEHOLDER_NAME_RE.test(m.h) || PLACEHOLDER_NAME_RE.test(m.a);
           const hw = !up && (m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga);
           const draw = !up && !m.pen && m.gh === m.ga;
           const scoreStr = up
-            ? (() => {
-                const prob = getWinProbability(m.h, m.a);
-                const favH = prob.h >= prob.a;
-                return `<span style="font-family:'Roboto Mono';font-size:0.75rem;letter-spacing:0.06em;color:var(--muted);">VS</span>
-                  <br><small class="predict-chip" style="font-size:0.58rem;font-family:'Roboto Mono';" title="Predicted from current Elo ratings">
-                    <span style="color:${favH ? 'var(--gold)' : 'var(--muted)'};">${Math.round(prob.h*100)}%</span> · <span style="color:${!favH ? 'var(--gold)' : 'var(--muted)'};">${Math.round(prob.a*100)}%</span>
-                  </small>`;
-              })()
+            ? (isPlaceholder
+                ? `<span style="font-family:'Roboto Mono';font-size:0.75rem;letter-spacing:0.06em;color:var(--muted);">VS</span>`
+                : (() => {
+                    const prob = getWinProbability(m.h, m.a);
+                    const favH = prob.h >= prob.a;
+                    return `<span style="font-family:'Roboto Mono';font-size:0.75rem;letter-spacing:0.06em;color:var(--muted);">VS</span>
+                      <br><small class="predict-chip" style="font-size:0.58rem;font-family:'Roboto Mono';" title="Predicted from current Elo ratings">
+                        <span style="color:${favH ? 'var(--gold)' : 'var(--muted)'};">${Math.round(prob.h*100)}%</span> · <span style="color:${!favH ? 'var(--gold)' : 'var(--muted)'};">${Math.round(prob.a*100)}%</span>
+                      </small>`;
+                  })())
             : `${m.gh}–${m.ga}${m.pen ? `<br><small style="font-size:0.58rem;opacity:0.65;font-family:'Roboto Mono'">pen ${m.pen}</small>` : ''}`;
           return `<tr>
             <td class="td-home${!up && hw ? ' winner' : ''}">${m.h}</td>
@@ -2188,8 +2173,9 @@
         }).join('');
 
         return `<div>
-          <div class="round-label">${r.round} <span class="r-count">${upcomingCount ? `${upcomingCount} upcoming` : 'all played'}</span></div>
-          <div style="overflow-x:auto;">
+          <div class="round-label">${r.round} <span class="r-count">${real.length ? (upcomingCount ? `${upcomingCount} upcoming` : 'all played') : 'byes only'}</span></div>
+          ${byesHtml}
+          ${rowsHtml ? `<div style="overflow-x:auto;">
             <table class="fx-table">
               <thead><tr>
                 <th style="text-align:right;padding:8px 14px;">Home</th>
@@ -2198,8 +2184,7 @@
                 <th class="th-center" style="padding:8px 14px;">Status</th>
               </tr></thead>
               <tbody>${rowsHtml}</tbody>
-            </table>
-          </div>
+            </table></div>` : ''}
         </div>`;
       }).join('');
 
@@ -4300,6 +4285,23 @@
     const map = {64:'Round of 64', 32:'Round of 32', 16:'Round of 16', 8:'Quarter-finals', 4:'Semi-finals', 2:'Final'};
     return map[size] || `Round of ${size}`;
   }
+  // ported from Fixture Flow's own spreadByes(): spaces byes out one per early
+  // entrant instead of dumping them all at the end, so bracket pairing (and which
+  // players get a real first-round match vs a walkover) matches what Fixture Flow
+  // itself seeds
+  function spreadByes(arr){
+    const real = arr.filter(x => x !== '__BYE__');
+    const byes = arr.length - real.length;
+    const out = [];
+    let b = byes;
+    for(let i = 0; i < real.length; i++){
+      out.push(real[i]);
+      if(b > 0 && out.length % 2 === 1){ out.push('__BYE__'); b--; }
+    }
+    while(out.length < arr.length) out.push('__BYE__');
+    arr.length = 0;
+    arr.push(...out);
+  }
 
   function parseFixtureFlowBackup(raw){
     const newTournaments = [];
@@ -4330,56 +4332,68 @@
           pen: (m.ph != null && m.pa != null) ? `${m.ph}-${m.pa}` : undefined,
         });
       });
-
-      // known bracket stage order, deepest (biggest) round first
-      const stageOrder = ['Round of 64','Round of 32','Round of 16','Quarter-finals','Semi-finals','Final'];
-      const playedRoundNames = Object.keys(roundMap);
-      const rounds = stageOrder
-        .filter(s => playedRoundNames.includes(s))
-        .map(s => ({ round: s, matches: roundMap[s] }));
-      // any round names Fixture Flow used that aren't in the known list — append as-is
-      playedRoundNames.filter(s => !stageOrder.includes(s)).forEach(s => {
-        rounds.push({ round: s, matches: roundMap[s] });
-      });
-
-      const finalRound = roundMap['Final'];
-      let winner = null, runnerUp = null;
-      if(finalRound && finalRound.length){
-        const f = finalRound[0];
-        const hw = f.pen ? parseInt(f.pen.split('-')[0]) > parseInt(f.pen.split('-')[1]) : f.gh > f.ga;
-        winner = hw ? f.h : f.a;
-        runnerUp = hw ? f.a : f.h;
-      }
-
-      // infer upcoming first-round fixtures: pair up order[] entries not yet
-      // appearing in any recorded match for this tournament (only safe/reliable
-      // when the bracket has no byes — flagged in the UI if counts look uneven)
-      const playedNames = new Set();
-      Object.values(roundMap).flat().forEach(m => { playedNames.add(m.h); playedNames.add(m.a); });
-      const unplayed = order.filter(n => !playedNames.has(n));
-      let inferredNote = '';
-      if(unplayed.length){
-        const firstRoundName = stageNameForSize(order.length) || stageNameForSize(unplayed.length);
-        const pairs = [];
-        for(let i = 0; i < unplayed.length - 1; i += 2){
-          pairs.push({ h: unplayed[i], a: unplayed[i+1], status:'upcoming' });
-        }
-        if(unplayed.length % 2 === 1) inferredNote = ` (odd player left over — check "${unplayed[unplayed.length-1]}" manually)`;
-        if(pairs.length){
-          const existingRound = rounds.find(r => r.round === firstRoundName);
-          if(existingRound) existingRound.matches.push(...pairs);
-          else rounds.push({ round: firstRoundName, matches: pairs });
-        }
-      }
-
       const totalPlayed = Object.values(roundMap).flat().length;
+
+      // Rebuild the FULL knockout bracket the same way Fixture Flow itself does:
+      // seed the real entrants into the next power-of-two bracket size, spread
+      // byes out evenly (spreadByes — not all dumped in one round), then walk
+      // round-by-round, pulling in whatever result was actually recorded. Any
+      // pairing without a recorded result becomes an upcoming match; a bye
+      // advances its player straight through; a round whose players aren't
+      // decided yet still gets a "Winner M#" placeholder pairing — so Round of
+      // 32 through Final all show up immediately, exactly like Fixture Flow,
+      // instead of stopping at the last round with a real score.
+      const rounds = [];
+      let winner = null, runnerUp = null;
+      if(order.length >= 2){
+        const size = 2 ** Math.ceil(Math.log2(order.length));
+        const entrants = [...order, ...Array(size - order.length).fill('__BYE__')];
+        spreadByes(entrants);
+        let current = entrants, safety = 0;
+        while(current.length > 1 && safety < 20){
+          const title = stageNameForSize(current.length);
+          const isFinal = current.length === 2;
+          const matches = [];
+          const next = [];
+          for(let i = 0; i < current.length; i += 2){
+            const a = current[i], b = current[i + 1];
+            if(a === '__BYE__' || b === '__BYE__'){
+              const team = a === '__BYE__' ? b : a;
+              matches.push({ h: team, a: 'BYE', bye: true, status: 'upcoming' });
+              next.push(team);
+              continue;
+            }
+            const played = (roundMap[title] || []).find(m =>
+              (m.h === a && m.a === b) || (m.h === b && m.a === a));
+            if(played){
+              matches.push(played);
+              const hw = played.pen ? parseInt(played.pen.split('-')[0]) > parseInt(played.pen.split('-')[1]) : played.gh > played.ga;
+              next.push(hw ? played.h : played.a);
+            } else {
+              matches.push({ h: a, a: b, status: 'upcoming' });
+              next.push(`Winner M${matches.length}`);
+            }
+          }
+          rounds.push({ round: title, matches });
+          if(isFinal){
+            const f = matches[0];
+            if(f && !f.bye && f.status !== 'upcoming'){
+              const hw = f.pen ? parseInt(f.pen.split('-')[0]) > parseInt(f.pen.split('-')[1]) : f.gh > f.ga;
+              winner = hw ? f.h : f.a;
+              runnerUp = hw ? f.a : f.h;
+            }
+          }
+          current = next;
+          safety++;
+        }
+      }
+
       const status = winner ? 'completed' : (totalPlayed > 0 ? 'live' : 'upcoming');
 
       newTournaments.push({
         name: t.name || 'Untitled',
         status, date: t.date || '',
         rounds, winner, runnerUp,
-        _note: inferredNote,
       });
     });
 
