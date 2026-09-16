@@ -2053,7 +2053,7 @@
     // the shape of what's still ahead (e.g. sat in the Quarter-finals, see Semi-finals and
     // Final waiting blank) rather than the bracket just stopping at the last real round
     const blankRounds = [];
-    if(t.status === 'live'){
+    if(t.status === 'live' || t.status === 'upcoming'){
       const enteredNames = rounds.map(r => r.round);
       const lastIdx = Math.max(...enteredNames.map(n => BRACKET_ROUND_SEQUENCE.indexOf(n)).filter(i => i >= 0), -1);
       for(let i = lastIdx + 1; i < BRACKET_ROUND_SEQUENCE.length; i++){
@@ -2137,10 +2137,30 @@
       const totalMatches = t.rounds.reduce((acc, r) => acc + r.matches.filter(m => m.h !== 'TBD').length, 0);
       const played = t.rounds.reduce((acc, r) => acc + r.matches.filter(m => m.h !== 'TBD' && m.status !== 'upcoming').length, 0);
 
-      // Rounds reversed (latest round first)
-      const rounds = [...t.rounds].reverse();
+      // for a tournament still in progress, add blank placeholder rounds for whatever
+      // standard stages (Round of 32 → ... → Final) haven't been entered yet, so the
+      // full Fixture Flow bracket shape is visible here too, not just in the bracket view
+      const blankRoundNames = [];
+      if(t.status === 'live' || t.status === 'upcoming'){
+        const enteredNames = t.rounds.map(r => r.round);
+        const lastIdx = Math.max(...enteredNames.map(n => BRACKET_ROUND_SEQUENCE.indexOf(n)).filter(i => i >= 0), -1);
+        for(let i = lastIdx + 1; i < BRACKET_ROUND_SEQUENCE.length; i++){
+          const name = BRACKET_ROUND_SEQUENCE[i];
+          if(!enteredNames.includes(name)) blankRoundNames.push(name);
+        }
+      }
+
+      // Rounds reversed (latest round first) — blank future rounds are chronologically
+      // last, so they lead the reversed list (shown ahead of the current round)
+      const rounds = [...blankRoundNames.map(name => ({ round: name, matches: [], blank: true })).reverse(), ...[...t.rounds].reverse()];
 
       const roundsHtml = rounds.map(r => {
+        if(r.blank){
+          return `<div>
+            <div class="round-label">${r.round} <span class="r-count" style="opacity:0.6;">not started</span></div>
+            <div style="padding:16px 18px;color:var(--muted);font-family:'Roboto Mono';font-size:0.78rem;opacity:0.75;">Bracket not yet set — waiting on the previous round to finish.</div>
+          </div>`;
+        }
         const real = r.matches.filter(m => m.h !== 'TBD');
         if (!real.length) return '';
         const upcomingCount = real.filter(m => m.status === 'upcoming').length;
