@@ -2975,8 +2975,24 @@
   .crop-actions .save:hover{background:var(--gold-soft,var(--gold));}
   .reveal-overlay{display:none;position:fixed;inset:0;background:#000;z-index:240;align-items:center;justify-content:center;padding:24px;}
   .reveal-overlay.show{display:flex;}
-  .reveal-card-img{max-width:100%;max-height:80vh;border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,0.7);opacity:0;transform:scale(0.85);transition:opacity .5s ease,transform .5s cubic-bezier(.2,1.4,.4,1);}
-  .reveal-card-img.show{opacity:1;transform:scale(1);}
+  /* fixed 16:9 box (matches the reveal videos' own dimensions) sized responsively
+     but capped — object-fit:contain inside it means the video can never end up
+     cropped/half-showing no matter how a phone browser sizes the raw <video>
+     element before metadata loads */
+  .reveal-video-wrap{width:100%; max-width:520px; aspect-ratio:16/9; max-height:80vh; border-radius:12px; overflow:hidden;}
+  .reveal-video-wrap.hide{display:none;}
+  .reveal-video{width:100%; height:100%; object-fit:contain; display:block;}
+  .reveal-tap{
+    position:absolute;display:none;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;
+    background:var(--gold);color:var(--ink-fixed);font-family:'Oswald';font-weight:600;font-size:0.95rem;
+    text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;border:none;
+  }
+  .reveal-tap.show{display:flex;}
+  /* display:none (not just opacity:0) while hidden — otherwise this sits in the
+     same flex row as .reveal-video-wrap the whole time and the two fight over
+     width, which is what was collapsing the video box to nothing */
+  .reveal-card-img{display:none;max-width:100%;max-height:80vh;border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,0.7);opacity:0;transform:scale(0.85);transition:opacity .5s ease,transform .5s cubic-bezier(.2,1.4,.4,1);}
+  .reveal-card-img.show{display:block;opacity:1;transform:scale(1);}
   .reveal-actions{position:absolute;bottom:28px;left:0;right:0;display:none;justify-content:center;gap:12px;padding:0 24px;}
   .reveal-actions.show{display:flex;}
   .reveal-actions button{
@@ -3084,6 +3100,10 @@
     </div>
   </div>
   <div class="reveal-overlay" id="revealOverlay">
+    <div class="reveal-video-wrap" id="revealVideoWrap">
+      <video class="reveal-video" id="revealVideo" muted playsinline webkit-playsinline="true"></video>
+    </div>
+    <button type="button" class="reveal-tap" id="revealTap" onclick="revealTapPlay()"><svg class="fa-ic"><use href="#fa-futbol"/></svg> Tap to reveal</button>
     <img class="reveal-card-img" id="revealCardImg" alt="Your player card">
     <div class="reveal-actions" id="revealActions">
       <button type="button" class="close-btn" onclick="closeCardReveal()">Close</button>
@@ -3611,12 +3631,18 @@
       }
     }
 
-    /* ---------------- CARD REVEAL (centered fade/scale-in) ----------------
-       Used to play a landscape stadium-intro video first, but that video's
-       16:9 shape never matched this portrait card overlay properly on a
-       phone — it ended up showing only part of the frame instead of the
-       whole thing. A plain centered fade-in of the card itself has no
-       aspect-ratio mismatch to get wrong. */
+    /* ---------------- CARD REVEAL ANIMATION (pack-opening style) ----------------
+       The video previously showed cropped/half-visible on a phone — that turned
+       out to be because the bare <video> had no explicit box of its own, so its
+       size depended on default replaced-element sizing (which can lag behind the
+       real 1920x1080 metadata on some mobile browsers). It now plays inside a
+       .reveal-video-wrap with a fixed 16:9 aspect-ratio box and object-fit:contain,
+       so the video is always fully visible inside a correctly-shaped box no
+       matter how/when the browser picks up its real dimensions. */
+    const REVEAL_VIDEOS = [
+      'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/BIG%20TIME.mp4',
+      'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/SHOW%20TIME.mp4',
+    ];
     let revealBlobUrl = null;
 
     function showCardReveal(canvas){
@@ -3626,23 +3652,58 @@
         revealBlobUrl = URL.createObjectURL(blob);
 
         const overlay = document.getElementById('revealOverlay');
+        const videoWrap = document.getElementById('revealVideoWrap');
+        const video = document.getElementById('revealVideo');
+        const tap = document.getElementById('revealTap');
         const cardImg = document.getElementById('revealCardImg');
         const actions = document.getElementById('revealActions');
 
+        videoWrap.classList.remove('hide');
+        tap.classList.remove('show');
         cardImg.classList.remove('show');
         actions.classList.remove('show');
         cardImg.src = revealBlobUrl;
         overlay.classList.add('show');
 
-        requestAnimationFrame(function(){
+        const revealCard = function(){
+          videoWrap.classList.add('hide');
+          tap.classList.remove('show');
           cardImg.classList.add('show');
           actions.classList.add('show');
-        });
+        };
+
+        // reduced-motion (or a video that fails to load) skips straight to the card —
+        // the animation is pure flourish, never a blocker to actually getting the image
+        if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+          videoWrap.classList.add('hide');
+          revealCard();
+          return;
+        }
+        video.muted = true;
+        video.src = REVEAL_VIDEOS[Math.floor(Math.random() * REVEAL_VIDEOS.length)];
+        video.onended = revealCard;
+        video.onerror = revealCard;
+        video.load();
+        const playPromise = video.play();
+        if(playPromise && playPromise.catch){
+          playPromise.catch(function(){ tap.classList.add('show'); });
+        }
       }, 'image/png');
     }
 
+    function revealTapPlay(){
+      const video = document.getElementById('revealVideo');
+      const tap = document.getElementById('revealTap');
+      video.play().then(function(){ tap.classList.remove('show'); }).catch(function(){});
+    }
+
     function closeCardReveal(){
-      document.getElementById('revealOverlay').classList.remove('show');
+      const overlay = document.getElementById('revealOverlay');
+      const video = document.getElementById('revealVideo');
+      overlay.classList.remove('show');
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
     }
 
     function downloadRevealedCard(){
