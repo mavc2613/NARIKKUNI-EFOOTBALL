@@ -4092,7 +4092,13 @@
       
       // Load aliases (name merges from fixture sync)
       sessionOverrides = { ...data.aliases||{} };
-      
+      // this specific alias is stale — it maps a bare "aflah" to the Chakkara
+      // player, but Chakkara is always entered as "Chakra" specifically, and a
+      // bare "aflah" is Aflah M. (confirmed by the team). Drop it so NAME_MAP's
+      // corrected mapping can resolve it instead of being silently overridden by
+      // this older remote alias every time the page loads.
+      delete sessionOverrides['aflah'];
+
       // Load photos — anything uploaded before compression was added can be a full-resolution
       // phone photo (hundreds of KB), which makes every roster re-render decode it all over
       // again. Shrink oversized ones in memory now so this session's roster stays fast.
