@@ -715,9 +715,11 @@
   .player-stats div b{display:block; font-family:var(--font-display); font-size:1.05rem; color:var(--floodlight);}
   .form-dots{display:flex; gap:4px; margin-top:10px;}
   .form-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
-  .form-dot.form-W{background:var(--turf-bright);}
-  .form-dot.form-D{background:var(--muted);}
-  .form-dot.form-L{background:#b23a2e;}
+  /* fixed colors, not theme variables — W/D/L should read the same red/green/blue
+     regardless of which of the three color themes (normal/fire/black&white) is active */
+  .form-dot.form-W{background:#22c55e;}
+  .form-dot.form-D{background:#3b82f6;}
+  .form-dot.form-L{background:#e5484d;}
   .streak-badge{
     display:inline-flex; align-items:center; gap:8px; font-family:'Roboto Mono'; font-size:0.72rem;
     color:var(--gold); background:rgba(226,166,59,0.1); border:1px solid var(--gold); border-radius:30px;
