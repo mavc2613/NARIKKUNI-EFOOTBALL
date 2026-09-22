@@ -2975,11 +2975,10 @@
   .crop-actions .save:hover{background:var(--gold-soft,var(--gold));}
   .reveal-overlay{display:none;position:fixed;inset:0;background:#000;z-index:240;align-items:center;justify-content:center;padding:24px;}
   .reveal-overlay.show{display:flex;}
-  /* fixed 16:9 box (matches the reveal videos' own dimensions) sized responsively
-     but capped — object-fit:contain inside it means the video can never end up
-     cropped/half-showing no matter how a phone browser sizes the raw <video>
-     element before metadata loads */
-  .reveal-video-wrap{width:100%; max-width:520px; aspect-ratio:16/9; max-height:80vh; border-radius:12px; overflow:hidden;}
+  /* fills as much of the viewport as it can (desktop: wide and full; a rotated
+     phone: fills the landscape screen) — object-fit:contain inside means the
+     video always fits without ever being cropped, whatever the screen shape */
+  .reveal-video-wrap{width:100%; height:100%; border-radius:16px; overflow:hidden;}
   .reveal-video-wrap.hide{display:none;}
   .reveal-video{width:100%; height:100%; object-fit:contain; display:block;}
   .reveal-tap{
@@ -2988,6 +2987,18 @@
     text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;border:none;
   }
   .reveal-tap.show{display:flex;}
+  /* shown instead of the video when the screen is portrait — the reveal videos
+     are landscape, so on a phone held upright they'd be tiny; asking for a
+     rotate is simpler and looks better than trying to force-fit a sideways video */
+  .reveal-rotate-hint{
+    display:none; flex-direction:column; align-items:center; gap:16px; text-align:center; color:var(--floodlight);
+  }
+  .reveal-rotate-hint.show{display:flex;}
+  .reveal-rotate-hint svg{width:52px;height:52px;color:var(--gold);animation:revealRotateHintSpin 1.6s ease-in-out infinite;}
+  @keyframes revealRotateHintSpin{0%,100%{transform:rotate(0deg);}50%{transform:rotate(90deg);}}
+  .reveal-rotate-hint .msg{font-family:'Oswald';font-weight:600;font-size:1rem;text-transform:uppercase;letter-spacing:0.04em;}
+  .reveal-rotate-hint .skip{background:none;border:none;color:var(--muted);text-decoration:underline;font-family:'Roboto Mono';font-size:0.72rem;cursor:pointer;padding:6px;}
+  .reveal-rotate-hint .skip:hover{color:var(--floodlight);}
   /* display:none (not just opacity:0) while hidden — otherwise this sits in the
      same flex row as .reveal-video-wrap the whole time and the two fight over
      width, which is what was collapsing the video box to nothing */
@@ -3104,6 +3115,11 @@
       <video class="reveal-video" id="revealVideo" muted playsinline webkit-playsinline="true"></video>
     </div>
     <button type="button" class="reveal-tap" id="revealTap" onclick="revealTapPlay()"><svg class="fa-ic"><use href="#fa-futbol"/></svg> Tap to reveal</button>
+    <div class="reveal-rotate-hint" id="revealRotateHint">
+      <svg class="fa-ic"><use href="#fa-arrows-rotate"/></svg>
+      <div class="msg">Rotate your phone to see the player card</div>
+      <button type="button" class="skip" onclick="skipCardReveal()">Skip animation</button>
+    </div>
     <img class="reveal-card-img" id="revealCardImg" alt="Your player card">
     <div class="reveal-actions" id="revealActions">
       <button type="button" class="close-btn" onclick="closeCardReveal()">Close</button>
@@ -3636,14 +3652,23 @@
        out to be because the bare <video> had no explicit box of its own, so its
        size depended on default replaced-element sizing (which can lag behind the
        real 1920x1080 metadata on some mobile browsers). It now plays inside a
-       .reveal-video-wrap with a fixed 16:9 aspect-ratio box and object-fit:contain,
-       so the video is always fully visible inside a correctly-shaped box no
-       matter how/when the browser picks up its real dimensions. */
+       .reveal-video-wrap sized to fill the viewport (object-fit:contain keeps it
+       from ever being cropped), full and wide on a desktop window, or filling a
+       rotated phone screen edge to edge. The video is landscape, so a phone held
+       upright shows a "rotate to landscape" prompt instead of a tiny sideways
+       video — a window resize/rotation is watched the whole time the reveal is
+       open, so turning the phone mid-prompt starts the video immediately. */
     const REVEAL_VIDEOS = [
       'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/BIG%20TIME.mp4',
       'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/SHOW%20TIME.mp4',
     ];
     let revealBlobUrl = null;
+    let revealResizeHandler = null;
+    let revealCardNow = null;
+
+    function isRevealLandscape(){
+      return window.matchMedia('(orientation: landscape)').matches;
+    }
 
     function showCardReveal(canvas){
       canvas.toBlob(function(blob){
@@ -3655,40 +3680,81 @@
         const videoWrap = document.getElementById('revealVideoWrap');
         const video = document.getElementById('revealVideo');
         const tap = document.getElementById('revealTap');
+        const rotateHint = document.getElementById('revealRotateHint');
         const cardImg = document.getElementById('revealCardImg');
         const actions = document.getElementById('revealActions');
 
-        videoWrap.classList.remove('hide');
+        videoWrap.classList.add('hide');
         tap.classList.remove('show');
+        rotateHint.classList.remove('show');
         cardImg.classList.remove('show');
         actions.classList.remove('show');
         cardImg.src = revealBlobUrl;
         overlay.classList.add('show');
 
         const revealCard = function(){
+          stopWatchingRevealOrientation();
           videoWrap.classList.add('hide');
           tap.classList.remove('show');
+          rotateHint.classList.remove('show');
           cardImg.classList.add('show');
           actions.classList.add('show');
         };
+        revealCardNow = revealCard;
 
         // reduced-motion (or a video that fails to load) skips straight to the card —
         // the animation is pure flourish, never a blocker to actually getting the image
         if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-          videoWrap.classList.add('hide');
           revealCard();
           return;
         }
         video.muted = true;
-        video.src = REVEAL_VIDEOS[Math.floor(Math.random() * REVEAL_VIDEOS.length)];
         video.onended = revealCard;
         video.onerror = revealCard;
-        video.load();
-        const playPromise = video.play();
-        if(playPromise && playPromise.catch){
-          playPromise.catch(function(){ tap.classList.add('show'); });
-        }
+
+        // src is only assigned once we're actually in landscape — assigning it
+        // earlier (even while the rotate hint is showing) makes the browser start
+        // loading it in the background, and a load failure there would fire
+        // onerror and silently skip straight to the card before anyone rotated
+        const playVideo = function(){
+          if(!video.src) video.src = REVEAL_VIDEOS[Math.floor(Math.random() * REVEAL_VIDEOS.length)];
+          video.load();
+          const playPromise = video.play();
+          if(playPromise && playPromise.catch){
+            playPromise.catch(function(){ tap.classList.add('show'); });
+          }
+        };
+
+        const syncToOrientation = function(){
+          if(isRevealLandscape()){
+            rotateHint.classList.remove('show');
+            if(videoWrap.classList.contains('hide')){
+              videoWrap.classList.remove('hide');
+              playVideo();
+            }
+          } else {
+            video.pause();
+            tap.classList.remove('show');
+            videoWrap.classList.add('hide');
+            rotateHint.classList.add('show');
+          }
+        };
+
+        revealResizeHandler = syncToOrientation;
+        window.addEventListener('resize', revealResizeHandler);
+        syncToOrientation();
       }, 'image/png');
+    }
+
+    function skipCardReveal(){
+      if(revealCardNow) revealCardNow();
+    }
+
+    function stopWatchingRevealOrientation(){
+      if(revealResizeHandler){
+        window.removeEventListener('resize', revealResizeHandler);
+        revealResizeHandler = null;
+      }
     }
 
     function revealTapPlay(){
@@ -3704,6 +3770,7 @@
       video.pause();
       video.removeAttribute('src');
       video.load();
+      stopWatchingRevealOrientation();
     }
 
     function downloadRevealedCard(){
