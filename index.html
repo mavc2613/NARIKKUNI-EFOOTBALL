@@ -500,6 +500,42 @@
   .upload-sub.err{color:#e07a6b;}
   .upload-sub.ok{color:var(--turf-bright);}
 
+  /* ---------- TOAST NOTIFICATIONS ---------- */
+  .toast-container{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:500;
+    display:flex; flex-direction:column; gap:10px; align-items:center;
+    width:min(420px, calc(100% - 32px)); pointer-events:none;
+  }
+  .toast{
+    pointer-events:auto; display:flex; align-items:center; gap:10px; width:100%;
+    background:var(--card); border:1px solid var(--card-line); border-left:4px solid var(--gold);
+    border-radius:10px; padding:12px 16px; box-shadow:0 12px 32px rgba(0,0,0,0.45);
+    font-family:'Roboto Mono'; font-size:0.8rem; color:var(--floodlight); line-height:1.4;
+    opacity:0; transform:translateY(12px); transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  .toast .fa-ic{flex-shrink:0; width:16px; height:16px; color:var(--gold);}
+  .toast.error{border-left-color:#e5484d;}
+  .toast.error .fa-ic{color:#e5484d;}
+  .toast.success{border-left-color:#22c55e;}
+  .toast.success .fa-ic{color:#22c55e;}
+
+  /* ---------- SYNC SHIMMER ----------
+     A brief overlay flashed over the Fixtures/Players sections right after the
+     live feed sync re-renders them, so that refresh reads as one deliberate
+     "synced" moment instead of the content just silently snapping to new data. */
+  .sync-shimmer{
+    position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; border-radius:inherit;
+    background:rgba(0,0,0,0.15); opacity:1; transition:opacity .4s ease;
+  }
+  .sync-shimmer.fade-out{opacity:0;}
+  .sync-shimmer::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.18) 50%, transparent 80%);
+    background-size:200% 100%; animation:syncShimmerSweep 1.1s ease-in-out infinite;
+  }
+  @keyframes syncShimmerSweep{0%{background-position:150% 0;}100%{background-position:-50% 0;}}
+
   .assign-panel{background:var(--card); border:1px solid var(--gold); border-radius:14px; padding:22px 26px; margin-bottom:32px;}
   .assign-head{font-family:'Oswald'; font-weight:600; font-size:1rem; color:var(--floodlight); margin-bottom:6px; display:flex; align-items:center; gap:8px;}
   .assign-sub{font-family:'Roboto Mono'; font-size:0.72rem; color:var(--muted); margin-bottom:18px; line-height:1.5;}
@@ -1207,6 +1243,48 @@
   const PHOTOS = { "Athul": ATHUL_PHOTO, "Javid Farhan": JAVID_PHOTO };
   let editModeEnabled = false; // declared early — renderRoster() reads this before the auth block below runs
   let profileWindows = {}; // name -> open profile-tab window ref, so photo edits can refresh it live
+
+  /* ---------------- TOAST NOTIFICATIONS ----------------
+     Replaces native alert() popups (which look jarring against the site's own
+     styling) with an in-theme, non-blocking toast. type is 'error'|'success'|'info'. */
+  function showToast(message, type){
+    type = type || 'info';
+    const container = document.getElementById('toastContainer');
+    if(!container){ alert(message); return; } // defensive fallback, shouldn't happen
+    const icon = type === 'error' ? 'fa-triangle-exclamation' : type === 'success' ? 'fa-circle-check' : 'fa-circle';
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = `<svg class="fa-ic"><use href="#${icon}"/></svg><span>${message}</span>`;
+    container.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    // timer-based cleanup rather than waiting on a 'transitionend' event — that
+    // event doesn't reliably fire in every environment (seen in testing), which
+    // would otherwise leave toasts stuck in the DOM forever
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, 4200);
+  }
+
+  /* ---------------- SYNC SHIMMER ----------------
+     Runs fn(), then flashes a brief shimmer overlay over the given container ids —
+     used around the live-sync re-render so the Fixtures/Players sections read as
+     one deliberate "synced" transition instead of an abrupt content swap. */
+  function withSyncShimmer(elIds, fn){
+    fn();
+    elIds.forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      const overlay = document.createElement('div');
+      overlay.className = 'sync-shimmer';
+      el.appendChild(overlay);
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => overlay.remove(), 450);
+      }, 260);
+    });
+  }
 
   /* ---------------- DATA ---------------- */
   const leagueSeasons = [
@@ -2026,7 +2104,7 @@
     }catch(err){
       btn.disabled = false;
       btn.innerHTML = originalHtml;
-      alert('Could not generate season wrap: ' + err.message);
+      showToast('Could not generate season wrap: ' + err.message, 'error');
     }
   }
 
@@ -2554,7 +2632,7 @@
     if(!editModeEnabled) return;
     const newName = (prompt(`Rename ${oldName} to:`, oldName) || '').trim();
     if(!newName || newName === oldName) return;
-    if(rosterOrder.includes(newName)){ alert('That name already exists on the roster.'); return; }
+    if(rosterOrder.includes(newName)){ showToast('That name already exists on the roster.', 'error'); return; }
 
     renameEverywhere(oldName, newName);
     pendingRenames[oldName] = newName;
@@ -3016,6 +3094,20 @@
   .reveal-actions .save{background:var(--gold);color:var(--ink-fixed);border-color:var(--gold);}
   .reveal-actions .save:hover{background:var(--gold-soft,var(--gold));}
   .reveal-actions .close-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .toast-container{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:500;
+    display:flex; flex-direction:column; gap:10px; align-items:center;
+    width:min(420px, calc(100% - 32px)); pointer-events:none;
+  }
+  .toast{
+    pointer-events:auto; display:flex; align-items:center; gap:10px; width:100%;
+    background:var(--card); border:1px solid var(--card-line); border-left:4px solid #e5484d;
+    border-radius:10px; padding:12px 16px; box-shadow:0 12px 32px rgba(0,0,0,0.45);
+    font-family:'Roboto Mono'; font-size:0.8rem; color:var(--floodlight); line-height:1.4;
+    opacity:0; transform:translateY(12px); transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  .toast .fa-ic{flex-shrink:0; width:16px; height:16px; color:#e5484d;}
   h1{font-family:var(--font-display);font-size:2.6rem;color:var(--floodlight);text-transform:uppercase;}
   .sub{font-family:'Roboto Mono';font-size:0.8rem;color:var(--turf-bright);margin-top:6px;}
   .stat-row{display:flex;gap:14px;margin-bottom:36px;flex-wrap:wrap;}
@@ -3128,6 +3220,7 @@
       <button type="button" class="save" onclick="downloadRevealedCard()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Save Image</button>
     </div>
   </div>
+  <div class="toast-container" id="toastContainer"></div>
   ${streakBadge}
   <div class="stat-row">
     <div class="stat-box"><div class="n">${eloRating}</div><div class="l">Elo Rating</div></div>
@@ -3645,8 +3738,31 @@
       }catch(err){
         btn.disabled = false;
         btn.innerHTML = originalHtml;
-        alert('Could not generate the image: ' + err.message);
+        showToast('Could not generate the image: ' + err.message);
       }
+    }
+
+    function showToast(message){
+      // no backtick template literals here — this script is itself embedded inside
+      // a backtick string in the parent page's JS, so a raw backtick would end that
+      // string early and break the page that generated this popup
+      const container = document.getElementById('toastContainer');
+      if(!container){ alert(message); return; }
+      const el = document.createElement('div');
+      el.className = 'toast error';
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('class', 'fa-ic');
+      icon.innerHTML = '<use href="#fa-triangle-exclamation"></use>';
+      const span = document.createElement('span');
+      span.textContent = message;
+      el.appendChild(icon);
+      el.appendChild(span);
+      container.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('show'));
+      setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+      }, 4200);
     }
 
     /* ---------------- CARD REVEAL ANIMATION (pack-opening style) ----------------
@@ -3849,7 +3965,7 @@
       editModeEnabled = true;
       applyEditModeUI();
     } else {
-      alert('Wrong password.');
+      showToast('Wrong password.', 'error');
     }
   }
 
@@ -3977,7 +4093,7 @@
     const input = card.querySelector('.rename-row input');
     const newName = input.value.trim();
     if(!newName || newName === oldName) return;
-    if(rosterOrder.includes(newName)){ alert('That name already exists on the roster.'); return; }
+    if(rosterOrder.includes(newName)){ showToast('That name already exists on the roster.', 'error'); return; }
 
     renameEverywhere(oldName, newName);
     pendingRenames[oldName] = newName;
@@ -4005,7 +4121,7 @@
     const input = document.getElementById('newPlayerInput');
     const name = input.value.trim();
     if(!name) return;
-    if(rosterOrder.includes(name)){ alert('That player already exists.'); return; }
+    if(rosterOrder.includes(name)){ showToast('That player already exists.', 'error'); return; }
     rosterOrder.push(name);
     pendingAdditions.push(name);
     input.value = '';
@@ -4046,7 +4162,7 @@
     const fromName = document.getElementById('mergeFrom').value;
     const toName = document.getElementById('mergeTo').value;
     
-    if(!fromName || !toName || fromName === toName){ alert('Select two different players.'); return; }
+    if(!fromName || !toName || fromName === toName){ showToast('Select two different players.', 'error'); return; }
     if(!confirm(`Merge all data from ${fromName} into ${toName}? ${fromName} will be removed from the roster.`)) return;
     
     // Rename everywhere (from → to)
@@ -4521,14 +4637,16 @@
       pruneStaleAliasedRosterEntries();
       lbActiveTournament = null; // always land on the latest tournament after a live sync
 
-      renderFixtures();
-      renderLeaderboard();
-      renderRoster();
-      renderSideStats();
-      renderKnockoutTable();
-      renderHomeCounts();
-      populateH2HSelects();
-      renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
+      withSyncShimmer(['fixtureList', 'rosterGrid'], () => {
+        renderFixtures();
+        renderLeaderboard();
+        renderRoster();
+        renderSideStats();
+        renderKnockoutTable();
+        renderHomeCounts();
+        populateH2HSelects();
+        renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
+      });
       renderAssignPanel(unmapped);
 
       const expDate = raw.exported
@@ -4583,11 +4701,11 @@
   }
   
   function mergeExistingFromPanel(){
-    if(!editModeEnabled){ alert('Turn on Edit Mode first (🔒 button) — otherwise this only lasts until you reload the page.'); return; }
+    if(!editModeEnabled){ showToast('Turn on Edit Mode first (🔒 button) — otherwise this only lasts until you reload the page.', 'error'); return; }
     const fromName = document.getElementById('mergeExistingFrom').value;
     const toName = document.getElementById('mergeExistingTo').value;
     
-    if(!fromName || !toName || fromName === toName){ alert('Select two different players.'); return; }
+    if(!fromName || !toName || fromName === toName){ showToast('Select two different players.', 'error'); return; }
     if(!confirm(`Merge all data from ${fromName} into ${toName}? ${fromName} will be removed from the roster.`)) return;
     
     // Use existing merge logic
@@ -4696,7 +4814,7 @@
   }
 
   function applyAssignments(){
-    if(!editModeEnabled){ alert('Turn on Edit Mode first (🔒 button) — otherwise this only lasts until you reload the page.'); return; }
+    if(!editModeEnabled){ showToast('Turn on Edit Mode first (🔒 button) — otherwise this only lasts until you reload the page.', 'error'); return; }
     const selects = document.querySelectorAll('#assignPanel .assign-select');
     let changed = 0;
     let confirmedNew = 0;
@@ -4846,6 +4964,8 @@
     select.innerHTML = '<option value="">None</option>' + rosterOrder.map(n => `<option value="${n}">${n}</option>`).join('');
   });
 </script>
+
+<div class="toast-container" id="toastContainer"></div>
 
 </body>
 </html>
