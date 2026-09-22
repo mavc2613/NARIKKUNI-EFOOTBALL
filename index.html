@@ -3780,10 +3780,12 @@
        upright shows a "rotate to landscape" prompt instead of a tiny sideways
        video — a window resize/rotation is watched the whole time the reveal is
        open, so turning the phone mid-prompt starts the video immediately. */
-    const REVEAL_VIDEOS = [
-      'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/BIG%20TIME.mp4',
-      'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/SHOW%20TIME.mp4',
-    ];
+    const BIG_TIME_VIDEO = 'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/BIG%20TIME.mp4';
+    const SHOW_TIME_VIDEO = 'https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/player%20card/BG/Video/SHOW%20TIME.mp4';
+    // Big Time plays for anyone who's actually won a title — everyone else gets Show Time
+    function pickRevealVideo(){
+      return CARD_DATA.titles >= 1 ? BIG_TIME_VIDEO : SHOW_TIME_VIDEO;
+    }
     let revealBlobUrl = null;
     let revealResizeHandler = null;
     let revealCardNow = null;
@@ -3839,7 +3841,7 @@
         // loading it in the background, and a load failure there would fire
         // onerror and silently skip straight to the card before anyone rotated
         const playVideo = function(){
-          if(!video.src) video.src = REVEAL_VIDEOS[Math.floor(Math.random() * REVEAL_VIDEOS.length)];
+          if(!video.src) video.src = pickRevealVideo();
           video.load();
           const playPromise = video.play();
           if(playPromise && playPromise.catch){
