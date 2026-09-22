@@ -239,15 +239,16 @@
   .comp-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px;}
   .comp-card{position:relative; border-radius:14px; overflow:hidden; height:260px; border:1px solid var(--card-line); display:flex; align-items:flex-end; padding:28px; cursor:pointer; transition:transform .2s ease, border-color .2s ease;}
   .comp-card:hover{transform:translateY(-6px); border-color:var(--gold); box-shadow:0 16px 40px rgba(0,0,0,0.35);}
-  .comp-card.league{background:linear-gradient(160deg, #16463a, #0c2e22 65%);}
-  .comp-card.knockout{background:linear-gradient(160deg, #3a1f1f, #1a1010 65%);}
-  .comp-card.combined{background:linear-gradient(160deg, #2e2a15, #14200f 65%);}
+  .comp-card.league{background:linear-gradient(0deg, rgba(5,8,7,0.94) 0%, rgba(5,8,7,0.35) 55%, rgba(5,8,7,0.15) 100%), #0c2e22 url('https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/Compatitions/LEAUGUE.jpg') center/cover no-repeat;}
+  .comp-card.knockout{background:linear-gradient(0deg, rgba(6,4,4,0.94) 0%, rgba(6,4,4,0.35) 55%, rgba(6,4,4,0.15) 100%), #1a1010 url('https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/Compatitions/KNOCKOUT.jpg') center/cover no-repeat;}
+  .comp-card.combined{background:linear-gradient(0deg, rgba(7,6,3,0.94) 0%, rgba(7,6,3,0.35) 55%, rgba(7,6,3,0.15) 100%), #14200f url('https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/Compatitions/LEAGUE%2BKNOCKOUT.jpg') center/cover no-repeat;}
   .comp-card::after{content:""; position:absolute; inset:0; background:repeating-linear-gradient(115deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 34px);}
   .comp-card .tag{position:relative; z-index:2; font-family:'Roboto Mono',monospace; font-size:0.68rem; letter-spacing:0.15em; color:var(--gold); margin-bottom:8px; text-transform:uppercase;}
   .comp-card h3{position:relative; z-index:2; font-size:2.6rem; color:var(--floodlight);}
   .comp-card .arrow{position:absolute; top:24px; right:24px; z-index:2; font-size:1.3rem; color:var(--gold); transition:transform .2s ease;}
   .comp-card:hover .arrow{transform:translate(4px,-4px);}
   .comp-card .count{position:relative; z-index:2; font-family:'Roboto Mono'; font-size:0.7rem; color:var(--muted); margin-top:6px;}
+  .comp-banner{width:100%; max-height:280px; object-fit:cover; border-radius:14px; border:1px solid var(--card-line); display:block; margin:24px 0 8px;}
 
   .quick-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px;}
   .quick-card{background:var(--card); border:1px solid var(--card-line); border-radius:14px; padding:30px; display:flex; flex-direction:column; gap:10px; transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;}
@@ -1081,6 +1082,7 @@
         <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">Competition 01</div></div>
         <h2 class="sec-title reveal">League</h2>
         <p class="sec-desc reveal">Every player faces every player. Most points after the full round decides the champion.</p>
+        <img class="comp-banner reveal" src="https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/Compatitions/LEAUGUE.jpg" alt="League trophy" loading="lazy">
         <div class="results-table reveal">
           <div class="results-header"><div>Season</div><div>Champion</div><div>Runner-up</div><div>2nd Runner-up</div><div>Status</div></div>
           <div id="leagueRows"></div>
@@ -1095,6 +1097,7 @@
         <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">Competition 02</div></div>
         <h2 class="sec-title reveal">Knockout</h2>
         <p class="sec-desc reveal">One leg, no second chances. Lose and you're out of the cup. Seven seasons in, and counting.</p>
+        <img class="comp-banner reveal" src="https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/Compatitions/KNOCKOUT.jpg" alt="Knockout trophy" loading="lazy">
         <div class="results-table reveal">
           <div class="results-header"><div>Season</div><div>Champion</div><div>Runner-up</div><div>2nd Runner-up</div><div>Status</div></div>
           <div id="knockoutRows"></div>
@@ -1109,6 +1112,7 @@
         <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">Competition 03</div></div>
         <h2 class="sec-title reveal">League + Knockout</h2>
         <p class="sec-desc reveal">One season, two honors — same idea as the Indian Super League. The League phase crowns a Shield winner for topping the table. Then a knockout playoff, open to the league's top finishers, decides the actual season champion.</p>
+        <img class="comp-banner reveal" src="https://raw.githubusercontent.com/mavc2613/narikkuni-efootball/main/Compatitions/LEAGUE%2BKNOCKOUT.jpg" alt="League + Knockout trophy" loading="lazy">
         <div class="shield-note reveal">
           <div class="ic"><svg class="fa-ic"><use href="#fa-shield-halved"/></svg></div>
           <p>The Shield and the Playoff Champion can be different players in the same season — the Shield rewards consistency across the league phase, the playoffs reward who peaks at the right time.</p>
