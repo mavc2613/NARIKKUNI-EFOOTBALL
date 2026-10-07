@@ -1138,14 +1138,14 @@
           <div class="save-bar-left"><svg class="fa-ic"><use href="#fa-pen"/></svg> <span id="dirtyLabel">Unsaved changes</span></div>
           <div class="save-bar-right" id="saveBarRight">
             <input type="password" class="token-input" id="ghToken" placeholder="GitHub token (fine-grained, this repo, Contents: write)">
-            <button class="save-btn" onclick="saveRosterToGitHub()">Save to GitHub</button>
+            <button class="save-btn" data-sfx="save" onclick="saveRosterToGitHub()">Save to GitHub</button>
           </div>
           <div class="save-status" id="saveStatus"></div>
         </div>
 
         <div class="add-player-row reveal" id="addPlayerRow" style="display:none;">
           <input type="text" id="newPlayerInput" placeholder="New player name…">
-          <button onclick="addPlayer()">+ Add Player</button>
+          <button data-sfx="save" onclick="addPlayer()">+ Add Player</button>
           <button onclick="openMergeDuplicatesModal()" style="background:var(--gold-soft); color:var(--ink-fixed);"><svg class="fa-ic"><use href="#fa-shuffle"/></svg> Merge Duplicates</button>
         </div>
 
@@ -1255,6 +1255,7 @@
     type = type || 'info';
     const container = document.getElementById('toastContainer');
     if(!container){ alert(message); return; } // defensive fallback, shouldn't happen
+    if(type === 'error') playErrorSound();
     const icon = type === 'error' ? 'fa-triangle-exclamation' : type === 'success' ? 'fa-circle-check' : 'fa-circle';
     const el = document.createElement('div');
     el.className = 'toast ' + type;
@@ -1289,6 +1290,67 @@
       }, 260);
     });
   }
+
+  /* ---------------- UI SOUND EFFECTS ----------------
+     Every sound is synthesized with the Web Audio API — nothing to host or load.
+     The AudioContext is created lazily on first use, which always happens inside
+     a real click handler, so the browser's "audio needs a user gesture" policy
+     is satisfied automatically without a separate unlock step.
+     A single capture-phase click listener below drives most of this: anything
+     carrying data-sfx gets that specific sound, otherwise ordinary interactive
+     elements (buttons, links, roster cards/rows) get a quiet generic tap. Capture
+     phase matters here — some handlers call stopPropagation() during the later
+     bubble phase, which would otherwise silence this listener for those clicks. */
+  let sfxAudioCtx = null;
+  function ensureSfxAudio(){
+    try{
+      if(!sfxAudioCtx) sfxAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(sfxAudioCtx.state === 'suspended') sfxAudioCtx.resume();
+    }catch(e){ /* Web Audio unsupported — UI just stays silent */ }
+    return sfxAudioCtx;
+  }
+  function playTones(specs){
+    const ctx = ensureSfxAudio();
+    if(!ctx) return;
+    const now = ctx.currentTime;
+    specs.forEach(function(s){
+      const t0 = now + (s.start || 0);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = s.type || 'sine';
+      osc.frequency.setValueAtTime(s.freq, t0);
+      if(s.freqEnd) osc.frequency.linearRampToValueAtTime(s.freqEnd, t0 + s.duration);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(s.gain, t0 + Math.min(0.012, s.duration / 4));
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + s.duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + s.duration + 0.02);
+    });
+  }
+  function playTapSound(){ playTones([{ freq:760, duration:0.04, gain:0.05, type:'sine' }]); }
+  function playSaveSound(){
+    playTones([
+      { freq:660, duration:0.11, gain:0.13, type:'triangle', start:0 },
+      { freq:880, duration:0.16, gain:0.13, type:'triangle', start:0.08 },
+    ]);
+  }
+  function playCloseSound(){ playTones([{ freq:480, freqEnd:320, duration:0.09, gain:0.06, type:'sine' }]); }
+  function playErrorSound(){ playTones([{ freq:300, freqEnd:170, duration:0.14, gain:0.11, type:'square' }]); }
+  function playDeleteSound(){ playTones([{ freq:200, freqEnd:90, duration:0.16, gain:0.14, type:'sawtooth' }]); }
+
+  document.addEventListener('click', function(e){
+    const sfxEl = e.target.closest('[data-sfx]');
+    if(sfxEl){
+      const kind = sfxEl.getAttribute('data-sfx');
+      if(kind === 'save') playSaveSound();
+      else if(kind === 'close') playCloseSound();
+      else if(kind === 'delete') playDeleteSound();
+      return;
+    }
+    if(e.target.closest('button, a, [data-player], [onclick]')) playTapSound();
+  }, true);
 
   /* ---------------- DATA ---------------- */
   const leagueSeasons = [
@@ -2098,6 +2160,7 @@
         const a = document.createElement('a');
         a.href = url;
         a.download = latest.name.replace(/[^a-z0-9]+/gi,'_') + '_Season_Wrap.png';
+        a.setAttribute('data-sfx', 'none'); // programmatic click — not a real UI tap
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -2676,7 +2739,7 @@
       const photoControls = hasPhoto
         ? `<div class="photo-controls" onclick="event.stopPropagation();">
              <button type="button" class="p-ic-btn" title="Zoom photo" aria-label="Zoom ${escAttr(name)}'s photo" onclick="zoomPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-magnifying-glass"/></svg></button>
-             ${editModeEnabled ? `<button type="button" class="p-ic-btn danger" title="Remove photo" aria-label="Remove ${escAttr(name)}'s photo" onclick="deletePlayerPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>` : ''}
+             ${editModeEnabled ? `<button type="button" class="p-ic-btn danger" data-sfx="delete" title="Remove photo" aria-label="Remove ${escAttr(name)}'s photo" onclick="deletePlayerPhoto('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>` : ''}
            </div>`
         : '';
       card.innerHTML = `
@@ -2722,7 +2785,7 @@
           <div class="rt-actions" onclick="event.stopPropagation();">
             ${editModeEnabled ? `
               <button type="button" class="p-ic-btn" title="Rename" aria-label="Rename ${escAttr(name)}" onclick="renamePlayerViaPrompt('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-pen"/></svg></button>
-              <button type="button" class="p-ic-btn danger" title="Delete player" aria-label="Delete ${escAttr(name)} from roster" onclick="deletePlayer('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>
+              <button type="button" class="p-ic-btn danger" data-sfx="delete" title="Delete player" aria-label="Delete ${escAttr(name)} from roster" onclick="deletePlayer('${escAttr(name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>
             ` : ''}
           </div>
         </td>`;
@@ -3193,7 +3256,7 @@
     </div>
   </div>
   <div class="pz-overlay" id="pzOverlay" onclick="if(event.target.id==='pzOverlay') closeProfileZoom();">
-    <button type="button" class="pz-close" aria-label="Close zoomed photo" onclick="closeProfileZoom()">✕</button>
+    <button type="button" class="pz-close" data-sfx="close" aria-label="Close zoomed photo" onclick="closeProfileZoom()">✕</button>
     <img id="pzImg" src="${hasPhoto ? PHOTOS[name] : ''}" alt="${name}">
   </div>
   <div class="crop-overlay" id="cropOverlay">
@@ -3203,8 +3266,8 @@
       <div class="crop-frame" id="cropFrame"><img id="cropImg" src="${hasPhoto ? PHOTOS[name] : ''}" alt="" draggable="false"></div>
       <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1">
       <div class="crop-actions">
-        <button type="button" class="cancel" onclick="cancelCrop()">Cancel</button>
-        <button type="button" class="save" onclick="confirmCrop()">Use This Crop</button>
+        <button type="button" class="cancel" data-sfx="close" onclick="cancelCrop()">Cancel</button>
+        <button type="button" class="save" data-sfx="save" onclick="confirmCrop()">Use This Crop</button>
       </div>
     </div>
   </div>
@@ -3220,8 +3283,8 @@
     </div>
     <img class="reveal-card-img" id="revealCardImg" alt="Your player card">
     <div class="reveal-actions" id="revealActions">
-      <button type="button" class="close-btn" onclick="closeCardReveal()">Close</button>
-      <button type="button" class="save" onclick="downloadRevealedCard()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Save Image</button>
+      <button type="button" class="close-btn" data-sfx="close" onclick="closeCardReveal()">Close</button>
+      <button type="button" class="save" data-sfx="save" onclick="downloadRevealedCard()"><svg class="fa-ic"><use href="#fa-camera"/></svg> Save Image</button>
     </div>
   </div>
   <div class="toast-container" id="toastContainer"></div>
@@ -3423,9 +3486,73 @@
     let cropState = { offsetX:0, offsetY:0, zoom:1, baseScale:1, imgW:0, imgH:0, frameW:0, frameH:0 };
 
     function startDownloadFlow(){
+      ensureSfxAudio();
       if(CARD_DATA.photo) openCropModal();
       else generateCardImage();
     }
+
+    /* ---------------- UI SOUND EFFECTS ----------------
+       Same synthesized-audio approach as the main page (this popup is a fully
+       separate document, so it gets its own copy). The AudioContext has to be
+       created/resumed inside a real user gesture or browsers block audio — the
+       download click always does that, and it stays usable afterward even once
+       the reveal chime fires later, asynchronously. */
+    let sfxAudioCtx = null;
+    function ensureSfxAudio(){
+      try{
+        if(!sfxAudioCtx) sfxAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(sfxAudioCtx.state === 'suspended') sfxAudioCtx.resume();
+      }catch(e){ /* Web Audio unsupported — UI just stays silent */ }
+      return sfxAudioCtx;
+    }
+    function playTones(specs){
+      const ctx = ensureSfxAudio();
+      if(!ctx) return;
+      const now = ctx.currentTime;
+      specs.forEach(function(s){
+        const t0 = now + (s.start || 0);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = s.type || 'sine';
+        osc.frequency.setValueAtTime(s.freq, t0);
+        if(s.freqEnd) osc.frequency.linearRampToValueAtTime(s.freqEnd, t0 + s.duration);
+        gain.gain.setValueAtTime(0, t0);
+        gain.gain.linearRampToValueAtTime(s.gain, t0 + Math.min(0.012, s.duration / 4));
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + s.duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + s.duration + 0.02);
+      });
+    }
+    function playTapSound(){ playTones([{ freq:760, duration:0.04, gain:0.05, type:'sine' }]); }
+    function playSaveSound(){
+      playTones([
+        { freq:660, duration:0.11, gain:0.13, type:'triangle', start:0 },
+        { freq:880, duration:0.16, gain:0.13, type:'triangle', start:0.08 },
+      ]);
+    }
+    function playCloseSound(){ playTones([{ freq:480, freqEnd:320, duration:0.09, gain:0.06, type:'sine' }]); }
+    function playErrorSound(){ playTones([{ freq:300, freqEnd:170, duration:0.14, gain:0.11, type:'square' }]); }
+    // a short triumphant fanfare for the moment the card actually appears
+    function playRevealChime(){
+      playTones([
+        { freq:523.25, duration:0.6, gain:0.18, type:'triangle', start:0 },    // C5
+        { freq:659.25, duration:0.6, gain:0.18, type:'triangle', start:0.09 }, // E5
+        { freq:783.99, duration:0.6, gain:0.18, type:'triangle', start:0.18 }, // G5
+        { freq:1046.50, duration:0.6, gain:0.18, type:'triangle', start:0.27 },// C6
+      ]);
+    }
+    document.addEventListener('click', function(e){
+      const sfxEl = e.target.closest('[data-sfx]');
+      if(sfxEl){
+        const kind = sfxEl.getAttribute('data-sfx');
+        if(kind === 'save') playSaveSound();
+        else if(kind === 'close') playCloseSound();
+        return;
+      }
+      if(e.target.closest('button, a, [onclick]')) playTapSound();
+    }, true);
 
     function openCropModal(){
       const overlay = document.getElementById('cropOverlay');
@@ -3752,6 +3879,7 @@
       // string early and break the page that generated this popup
       const container = document.getElementById('toastContainer');
       if(!container){ alert(message); return; }
+      playErrorSound();
       const el = document.createElement('div');
       el.className = 'toast error';
       const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -3823,6 +3951,7 @@
           rotateHint.classList.remove('show');
           cardImg.classList.add('show');
           actions.classList.add('show');
+          playRevealChime();
         };
         revealCardNow = revealCard;
 
@@ -3901,6 +4030,7 @@
       if(!revealBlobUrl) return;
       const a = document.createElement('a');
       a.href = revealBlobUrl;
+      a.setAttribute('data-sfx', 'none'); // programmatic click — not a real UI tap
       a.download = CARD_DATA.name.replace(/[^a-z0-9]+/gi,'_') + '_eFootball_Narikkuni.png';
       document.body.appendChild(a);
       a.click();
@@ -4687,13 +4817,13 @@
             ${options}
           </select>
         </div>`).join('')}
-      <button class="assign-apply" onclick="applyAssignments()">Apply &amp; refresh</button>
+      <button class="assign-apply" data-sfx="save" onclick="applyAssignments()">Apply &amp; refresh</button>
       <div style="margin-top:24px;padding-top:24px;border-top:1px dashed var(--card-line);">
         <div style="font-family:'Roboto Mono';font-size:0.68rem;color:var(--muted);margin-bottom:12px;"><svg class="fa-ic"><use href="#fa-gear"/></svg> OR merge two existing roster players:</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <select id="mergeExistingFrom" style="flex:1;min-width:140px;background:var(--pitch-deep);color:var(--floodlight);border:1px solid var(--card-line);border-radius:6px;padding:8px;font-family:'Oswald';font-size:0.9rem;"></select>
           <select id="mergeExistingTo" style="flex:1;min-width:140px;background:var(--pitch-deep);color:var(--floodlight);border:1px solid var(--card-line);border-radius:6px;padding:8px;font-family:'Oswald';font-size:0.9rem;"></select>
-          <button onclick="mergeExistingFromPanel()" style="background:var(--gold-soft);color:var(--ink-fixed);border:none;padding:8px 16px;border-radius:6px;font-family:'Oswald';font-weight:600;font-size:0.85rem;cursor:pointer;">Merge</button>
+          <button data-sfx="save" onclick="mergeExistingFromPanel()" style="background:var(--gold-soft);color:var(--ink-fixed);border:none;padding:8px 16px;border-radius:6px;font-family:'Oswald';font-weight:600;font-size:0.85rem;cursor:pointer;">Merge</button>
         </div>
       </div>
     `;
@@ -4892,7 +5022,7 @@
 
 <!-- Player photo zoom lightbox -->
 <div class="photo-zoom-overlay" id="photoZoomOverlay" onclick="if(event.target.id==='photoZoomOverlay') closePhotoZoom();">
-  <button type="button" class="photo-zoom-close" aria-label="Close zoomed photo" onclick="closePhotoZoom()">✕</button>
+  <button type="button" class="photo-zoom-close" data-sfx="close" aria-label="Close zoomed photo" onclick="closePhotoZoom()">✕</button>
   <img id="photoZoomImg" src="" alt="">
 </div>
 
@@ -4927,8 +5057,8 @@
       <input type="text" id="seasonDate" placeholder="e.g. 22-08-2026">
     </div>
     <div class="modal-actions">
-      <button class="cancel" onclick="closeSeasonEditModal()">Cancel</button>
-      <button class="save" onclick="saveSeasonEdit()">Save</button>
+      <button class="cancel" data-sfx="close" onclick="closeSeasonEditModal()">Cancel</button>
+      <button class="save" data-sfx="save" onclick="saveSeasonEdit()">Save</button>
     </div>
   </div>
 </div>
@@ -4947,8 +5077,8 @@
     </div>
     <p style="color:var(--muted);font-size:0.85rem;margin:16px 0;">All match results, titles, and runner-up finishes from the first player will be consolidated into the second. The first player will be removed from the roster.</p>
     <div class="modal-actions">
-      <button class="cancel" onclick="closeMergeDuplicatesModal()">Cancel</button>
-      <button class="save" onclick="mergeDuplicates()">Merge Players</button>
+      <button class="cancel" data-sfx="close" onclick="closeMergeDuplicatesModal()">Cancel</button>
+      <button class="save" data-sfx="save" onclick="mergeDuplicates()">Merge Players</button>
     </div>
   </div>
 </div>
