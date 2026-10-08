@@ -4271,8 +4271,9 @@
     const { tournaments } = parseFixtureFlowBackup(lastRawImport);
     TOURNAMENT_DATA = tournaments;
     buildMatchResults();
-    renderFixtures(); renderLeaderboard(); renderSideStats(); renderKnockoutTable(); renderHomeCounts();
-    populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts();
+    renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderH2H(); renderAwards(); renderUpcoming();
+    renderOnThisDay(); renderRivalries(); renderActivityFeed();
     markDirty();
   }
 
