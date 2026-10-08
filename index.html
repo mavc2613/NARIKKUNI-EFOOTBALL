@@ -486,6 +486,13 @@
   }
   .bracket-match.bracket-bye .bracket-team{padding:0; border:none;}
   .bracket-bye-tag{font-family:'Roboto Mono'; font-size:0.6rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); font-style:italic; flex-shrink:0;}
+  .bracket-del-row{border-top:1px dashed var(--card-line); display:flex; justify-content:center; padding:4px 0;}
+  .bracket-del-btn{
+    width:22px; height:22px; border-radius:50%; border:1px solid var(--card-line); background:transparent;
+    color:var(--muted); font-size:0.62rem; padding:0; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all .15s ease;
+  }
+  .bracket-del-btn:hover{border-color:#e07a6b; color:#e07a6b;}
 
   /* ---------- LEADERBOARD ---------- */
   /* ---------- MANUAL UPLOAD ---------- */
@@ -2217,6 +2224,9 @@
         const isPlaceholder = PLACEHOLDER_NAME_RE.test(m.h) || PLACEHOLDER_NAME_RE.test(m.a);
         const hw = !up && (m.pen ? parseInt(m.pen.split('-')[0]) > parseInt(m.pen.split('-')[1]) : m.gh > m.ga);
         const draw = !up && !m.pen && m.gh === m.ga;
+        const delRow = (editModeEnabled && !up && m._rawKey)
+          ? `<div class="bracket-del-row"><button type="button" class="bracket-del-btn" data-sfx="delete" title="Delete this result" aria-label="Delete ${escAttr(m.h)} vs ${escAttr(m.a)}" onclick="deleteMatch('${escAttr(m._rawKey)}', '${escAttr(m.h)} vs ${escAttr(m.a)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button></div>`
+          : '';
         return `<div class="bracket-match">
           <div class="bracket-team ${hw ? 'winner' : ''}">
             <span class="bracket-name" title="${escAttr(m.h)}">${m.h}</span>
@@ -2227,6 +2237,7 @@
             ${!up ? `<span class="bracket-score">${m.ga}</span>` : ''}
           </div>
           ${up && !isPlaceholder ? '<div class="bracket-vs">VS</div>' : ''}
+          ${delRow}
         </div>`;
       }).join('');
       return `<div class="bracket-round">
