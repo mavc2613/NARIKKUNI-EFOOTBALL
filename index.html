@@ -700,7 +700,9 @@
   .save-bar{
     display:none; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
     background:rgba(226,166,59,0.08); border:1px solid var(--gold); border-radius:14px;
-    padding:18px 24px; margin-bottom:28px; position:sticky; top:12px; z-index:40;
+    padding:18px 24px; position:fixed; left:18px; right:18px; bottom:18px; max-width:640px;
+    margin:0 auto; z-index:90; box-shadow:0 4px 24px rgba(0,0,0,0.5);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   }
   .save-bar.show{display:flex;}
   .save-bar-left{font-family:'Oswald'; font-weight:600; font-size:0.92rem; color:var(--floodlight); display:flex; align-items:center; gap:10px;}
@@ -907,6 +909,15 @@
   <svg class="fa-ic" id="menuBtnIconBars"><use href="#fa-bars"/></svg>
   <svg class="fa-ic" id="menuBtnIconClose" style="display:none;"><use href="#fa-xmark"/></svg>
 </button>
+
+<div class="save-bar" id="saveBar">
+  <div class="save-bar-left"><svg class="fa-ic"><use href="#fa-pen"/></svg> <span id="dirtyLabel">Unsaved changes</span></div>
+  <div class="save-bar-right" id="saveBarRight">
+    <input type="password" class="token-input" id="ghToken" placeholder="GitHub token (fine-grained, this repo, Contents: write)">
+    <button class="save-btn" data-sfx="save" onclick="saveRosterToGitHub()">Save to GitHub</button>
+  </div>
+  <div class="save-status" id="saveStatus"></div>
+</div>
 
 <div class="shell">
   <nav class="side" id="sideNav">
@@ -1140,15 +1151,6 @@
         <div class="sec-eyebrow reveal"><div class="line"></div><div class="eyebrow">The Roster</div></div>
         <h2 class="sec-title reveal">Players</h2>
         <p class="sec-desc reveal" id="rosterCount"></p>
-
-        <div class="save-bar" id="saveBar">
-          <div class="save-bar-left"><svg class="fa-ic"><use href="#fa-pen"/></svg> <span id="dirtyLabel">Unsaved changes</span></div>
-          <div class="save-bar-right" id="saveBarRight">
-            <input type="password" class="token-input" id="ghToken" placeholder="GitHub token (fine-grained, this repo, Contents: write)">
-            <button class="save-btn" data-sfx="save" onclick="saveRosterToGitHub()">Save to GitHub</button>
-          </div>
-          <div class="save-status" id="saveStatus"></div>
-        </div>
 
         <div class="add-player-row reveal" id="addPlayerRow" style="display:none;">
           <input type="text" id="newPlayerInput" placeholder="New player name…">
