@@ -2359,6 +2359,7 @@
             </div>
             <span class="accord-date">${t.date} · ${played}/${totalMatches} matches played</span>
           </div>
+          ${editModeEnabled ? `<button type="button" class="p-ic-btn danger" data-sfx="delete" title="Delete this tournament" aria-label="Delete tournament ${escAttr(t.name)}" style="width:32px;height:32px;font-size:0.8rem;flex-shrink:0;" onclick="event.stopPropagation(); deleteTournament('${escAttr(t.name)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>` : ''}
           <svg class="fa-ic accord-chevron"><use href="#fa-chevron-down"/></svg>
         </div>
         <div class="accord-body ${isOpen ? 'open' : ''}" id="accord-body-${ti}">
@@ -4137,6 +4138,8 @@
   let pendingPhotoUploads = {}; // playerName -> base64
   let matchRemovals = [];        // "tournamentName::round|home|away" keys already saved to GitHub
   let pendingMatchRemovals = []; // same key format, deleted this session but not yet saved
+  let tournamentRemovals = [];        // tournament names already saved to GitHub
+  let pendingTournamentRemovals = []; // tournament names deleted this session but not yet saved
   let isDirty = false;
   let syncCountdownInterval = null;
   const SYNC_DELAY_SECONDS = 300; // GitHub's raw.githubusercontent.com CDN takes a few minutes to refresh after a save
@@ -4288,6 +4291,20 @@
     markDirty();
   }
 
+  function deleteTournament(name){
+    if(!editModeEnabled) return;
+    if(!lastRawImport){ showToast('Live fixture data hasn\'t loaded yet — try again in a moment.', 'error'); return; }
+    if(!confirm(`Delete the entire "${name}" tournament? This removes every match, round, and title/award tied to it until it's re-entered on Fixture Flow.`)) return;
+    pendingTournamentRemovals.push(name);
+    const { tournaments } = parseFixtureFlowBackup(lastRawImport);
+    TOURNAMENT_DATA = tournaments;
+    buildMatchResults();
+    renderFixtures(); renderLeaderboard(); renderRoster(); renderSideStats(); renderKnockoutTable(); renderHomeCounts();
+    renderTable('leagueRows', leagueSeasons); populateH2HSelects(); renderH2H(); renderAwards(); renderUpcoming();
+    renderOnThisDay(); renderRivalries(); renderActivityFeed();
+    markDirty();
+  }
+
   function addPlayer(){
     if(!editModeEnabled) return;
     const input = document.getElementById('newPlayerInput');
@@ -4417,7 +4434,7 @@
     statusEl.className = 'save-status'; statusEl.innerHTML = '<svg class="fa-ic fa-spin"><use href="#fa-futbol"/></svg> Saving…';
 
     try{
-      let sha = null, existing = { renames:{}, additions:[], removals:[], aliases:{}, seasonEdits:{}, photos:{}, matchRemovals:[] };
+      let sha = null, existing = { renames:{}, additions:[], removals:[], aliases:{}, seasonEdits:{}, photos:{}, matchRemovals:[], tournamentRemovals:[] };
       const getRes = await fetch(`${apiUrl}?ref=${BRANCH}`, { headers: { Authorization: `Bearer ${token}` } });
       if(getRes.ok){
         const fileData = await getRes.json();
@@ -4435,6 +4452,7 @@
         seasonEdits: { ...(existing.seasonEdits||{}), ...pendingSeasonEdits },
         photos: { ...(existing.photos||{}), ...pendingPhotoUploads },
         matchRemovals: Array.from(new Set([...(existing.matchRemovals||[]), ...pendingMatchRemovals])),
+        tournamentRemovals: Array.from(new Set([...(existing.tournamentRemovals||[]), ...pendingTournamentRemovals])),
       };
 
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2))));
@@ -4442,14 +4460,15 @@
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Roster update: ${Object.keys(pendingRenames).length} renamed, ${pendingAdditions.length} added, ${pendingRemovals.length} removed, ${Object.keys(pendingSeasonEdits).length} seasons edited, ${pendingMatchRemovals.length} matches removed`,
+          message: `Roster update: ${Object.keys(pendingRenames).length} renamed, ${pendingAdditions.length} added, ${pendingRemovals.length} removed, ${Object.keys(pendingSeasonEdits).length} seasons edited, ${pendingMatchRemovals.length} matches removed, ${pendingTournamentRemovals.length} tournaments removed`,
           content, branch: BRANCH, ...(sha ? {sha} : {}),
         }),
       });
       if(!putRes.ok){ const errBody = await putRes.json().catch(()=>({})); throw new Error(errBody.message || `PUT failed: HTTP ${putRes.status}`); }
 
       matchRemovals = merged.matchRemovals;
-      pendingRenames = {}; pendingAdditions = []; pendingRemovals = []; pendingSeasonEdits = {}; pendingPhotoUploads = {}; pendingMatchRemovals = []; isDirty = false;
+      tournamentRemovals = merged.tournamentRemovals;
+      pendingRenames = {}; pendingAdditions = []; pendingRemovals = []; pendingSeasonEdits = {}; pendingPhotoUploads = {}; pendingMatchRemovals = []; pendingTournamentRemovals = []; isDirty = false;
       document.getElementById('ghToken').value = ''; // clear token for security (session-memory only)
       document.getElementById('dirtyLabel').textContent = 'Saved';
       document.getElementById('saveBarRight').style.display = 'none'; // token/button no longer needed until the next edit
@@ -4512,6 +4531,7 @@
       (data.additions||[]).forEach(n => { if(n && !rosterOrder.includes(n)) rosterOrder.push(n); });
       (data.removals||[]).forEach(n => { rosterOrder = rosterOrder.filter(x => x !== n); });
       matchRemovals = data.matchRemovals || []; // read by parseFixtureFlowBackup() on every sync
+      tournamentRemovals = data.tournamentRemovals || []; // read by parseFixtureFlowBackup() on every sync
       // belt-and-suspenders: drop any name that has an alias pointing away from itself,
       // even if it was never explicitly added to removals (covers stale data from older saves)
       pruneStaleAliasedRosterEntries();
@@ -4695,7 +4715,9 @@
     const newNames = new Map();
     const unmapped = new Map(); // key -> {raw, resolved}
 
+    const tournamentRemovalSet = new Set([...tournamentRemovals, ...pendingTournamentRemovals]);
     (raw.tournaments || []).forEach(t => {
+      if(tournamentRemovalSet.has(t.name || 'Untitled')) return; // deleted via Edit Mode
       (t.order || []).forEach(rawName => {
         const clean = cleanRaw(rawName);
         const key = clean.toLowerCase();
