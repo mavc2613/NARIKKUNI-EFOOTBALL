@@ -2311,11 +2311,14 @@
                       </small>`;
                   })())
             : `${m.gh}–${m.ga}${m.pen ? `<br><small style="font-size:0.58rem;opacity:0.65;font-family:'Roboto Mono'">pen ${m.pen}</small>` : ''}`;
+          const deleteBtn = (editModeEnabled && m._rawKey)
+            ? `<button type="button" class="p-ic-btn danger" data-sfx="delete" title="Delete this result" aria-label="Delete ${escAttr(m.h)} vs ${escAttr(m.a)}" style="margin-left:8px;" onclick="deleteMatch('${escAttr(m._rawKey)}', '${escAttr(m.h)} vs ${escAttr(m.a)}')"><svg class="fa-ic"><use href="#fa-trash"/></svg></button>`
+            : '';
           return `<tr>
             <td class="td-home${!up && hw ? ' winner' : ''}">${m.h}</td>
             <td class="td-score${up ? ' upcoming' : ''}">${scoreStr}</td>
             <td class="td-away${!up && !hw && !draw ? ' winner' : ''}">${m.a}</td>
-            <td class="td-status"><span class="fixture-badge ${up ? 'upcoming' : 'completed'}">${up ? 'upcoming' : 'FT'}</span></td>
+            <td class="td-status"><span class="fixture-badge ${up ? 'upcoming' : 'completed'}">${up ? 'upcoming' : 'FT'}</span>${deleteBtn}</td>
           </tr>`;
         }).join('');
 
@@ -4121,6 +4124,8 @@
   let pendingRemovals = [];  // removed names
   let pendingSeasonEdits = {}; // type_season -> {season, champion, runner, secondRunner, shieldWinner, date}
   let pendingPhotoUploads = {}; // playerName -> base64
+  let matchRemovals = [];        // "tournamentName::round|home|away" keys already saved to GitHub
+  let pendingMatchRemovals = []; // same key format, deleted this session but not yet saved
   let isDirty = false;
   let syncCountdownInterval = null;
   const SYNC_DELAY_SECONDS = 300; // GitHub's raw.githubusercontent.com CDN takes a few minutes to refresh after a save
@@ -4248,6 +4253,25 @@
     if(pendingAdditions.includes(name)) pendingAdditions = pendingAdditions.filter(n => n !== name);
     else pendingRemovals.push(name);
     renderRoster(); renderSideStats(); renderHomeCounts();
+    populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
+    markDirty();
+  }
+
+  /* Deletes one recorded match result (identified by its parseFixtureFlowBackup
+     "_rawKey") from the live feed's view. This can't reach into Fixture Flow's own
+     data.json — it just tells OUR site to treat that one result as not-yet-played on
+     every future sync, via the shared roster-overrides.json file (same mechanism as
+     roster renames/removals). Any later round that depended on this result's winner
+     reverts to an upcoming "Winner M#" placeholder too, until it's re-entered. */
+  function deleteMatch(rawKey, label){
+    if(!editModeEnabled) return;
+    if(!lastRawImport){ showToast('Live fixture data hasn\'t loaded yet — try again in a moment.', 'error'); return; }
+    if(!confirm(`Delete this result (${label})? Any later round that already used this result's winner will go back to "upcoming" until it's re-entered.`)) return;
+    pendingMatchRemovals.push(rawKey);
+    const { tournaments } = parseFixtureFlowBackup(lastRawImport);
+    TOURNAMENT_DATA = tournaments;
+    buildMatchResults();
+    renderFixtures(); renderLeaderboard(); renderSideStats(); renderKnockoutTable(); renderHomeCounts();
     populateH2HSelects(); renderAwards(); renderUpcoming(); renderOnThisDay(); renderRivalries(); renderActivityFeed();
     markDirty();
   }
@@ -4381,7 +4405,7 @@
     statusEl.className = 'save-status'; statusEl.innerHTML = '<svg class="fa-ic fa-spin"><use href="#fa-futbol"/></svg> Saving…';
 
     try{
-      let sha = null, existing = { renames:{}, additions:[], removals:[], aliases:{}, seasonEdits:{}, photos:{} };
+      let sha = null, existing = { renames:{}, additions:[], removals:[], aliases:{}, seasonEdits:{}, photos:{}, matchRemovals:[] };
       const getRes = await fetch(`${apiUrl}?ref=${BRANCH}`, { headers: { Authorization: `Bearer ${token}` } });
       if(getRes.ok){
         const fileData = await getRes.json();
@@ -4398,6 +4422,7 @@
         aliases: { ...(existing.aliases||{}), ...sessionOverrides },
         seasonEdits: { ...(existing.seasonEdits||{}), ...pendingSeasonEdits },
         photos: { ...(existing.photos||{}), ...pendingPhotoUploads },
+        matchRemovals: Array.from(new Set([...(existing.matchRemovals||[]), ...pendingMatchRemovals])),
       };
 
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2))));
@@ -4405,13 +4430,14 @@
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Roster update: ${Object.keys(pendingRenames).length} renamed, ${pendingAdditions.length} added, ${pendingRemovals.length} removed, ${Object.keys(pendingSeasonEdits).length} seasons edited`,
+          message: `Roster update: ${Object.keys(pendingRenames).length} renamed, ${pendingAdditions.length} added, ${pendingRemovals.length} removed, ${Object.keys(pendingSeasonEdits).length} seasons edited, ${pendingMatchRemovals.length} matches removed`,
           content, branch: BRANCH, ...(sha ? {sha} : {}),
         }),
       });
       if(!putRes.ok){ const errBody = await putRes.json().catch(()=>({})); throw new Error(errBody.message || `PUT failed: HTTP ${putRes.status}`); }
 
-      pendingRenames = {}; pendingAdditions = []; pendingRemovals = []; pendingSeasonEdits = {}; pendingPhotoUploads = {}; isDirty = false;
+      matchRemovals = merged.matchRemovals;
+      pendingRenames = {}; pendingAdditions = []; pendingRemovals = []; pendingSeasonEdits = {}; pendingPhotoUploads = {}; pendingMatchRemovals = []; isDirty = false;
       document.getElementById('ghToken').value = ''; // clear token for security (session-memory only)
       document.getElementById('dirtyLabel').textContent = 'Saved';
       document.getElementById('saveBarRight').style.display = 'none'; // token/button no longer needed until the next edit
@@ -4473,6 +4499,7 @@
       });
       (data.additions||[]).forEach(n => { if(n && !rosterOrder.includes(n)) rosterOrder.push(n); });
       (data.removals||[]).forEach(n => { rosterOrder = rosterOrder.filter(x => x !== n); });
+      matchRemovals = data.matchRemovals || []; // read by parseFixtureFlowBackup() on every sync
       // belt-and-suspenders: drop any name that has an alias pointing away from itself,
       // even if it was never explicitly added to removals (covers stale data from older saves)
       pruneStaleAliasedRosterEntries();
@@ -4669,12 +4696,16 @@
 
       // group recorded matches by round
       const roundMap = {};
+      const matchRemovalSet = new Set([...matchRemovals, ...pendingMatchRemovals]);
       Object.entries(t.scores || {}).forEach(([key, m]) => {
+        const rawKey = `${t.name || 'Untitled'}::${key}`;
+        if(matchRemovalSet.has(rawKey)) return; // deleted via Edit Mode — treat as not-yet-played
         const roundName = key.split('|')[0];
         if(!roundMap[roundName]) roundMap[roundName] = [];
         roundMap[roundName].push({
           h: normName(m.h), a: normName(m.a), gh: m.gh, ga: m.ga,
           pen: (m.ph != null && m.pa != null) ? `${m.ph}-${m.pa}` : undefined,
+          _rawKey: rawKey,
         });
       });
       const totalPlayed = Object.values(roundMap).flat().length;
